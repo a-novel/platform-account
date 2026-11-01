@@ -1,0 +1,111 @@
+import * as ShellStories from "./screen.stories.svelte";
+
+import { Canvas, Meta, ResponsiveStoryPair } from "@a-novel-kit/uikit-storybook";
+
+<Meta of={ShellStories} />
+
+# Platform shell
+
+The shell frames every page with its navigation, its account controls and the login dialog. Each
+preview holds one state fixed, so dismissing a dialog or a menu leaves it as it was.
+
+Expanded headers show the Agora wordmark, and the compact rail shows its icon. On mobile, the
+wordmark and the menu control keep their place between the closed header and the open menu.
+
+Dialog titles and fields share a leading edge. UIKit owns the header controls, the fullscreen menu,
+the compact navigation and the action spacing. Service errors sit just above the submit button, which
+spans the form on mobile and keeps its natural width on desktop.
+
+Validation previews use the same API schemas as the controllers. Invalid credentials read apart from
+a service outage, and a successful login redirects.
+
+## Navigation and account
+
+### Anonymous — expanded
+
+<ResponsiveStoryPair
+  desktop={ShellStories.ExpandedAnonymousDesktop}
+  mobile={ShellStories.ExpandedAnonymousMobile}
+  meta={ShellStories}
+/>
+
+### Anonymous — collapsed
+
+<ResponsiveStoryPair
+  desktop={ShellStories.CollapsedAnonymous}
+  mobile={ShellStories.CollapsedAnonymousMobile}
+  meta={ShellStories}
+/>
+
+### Authenticated
+
+<ResponsiveStoryPair
+  desktop={ShellStories.Authenticated}
+  mobile={ShellStories.AuthenticatedMobile}
+  meta={ShellStories}
+/>
+
+### Privacy destination
+
+While the platform collects browser telemetry, the rail lists Privacy, where the visitor changes the
+consent banner's answer.
+
+<Canvas of={ShellStories.PrivacyDestination} />
+
+### Loading account
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LoadingAccount}
+  mobile={ShellStories.LoadingAccountMobile}
+  meta={ShellStories}
+/>
+
+### Account unavailable
+
+<ResponsiveStoryPair desktop={ShellStories.AccountError} mobile={ShellStories.AccountErrorMobile} meta={ShellStories} />
+
+### Long account name
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LongAccountName}
+  mobile={ShellStories.LongAccountNameMobile}
+  meta={ShellStories}
+/>
+
+## Login
+
+### Default
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LoginModalDesktop}
+  mobile={ShellStories.LoginModalMobile}
+  meta={ShellStories}
+/>
+
+### Submitting
+
+<ResponsiveStoryPair desktop={ShellStories.LoginSubmitting} mobile={ShellStories.LoginSubmitting} meta={ShellStories} />
+
+### Validation errors
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LoginValidationError}
+  mobile={ShellStories.LoginValidationError}
+  meta={ShellStories}
+/>
+
+### Invalid credentials
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LoginServiceError}
+  mobile={ShellStories.LoginServiceError}
+  meta={ShellStories}
+/>
+
+### Service unavailable
+
+<ResponsiveStoryPair
+  desktop={ShellStories.LoginServiceUnavailable}
+  mobile={ShellStories.LoginServiceUnavailable}
+  meta={ShellStories}
+/>

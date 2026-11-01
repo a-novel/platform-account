@@ -1,0 +1,101 @@
+name: template-e2e
+
+x-postgres-environment: &postgres-environment
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_DB: postgres
+  POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+  POSTGRES_INITDB_ARGS: --auth=scram-sha-256
+
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ["CMD", "pg_isready", "-U", "postgres"]
+  interval: 1s
+  timeout: 5s
+  retries: 30
+
+services:
+  postgres-authentication:
+    image: ghcr.io/a-novel/service-authentication/database:v2.20.1@sha256:cce2b62f9486ddbf490e142525c444777782593845b1c2a6ab4ddab06eb94846
+    environment: *postgres-environment
+    healthcheck: *postgres-healthcheck
+
+  postgres-json-keys:
+    image: ghcr.io/a-novel/service-json-keys/database:v2.14.1@sha256:a7fd1aa7ba4476c6775e391fd632e0e292ca0667a25bec07a0cc3fab57afad3a
+    environment: *postgres-environment
+    healthcheck: *postgres-healthcheck
+
+  mailserver:
+    image: ghcr.io/axllent/mailpit:v1.33.0
+    ports:
+      - "127.0.0.1:14825:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_DISABLE_WAL: "true"
+
+  service-json-keys:
+    image: ghcr.io/a-novel/service-json-keys/standalone-grpc:v2.14.1@sha256:502a4fcb4016b3a039852f3b7d21968d5c3eb4c35770ab20b5184ec18b3e9f5c
+    healthcheck:
+      test: ["CMD", "grpcurl", "--plaintext", "-d", "", "localhost:8080", "grpc.health.v1.Health/Check"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres-json-keys:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres-json-keys
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_TLS_ENABLED: "false"
+      APP_MASTER_KEY: fec0681a2f57242211c559ca347721766f8a3acd8ed2e63b36b3768051c702ca
+
+  # Holds the network authentication joins, so the outage journey's restart leaves the host's
+  # interfaces alone. A new interface makes Chromium abort loading pages with ERR_NETWORK_CHANGED.
+  authentication-network:
+    image: registry.k8s.io/pause:3.10.2
+    ports:
+      - "127.0.0.1:14100:8080"
+
+  authentication:
+    image: ghcr.io/a-novel/service-authentication/standalone-rest:v2.20.1@sha256:2d9b65ce544e798e47afb4c15057e141b5228ef8d8562252af0d960c29456b92
+    network_mode: service:authentication-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8080/v2/ping"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres-authentication:
+        condition: service_healthy
+      service-json-keys:
+        condition: service_healthy
+      mailserver:
+        condition: service_started
+    command:
+      - sh
+      - -c
+      - >-
+        /migrations &&
+        /maintenance account-role --email admin@template.test --role auth:superadmin --lang en &&
+        exec /rest
+    environment:
+      POSTGRES_HOST: postgres-authentication
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_TLS_ENABLED: "false"
+      SERVICE_JSON_KEYS_HOST: service-json-keys
+      SERVICE_JSON_KEYS_PORT: 8080
+      PLATFORM_AUTH_URL: http://127.0.0.1:4173
+      SMTP_SENDER_DOMAIN: mailserver
+      SMTP_ADDR: mailserver:1025
+      SMTP_SENDER_NAME: Template integration tests
+      SMTP_SENDER_EMAIL: noreply@template.test
+      SMTP_SENDER_PASSWORD: test-only
+      SMTP_FORCE_UNENCRYPTED: "true"
+      # Every journey comes from one address and mints its own anonymous session.
+      REST_RATE_LIMITS_ENABLED: "false"
