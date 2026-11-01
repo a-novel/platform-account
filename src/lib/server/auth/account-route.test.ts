@@ -1,6 +1,6 @@
 import { createI18n } from "#lib/i18n/instance.js";
 
-import { loadAccount } from "./account-route";
+import { accountActions, loadAccount } from "./account-route";
 import { getAuthenticationContext } from "./context";
 import { stubAuthenticationContext } from "./context.fixture";
 import { type AuthenticatedSession, AuthenticationSession, AuthenticationUnavailableError } from "./session";
@@ -8,11 +8,15 @@ import { type AuthenticatedSession, AuthenticationSession, AuthenticationUnavail
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpError } from "@a-novel-kit/nodelib-browser/http";
-import { credentialsGetSelf } from "@a-novel/service-authentication-rest";
+import {
+  credentialsGetSelf,
+  credentialsUpdatePassword,
+  shortCodeCreateEmailUpdate,
+} from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
 
-vi.mock("./context", () => ({ getAuthenticationContext: vi.fn() }));
+vi.mock("./context", { spy: true });
 vi.mock("@a-novel/service-authentication-rest", { spy: true });
 
 const authenticated = vi.spyOn(AuthenticationSession.prototype, "authenticated");
@@ -23,11 +27,21 @@ const signedIn: AuthenticatedSession = {
   claims: { userID: "test-user", refreshTokenID: "test-refresh", roles: [] },
 };
 
-function event(): RequestEvent {
+function event(
+  request = new Request("https://account.test/account?/password", {
+    method: "POST",
+    body: new URLSearchParams({
+      currentPassword: "old-password",
+      password: "new-password",
+      confirmPassword: "new-password",
+    }),
+  })
+): RequestEvent {
   return {
-    url: new URL("https://template.test/account"),
+    url: new URL("https://account.test/account"),
     locals: { locale: "en", i18n: createI18n("en") },
     cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
+    request,
   } as unknown as RequestEvent;
 }
 
@@ -38,13 +52,15 @@ describe("account route", () => {
     vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies, request.url));
   });
 
-  it("limits a retrieval failure to the recap and keeps logout usable", async () => {
+  it("limits a retrieval failure to the recap and initializes usable actions", async () => {
     authenticated.mockRejectedValue(new AuthenticationUnavailableError());
     await expect(loadAccount(event())).resolves.toEqual({
       authorization: "unavailable",
       accountModel: {
         claims: { status: "error", feedback: "sessionUnavailable" },
         credentials: { status: "unavailable" },
+        passwordState: { status: "ready" },
+        emailState: { status: "ready" },
         logoutState: "ready",
       },
     });
@@ -75,10 +91,10 @@ describe("account route", () => {
         expiresAt: new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(expiresAt),
       },
     });
-    expect(request.cookies.set).toHaveBeenCalledWith("template_identity_handle", "creator", expect.anything());
+    expect(request.cookies.set).toHaveBeenCalledWith("account_identity_handle", "creator", expect.anything());
   });
 
-  it("keeps the session recap and logout when the email cannot be read", async () => {
+  it("keeps the session recap and the forms when the email cannot be read", async () => {
     authenticated.mockResolvedValue(signedIn);
     vi.mocked(credentialsGetSelf).mockRejectedValue(new HttpError(500, "unavailable"));
 
@@ -87,7 +103,7 @@ describe("account route", () => {
       accountModel: {
         claims: { status: "ready", userId: "test-user" },
         credentials: { status: "unavailable" },
-        logoutState: "ready",
+        emailState: { status: "ready" },
       },
     });
   });
@@ -98,5 +114,76 @@ describe("account route", () => {
       status: 303,
       location: "/?auth=login&returnTo=%2Faccount",
     });
+  });
+
+  it("rechecks authentication before a form can change a password", async () => {
+    authenticated.mockRejectedValue(new AuthenticationUnavailableError());
+    const result = await accountActions.password(event());
+    expect(authenticated).toHaveBeenCalledOnce();
+    expect(result).toMatchObject({
+      status: 503,
+      data: { accountAction: { kind: "password", state: { status: "service-error", feedback: "serviceUnavailable" } } },
+    });
+    expect(credentialsUpdatePassword).not.toHaveBeenCalled();
+  });
+
+  it("keeps a rejected current password in the form instead of showing the generic access-denied page", async () => {
+    authenticated.mockResolvedValue(signedIn);
+    vi.mocked(credentialsUpdatePassword).mockRejectedValue(new HttpError(403, "incorrect current password"));
+    await expect(accountActions.password(event())).resolves.toMatchObject({
+      status: 403,
+      data: {
+        accountAction: {
+          kind: "password",
+          state: {
+            status: "validation-error",
+            issues: [{ field: "currentPassword", feedback: "invalidCurrentPassword" }],
+          },
+        },
+      },
+    });
+  });
+
+  it("leaves an email change pending after sending its confirmation link", async () => {
+    authenticated.mockResolvedValue(signedIn);
+    vi.mocked(shortCodeCreateEmailUpdate).mockResolvedValue(undefined);
+    const request = event(
+      new Request("https://account.test/account?/email", {
+        method: "POST",
+        body: new URLSearchParams({ email: "new@example.test" }),
+      })
+    );
+
+    await expect(accountActions.email(request)).resolves.toEqual({
+      accountAction: {
+        kind: "email",
+        state: { status: "pending-email" },
+      },
+    });
+    expect(shortCodeCreateEmailUpdate).toHaveBeenCalledOnce();
+  });
+
+  it("rejects invalid email before calling the service and names the account control", async () => {
+    const request = event(
+      new Request("https://account.test/account?/email", {
+        method: "POST",
+        body: new URLSearchParams({ email: "invalid-private-value" }),
+      })
+    );
+    const result = await accountActions.email(request);
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        accountAction: {
+          kind: "email",
+          state: {
+            status: "validation-error",
+            issues: [{ field: "newEmail", feedback: "email" }],
+          },
+        },
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("invalid-private-value");
+    expect(shortCodeCreateEmailUpdate).not.toHaveBeenCalled();
   });
 });

@@ -19,6 +19,10 @@ export const variables = defineEnvVars({
     schema: (value) => value,
     description: "Timeout of each downstream readiness probe, from 100 to 10,000 ms.",
   },
+  STUDIO_URL: {
+    schema: (value) => value,
+    description: "Public URL of Studio, which the app list opens.",
+  },
   DOWNTIME_URL: {
     schema: (value) => value,
     description: "Planned downtime document. Defaults to the one infra publishes.",

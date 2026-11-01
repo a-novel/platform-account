@@ -11,7 +11,7 @@ const TRACE_ID = "4bf92f3577b34da6a3ce929d0e0e4736";
 const SPAN_ID = "00f067aa0ba902b7";
 
 function event(path: string, language?: string, traced = false): RequestEvent {
-  const url = new URL(path, "https://template.test");
+  const url = new URL(path, "https://account.test");
   const root = trace.wrapSpanContext({ traceId: TRACE_ID, spanId: SPAN_ID, traceFlags: TraceFlags.SAMPLED });
   return {
     url,
@@ -47,6 +47,37 @@ describe("request hook", () => {
     expect(french.locals.i18n).not.toBe(english.locals.i18n);
   });
 
+  it.each([200, 400, 303, 503])("protects secure-link responses with status %s", async (status) => {
+    const resolved = new Response("private page", {
+      status,
+      headers: {
+        "cache-control": "public",
+        "content-type": "text/html",
+        location: "/ext/account/create?result=success",
+      },
+    });
+    const response = await handle({
+      event: event("/ext/account/create?shortCode=private-code"),
+      resolve: vi.fn().mockResolvedValue(resolved),
+    });
+    expect(response.status).toBe(status);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("referrer-policy")).toBe("strict-origin");
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect(response.headers.get("content-type")).toBe("text/html");
+    expect(response.headers.get("location")).toBe("/ext/account/create?result=success");
+    await expect(response.text()).resolves.toBe("private page");
+  });
+
+  it("preserves caching policy on ordinary pages", async () => {
+    const response = await handle({
+      event: event("/"),
+      resolve: vi.fn().mockResolvedValue(new Response("home", { headers: { "cache-control": "private" } })),
+    });
+    expect(response.headers.get("cache-control")).toBe("private");
+    expect(response.headers.has("x-robots-tag")).toBe(false);
+  });
+
   it.each([
     { name: "hands the request's trace to the page", traced: true, want: `${TRACE_ID}-${SPAN_ID}-1` },
     { name: "leaves the page's trace empty while tracing is off", traced: false, want: "" },
@@ -79,7 +110,7 @@ describe("request hook", () => {
     const root = provider.getTracer("test").startSpan("sveltekit.handle.root");
     const request = {
       ...event("/"),
-      request: new Request("https://template.test/", { method }),
+      request: new Request("https://studio.test/", { method }),
       route: { id: route },
       tracing: { enabled: true, root, current: root },
     } as unknown as RequestEvent;

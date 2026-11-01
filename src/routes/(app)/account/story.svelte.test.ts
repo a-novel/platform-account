@@ -11,16 +11,20 @@ import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 
 describe("fixed visual review controllers", () => {
-  it("pins the account logout instead of leaving the review page submitting", async () => {
+  it("pins account form states while retaining editable native inputs", async () => {
     const initialModel: AccountScreenModel = {
       claims: { status: "loading" },
       credentials: { status: "unavailable" },
+      passwordState: { status: "ready" },
+      emailState: { status: "ready" },
       logoutState: "ready",
     };
     render(AccountStory, { initialModel }, withLocale());
-    const logout = page.getByRole("button", { name: "Log out", exact: true });
-    await logout.click();
-    await expect.element(logout).toBeEnabled();
-    expect((logout.element() as HTMLButtonElement).form?.getAttribute("aria-busy")).toBe("false");
+    const email = page.getByRole("textbox", { name: "New email address" });
+    await email.fill("review@example.test");
+    const input = email.element() as HTMLInputElement;
+    await page.getByRole("button", { name: "Send link", exact: true }).click();
+    await expect.element(email).toBeEnabled();
+    expect(input.form?.getAttribute("aria-busy")).toBe("false");
   });
 });

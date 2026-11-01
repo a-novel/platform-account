@@ -8,7 +8,11 @@ import { defineConfig } from "playwright/test";
 function platformServer(state: string, port: number) {
   return SvelteKitPlaywright({
     port,
-    serverEnvironment: { AUTHENTICATION_SERVICE_URL: "http://127.0.0.1:14100", DOWNTIME_URL: downtimeUrl(state) },
+    serverEnvironment: {
+      AUTHENTICATION_SERVICE_URL: "http://127.0.0.1:14100",
+      DOWNTIME_URL: downtimeUrl(state),
+      STUDIO_URL: "https://studio.example.test",
+    },
     screenshotStyle: "./tests/e2e/screenshots.css",
   });
 }

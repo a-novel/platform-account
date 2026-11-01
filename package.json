@@ -1,11 +1,11 @@
 {
-  "name": "@a-novel/platform-template",
+  "name": "@a-novel/platform-account",
   "version": "0.1.0",
   "private": true,
-  "description": "Template for new A-Novel SvelteKit platforms",
+  "description": "Agora account management: sign-in, email links and account settings",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/a-novel/platform-template.git"
+    "url": "git+https://github.com/a-novel/platform-account.git"
   },
   "license": "AGPL-3.0",
   "type": "module",

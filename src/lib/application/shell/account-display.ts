@@ -4,7 +4,7 @@ export interface AccountDisplay {
   initials: string;
 }
 
-/** Turns an email handle such as `maya.chen+template` into a name and initials. */
+/** Turns an email handle such as `maya.chen+account` into a name and initials. */
 export function accountDisplayFromHandle(handle: string): AccountDisplay {
   const localPart = handle.split("+", 1)[0] ?? "";
   const words = localPart

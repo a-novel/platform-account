@@ -1,4 +1,4 @@
-name: template-e2e
+name: account-e2e
 
 x-postgres-environment: &postgres-environment
   POSTGRES_PASSWORD: postgres
@@ -79,7 +79,7 @@ services:
       - -c
       - >-
         /migrations &&
-        /maintenance account-role --email admin@template.test --role auth:superadmin --lang en &&
+        /maintenance account-role --email admin@account.test --role auth:superadmin --lang en &&
         exec /rest
     environment:
       POSTGRES_HOST: postgres-authentication
@@ -93,8 +93,8 @@ services:
       PLATFORM_AUTH_URL: http://127.0.0.1:4173
       SMTP_SENDER_DOMAIN: mailserver
       SMTP_ADDR: mailserver:1025
-      SMTP_SENDER_NAME: Template integration tests
-      SMTP_SENDER_EMAIL: noreply@template.test
+      SMTP_SENDER_NAME: Account integration tests
+      SMTP_SENDER_EMAIL: noreply@account.test
       SMTP_SENDER_PASSWORD: test-only
       SMTP_FORCE_UNENCRYPTED: "true"
       # Every journey comes from one address and mints its own anonymous session.

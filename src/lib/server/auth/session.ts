@@ -12,9 +12,9 @@ import {
 
 import type { Cookies } from "@sveltejs/kit";
 
-const accessTokenCookie = "template_access_token";
-const refreshTokenCookie = "template_refresh_token";
-const identityHandleCookie = "template_identity_handle";
+const accessTokenCookie = "account_access_token";
+const refreshTokenCookie = "account_refresh_token";
+const identityHandleCookie = "account_identity_handle";
 const rejectedSessionStatuses = [401, 403] as const;
 
 /** SessionCookies is the part of SvelteKit's `Cookies` API the session uses. */

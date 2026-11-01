@@ -4,38 +4,48 @@ import { Canvas, Meta, ResponsiveStoryPair } from "@a-novel-kit/uikit-storybook"
 
 <Meta of={ShellStories} />
 
-# Platform shell
+# Account shell
 
-The shell frames every page with its navigation, its account controls and the login dialog. Each
-preview holds one state fixed, so dismissing a dialog or a menu leaves it as it was.
+The shell frames every account page with one header: the Agora mark, the app list and the account
+controls, and the authentication dialogs. It has no navigation menu. Each preview holds one state
+fixed, so dismissing a dialog or a menu leaves it as it was.
 
-Expanded headers show the Agora wordmark, and the compact rail shows its icon. On mobile, the
-wordmark and the menu control keep their place between the closed header and the open menu.
+Wide headers show the Agora wordmark, and narrow ones show the icon, with the account name kept for
+assistive technology behind its avatar. The app list opens from the header's grid control.
 
-Dialog titles and fields share a leading edge. UIKit owns the header controls, the fullscreen menu,
-the compact navigation and the action spacing. Service errors sit just above the submit button, which
-spans the form on mobile and keeps its natural width on desktop.
+Dialog titles and fields share a leading edge. UIKit owns the header controls and the action spacing. Service errors sit above the submit button, which
+stays apart from the fields. Mobile actions stack at full width. Desktop actions keep their natural
+width, with secondary actions at the end of the footer. Completion states drop the footer.
+
+A request explains the next step before submission. Once the request is recorded or sent, the dialog
+heading becomes the outcome, with one compact status message and the submitted address below it.
 
 Validation previews use the same API schemas as the controllers. Invalid credentials read apart from
-a service outage, and a successful login redirects.
+service outages, which share a short heading and recovery guidance across forms. A successful login
+redirects. Invitation requests acknowledge list membership, with distinct warnings for existing
+accounts and repeated requests. Recovery acknowledges delivery without disclosing whether an account
+exists.
 
-## Navigation and account
+## Header and account
 
-### Anonymous — expanded
+### Anonymous
 
 <ResponsiveStoryPair
-  desktop={ShellStories.ExpandedAnonymousDesktop}
-  mobile={ShellStories.ExpandedAnonymousMobile}
+  desktop={ShellStories.AnonymousDesktop}
+  mobile={ShellStories.AnonymousMobile}
   meta={ShellStories}
 />
 
-### Anonymous — collapsed
+### App list
 
-<ResponsiveStoryPair
-  desktop={ShellStories.CollapsedAnonymous}
-  mobile={ShellStories.CollapsedAnonymousMobile}
-  meta={ShellStories}
-/>
+<Canvas of={ShellStories.AppList} />
+
+### Privacy link
+
+While the platform collects browser telemetry, the header links Privacy, where the visitor changes the
+consent banner's answer.
+
+<Canvas of={ShellStories.PrivacyLink} />
 
 ### Authenticated
 
@@ -44,13 +54,6 @@ a service outage, and a successful login redirects.
   mobile={ShellStories.AuthenticatedMobile}
   meta={ShellStories}
 />
-
-### Privacy destination
-
-While the platform collects browser telemetry, the rail lists Privacy, where the visitor changes the
-consent banner's answer.
-
-<Canvas of={ShellStories.PrivacyDestination} />
 
 ### Loading account
 
@@ -107,5 +110,105 @@ consent banner's answer.
 <ResponsiveStoryPair
   desktop={ShellStories.LoginServiceUnavailable}
   mobile={ShellStories.LoginServiceUnavailable}
+  meta={ShellStories}
+/>
+
+## Invitation list
+
+### Default
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationListDesktop}
+  mobile={ShellStories.InvitationListMobile}
+  meta={ShellStories}
+/>
+
+### Submitting
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationRequestSubmitting}
+  mobile={ShellStories.InvitationRequestSubmitting}
+  meta={ShellStories}
+/>
+
+### Validation errors
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationRequestValidationError}
+  mobile={ShellStories.InvitationRequestValidationError}
+  meta={ShellStories}
+/>
+
+### Service unavailable
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationListUnavailable}
+  mobile={ShellStories.InvitationListUnavailable}
+  meta={ShellStories}
+/>
+
+### Account already exists
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationAccountExists}
+  mobile={ShellStories.InvitationAccountExists}
+  meta={ShellStories}
+/>
+
+### Already requested
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationAlreadyRequested}
+  mobile={ShellStories.InvitationAlreadyRequested}
+  meta={ShellStories}
+/>
+
+### Request recorded
+
+<ResponsiveStoryPair
+  desktop={ShellStories.InvitationRequestRecorded}
+  mobile={ShellStories.InvitationRequestRecorded}
+  meta={ShellStories}
+/>
+
+## Reset password
+
+### Default
+
+<ResponsiveStoryPair
+  desktop={ShellStories.PasswordResetModalDesktop}
+  mobile={ShellStories.PasswordResetModalMobile}
+  meta={ShellStories}
+/>
+
+### Submitting
+
+<ResponsiveStoryPair
+  desktop={ShellStories.PasswordResetSubmitting}
+  mobile={ShellStories.PasswordResetSubmitting}
+  meta={ShellStories}
+/>
+
+### Validation errors
+
+<ResponsiveStoryPair
+  desktop={ShellStories.PasswordResetValidationError}
+  mobile={ShellStories.PasswordResetValidationError}
+  meta={ShellStories}
+/>
+
+### Service unavailable
+
+<ResponsiveStoryPair
+  desktop={ShellStories.PasswordResetServiceUnavailable}
+  mobile={ShellStories.PasswordResetServiceUnavailable}
+  meta={ShellStories}
+/>
+
+### Confirmation pending
+
+<ResponsiveStoryPair
+  desktop={ShellStories.PasswordResetEmailPending}
+  mobile={ShellStories.PasswordResetEmailPending}
   meta={ShellStories}
 />

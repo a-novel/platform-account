@@ -1,7 +1,6 @@
 import type { AuthDialogView } from "./types";
 
 const authParameter = "auth";
-const menuParameter = "menu";
 
 /** Reads a parameter that appears exactly once. A duplicate counts as absent. */
 function singleValue(parameters: URLSearchParams, name: string): string | undefined {
@@ -18,17 +17,7 @@ function withParameter(url: URL, name: string, value: string | null): URL {
 }
 
 function isAuthDialogView(value: string): value is AuthDialogView {
-  return value === "login";
-}
-
-/** Reads the mobile navigation's canonical URL state. */
-export function readNavigationOpen(parameters: URLSearchParams): boolean {
-  return singleValue(parameters, menuParameter) === "open";
-}
-
-/** Returns a URL with canonical mobile navigation state. */
-export function withNavigationOpen(url: URL, open: boolean): URL {
-  return withParameter(url, menuParameter, open ? "open" : null);
+  return value === "login" || value === "register" || value === "reset";
 }
 
 /** Reads one canonical authentication view. Duplicate and invalid values close the dialog. */

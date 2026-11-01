@@ -1,14 +1,7 @@
 <script lang="ts">
   import { readAuthenticationActionModel } from "#lib/application/auth/action-data.js";
-  import {
-    normalizeAuthUrl,
-    readAuthView,
-    readNavigationOpen,
-    withAuthView,
-    withNavigationOpen,
-  } from "#lib/application/shell/auth-dialog-state.js";
+  import { normalizeAuthUrl, readAuthView, withAuthView } from "#lib/application/shell/auth-dialog-state.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
-  import { readRailCollapsed, writeRailCollapsed } from "#lib/client/shell/rail-preference.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { authenticationTitleContext } from "#lib/ui/PageTitle.svelte";
   import { afterNavigate, goto } from "$app/navigation";
@@ -40,23 +33,17 @@
     initialRoute.authentication ?? authenticationState("login")
   );
   const controller = createShellController({
-    model: {
-      activeNavigation: initialRoute.activeNavigation,
-      authView: initialRoute.authView,
-      drawerOpen: initialRoute.drawerOpen,
-      rail: "expanded",
-      session: initialRoute.session,
-    },
+    model: { authView: initialRoute.authView, session: initialRoute.session },
     homeHref: resolve(""),
     accountHref: resolve("account"),
-    privacyHref: resolve("privacy"),
     logoutAction: resolve("auth/logout"),
+    privacyHref: resolve("privacy"),
+    // The app list comes from the runtime config, which a navigation never changes.
+    apps: untrack(() => data.apps),
     authentication,
     resolveAuthentication: authenticationState,
     onAuthViewChange: changeAuthView,
     getUrl: () => new URL(currentHref),
-    onDrawerChange: (open) => showShallow(withNavigationOpen(new URL(window.location.href), open)),
-    onRailChange: (rail) => writeRailCollapsed(window.localStorage, rail === "collapsed"),
   });
 
   setContext(authenticationTitleContext, () =>
@@ -79,8 +66,6 @@
   });
 
   onMount(() => {
-    controller.synchronizeRail(readRailCollapsed(window.localStorage) ? "collapsed" : "expanded");
-
     window.addEventListener("popstate", synchronizeUrl);
 
     return () => window.removeEventListener("popstate", synchronizeUrl);
@@ -92,10 +77,8 @@
     const authView = readAuthView(parameters);
 
     return {
-      activeNavigation: data.activeNavigation,
       session: data.session,
       authView,
-      drawerOpen: readNavigationOpen(parameters),
       authentication: authView ? authenticationState(authView) : undefined,
     };
   }

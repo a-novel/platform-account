@@ -6,17 +6,28 @@ import { AuthenticationSession } from "./session";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpError } from "@a-novel-kit/nodelib-browser/http";
+import {
+  AuthenticationApi,
+  Lang,
+  shortCodeCreatePasswordReset,
+  waitlistJoin,
+} from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
 
-vi.mock("./context", () => ({ getAuthenticationContext: vi.fn() }));
+vi.mock("./context", { spy: true });
+vi.mock("@a-novel/service-authentication-rest", { spy: true });
 
 function event(
-  fields = { email: "creator@example.com", password: "test-password" },
-  url = new URL("https://template.test/?auth=login")
+  journey: string,
+  fields = { email: "creator@example.test", password: "test-password" },
+  returnTo?: string
 ): RequestEvent {
+  const url = new URL(`https://account.test/?auth=${journey}`);
+  if (returnTo) url.searchParams.set("returnTo", returnTo);
   const request = {
     url,
+    locals: { locale: "fr" },
     cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
     request: new Request(url, { method: "POST", body: new URLSearchParams(fields) }),
   } as unknown as RequestEvent;
@@ -24,49 +35,81 @@ function event(
   return request;
 }
 
-const rejections = [
-  [new HttpError(401, "fixture-only detail"), 401, "invalidCredentials"],
-  [new HttpError(429, "fixture-only detail"), 429, "tooManyAttempts"],
-  [new Error("fixture-only detail"), 503, "serviceUnavailable"],
-] as const;
-
-const returnDestinations = [
-  ["/account?panel=email#email", "/account?panel=email#email"],
-  ["https://attacker.invalid", "/"],
-  ["/?auth=login&returnTo=%2Faccount", "/"],
-];
-
-describe("login outcomes", () => {
+describe("authentication outcomes", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("rejects invalid fields before contacting the service", async () => {
-    const result = await authenticationActions.default(event({ email: "invalid-private-value", password: "" }));
-    expect(result).toMatchObject({
-      status: 400,
-      data: { authentication: { journey: "login", state: { status: "validation-error" } } },
-    });
-    expect(getAuthenticationContext).not.toHaveBeenCalled();
-    expect(JSON.stringify(result)).not.toContain("invalid-private-value");
-  });
+  it.each(["login", "register", "reset"])(
+    "rejects invalid %s fields before contacting the service",
+    async (journey) => {
+      const request = event(journey, { email: "invalid-private-value", password: "" });
+      const result = await authenticationActions.default(request);
+      expect(result).toMatchObject({
+        status: 400,
+        data: { authentication: { journey, state: { status: "validation-error" } } },
+      });
+      expect(getAuthenticationContext).not.toHaveBeenCalled();
+      expect(JSON.stringify(result)).not.toContain("invalid-private-value");
+    }
+  );
 
-  it.each(rejections)("maps a %s rejection without exposing service detail", async (error, status, feedback) => {
-    vi.spyOn(AuthenticationSession.prototype, "login").mockRejectedValue(error);
-    const result = await authenticationActions.default(event());
-    expect(result).toMatchObject({
-      status,
-      data: { authentication: { journey: "login", state: { status: "service-error", feedback } } },
-    });
-    expect(JSON.stringify(result)).not.toContain("fixture-only detail");
-  });
+  const loginRejections = [
+    [new HttpError(401, "fixture-only detail"), 401, "invalidCredentials"],
+    [new HttpError(429, "fixture-only detail"), 429, "tooManyAttempts"],
+    [new Error("fixture-only detail"), 503, "serviceUnavailable"],
+  ] as const;
 
-  it.each(returnDestinations)("redirects to a sanitized %s only after login", async (returnTo, expected) => {
+  it.each(loginRejections)(
+    "maps login rejection to %s without exposing service detail",
+    async (error, status, feedback) => {
+      vi.spyOn(AuthenticationSession.prototype, "login").mockRejectedValue(error);
+      const result = await authenticationActions.default(event("login"));
+      expect(result).toMatchObject({
+        status,
+        data: { authentication: { journey: "login", state: { status: "service-error", feedback } } },
+      });
+      expect(JSON.stringify(result)).not.toContain("fixture-only detail");
+    }
+  );
+
+  const emailRequests = [
+    ["register", waitlistJoin, { status: "recorded", email: "creator@example.test" }],
+    ["reset", shortCodeCreatePasswordReset, { status: "pending-email", targetHint: "creator@example.test" }],
+  ] as const;
+
+  it.each(emailRequests)("acknowledges the %s outcome and handles unavailability", async (journey, send, state) => {
+    vi.spyOn(AuthenticationSession.prototype, "anonymousAccessToken").mockResolvedValue("fixture-access");
+    vi.mocked(send).mockResolvedValueOnce(undefined);
+    await expect(authenticationActions.default(event(journey))).resolves.toEqual({
+      authentication: { journey, state },
+    });
+    expect(send).toHaveBeenCalledWith(expect.any(AuthenticationApi), "fixture-access", {
+      email: "creator@example.test",
+      lang: Lang.Fr,
+    });
+    vi.mocked(send).mockRejectedValueOnce(new Error("private service detail"));
+    await expect(authenticationActions.default(event(journey))).resolves.toMatchObject({
+      status: 503,
+      data: { authentication: { journey, state: { status: "service-error", feedback: "serviceUnavailable" } } },
+    });
+    vi.mocked(send).mockRejectedValueOnce(new HttpError(429, "private service detail"));
+    await expect(authenticationActions.default(event(journey))).resolves.toMatchObject({
+      status: 429,
+      data: { authentication: { journey, state: { status: "service-error", feedback: "tooManyAttempts" } } },
+    });
+  });
+});
+
+describe("login return destination", () => {
+  const returnDestinations = [
+    ["/account?panel=email#email", "/account?panel=email#email"],
+    ["https://attacker.invalid", "/"],
+    ["/?auth=login&returnTo=%2Faccount", "/"],
+  ];
+
+  it.each(returnDestinations)("redirects to a sanitized %s only after successful login", async (returnTo, expected) => {
     const login = vi.spyOn(AuthenticationSession.prototype, "login").mockResolvedValue(undefined);
-    const url = new URL("https://template.test/?auth=login");
-    url.searchParams.set("returnTo", returnTo);
-    await expect(authenticationActions.default(event(undefined, url))).rejects.toMatchObject({
-      status: 303,
-      location: expected,
-    });
+    const request = event("login", { email: "creator@example.com", password: "test-password" }, returnTo);
+    await expect(authenticationActions.default(request)).rejects.toMatchObject({ status: 303, location: expected });
     expect(login).toHaveBeenCalledWith("creator@example.com", "test-password");
   });
 });

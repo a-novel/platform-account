@@ -23,17 +23,25 @@ access:
 authFlow:
   expiryUnavailable: Not provided
   feedback:
+    emailUpdated: Your email address was updated.
     invalidCredentials: The email address or password is incorrect.
+    invalidCurrentPassword: Your current password is incorrect.
+    passwordChanged: Your password was changed.
+    passwordReset: Your password was reset.
+    registrationCompleted: Your account is ready.
     serviceUnavailable: Please try again in a few minutes.
     sessionUnavailable: We couldn’t verify your session. Please reload the page in a few minutes.
     tooManyAttempts: Too many attempts. Please wait a few minutes before trying again.
   validation:
+    confirmPassword: Confirm your new password.
+    currentPassword: Enter your current password.
     email: Enter a valid email address.
     maxLength_one: Use no more than {{count}} character.
     maxLength_other: Use no more than {{count}} characters.
     minLength_one: Use at least {{count}} character.
     minLength_other: Use at least {{count}} characters.
     password: Enter your password.
+    passwordMismatch: The passwords do not match.
 authUi:
   account:
     claims:
@@ -43,19 +51,35 @@ authUi:
       roles: Roles
       title: Your session
       userId: Account ID
-    description: Your email, your settings and the session open on this device.
+    description: Your personal information and security settings.
     email:
       current: Current email
+      description: A confirmation link will be sent to your new email.
+      hint: Your current email remains active until you confirm.
+      label: New email address
       pending: Awaiting confirmation
+      pendingDescription: If no other account uses the new address, you’ll receive a confirmation link there.
       pendingExpiry: Link expires {{date}}
+      pendingTitle: Check your inbox
+      resend: Send another link
+      submit: Send link
+      submitting: Sending link…
       title: Email
       unavailable: Your current email can’t be shown right now.
     loadErrorTitle: Session details unavailable
     loadingTitle: Loading session
     logout:
-      description: You’ll be logged out on this device.
+      description: You’ll be logged out of your Agora account on this device.
       submit: Log out
       submitting: Logging out…
+    password:
+      confirmLabel: Confirm new password
+      currentLabel: Current password
+      hint: Choose a long, memorable password.
+      newLabel: New password
+      submit: Change password
+      submitting: Changing password…
+      title: Password
     title: Manage your account
   authentication:
     emailLabel: Email address
@@ -63,12 +87,62 @@ authUi:
       login:
         submit: Log in
         submitting: Logging in…
+      register:
+        accountExists: This email is already registered. You can log in to your account.
+        alreadyWaitlisted: This email is already on the invitation list.
+        recordedDescription: Your invitation will be sent to
+        recordedTitle: You’re on the invitation list
+        submit: Join the list
+        submitting: Joining the list…
+      reset:
+        pendingDescription: If this email is registered, you’ll receive a password reset link at
+        submit: Send link
+        submitting: Sending link…
     passwordLabel: Password
+    pendingTitle: Check your inbox
   serviceUnavailable: Temporarily unavailable
+  shortCode:
+    confirmPasswordLabel: Confirm new password
+    continue: Continue to your account
+    journeys:
+      emailUpdate:
+        submit: Update email
+        submitting: Updating email…
+        unavailableTitle: Email update unavailable
+      passwordReset:
+        description: Choose a new password to regain access to your account.
+        submit: Reset password
+        submitting: Resetting password…
+        title: Reset your Agora password
+      register:
+        description: Choose the password you’ll log in with.
+        submit: Create account
+        submitting: Creating account…
+        title: Create your Agora account
+    newPasswordLabel: New password
+    restart: Request a new link
+    states:
+      invalid:
+        description: This link may have expired, already been used, or been copied incorrectly.
+        title: This link is not valid
+      missing:
+        description: Open the complete link from your email or request a new one.
+        title: This link is incomplete
+home:
+  description: Log in to manage your email address, password and privacy settings.
+  title: Your Agora account
 pageTitles:
-  account: Account
+  account: Account settings
+  accountCreated: Account created
   brand: Agora
+  confirmEmail: Confirm email
+  createAccount: Create account
+  emailUpdated: Email updated
+  incompleteLink: Incomplete link
+  invalidLink: Invalid link
+  passwordReset: Password reset
   privacy: Privacy
+  resetPassword: Reset password
   withState: "{{title}}: {{status}}"
 privacy:
   description: Choose what we collect on this device.
@@ -76,21 +150,23 @@ privacy:
   title: Privacy
 shell:
   accountFallback: Account
+  apps:
+    label: Agora apps
+    studio: Studio
   auth:
+    createAccount: Request an invitation
+    forgotPassword: Forgot password?
     login:
       title: Log in
+    register:
+      description: Access is currently by invitation. We’ll contact you when yours is available.
+      title: Join the Agora invitation list
+    reset:
+      description: You’ll receive an email link to choose a new password.
+      title: Reset your password
   brand: Agora
   closeAuthentication: Close dialog
-  closeNavigation: Close navigation
-  collapseNavigation: Collapse navigation
-  expandNavigation: Expand navigation
-  home: Home
-  homeTitle: Home
   logout: Log out
-  manageAccount: Manage your account
-  manageAccountFor: Manage account for {{name}}
-  navigation: Agora navigation
-  openNavigation: Open navigation
   privacy: Privacy
   sessionDowntime: Account unavailable during maintenance.
   sessionLoading: Loading account

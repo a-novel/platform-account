@@ -8,20 +8,32 @@ const locales = [
   {
     locale: "en-US",
     routes: [
-      ["/", "Home"],
+      ["/", "Your Agora account"],
       ["/?auth=login", "Log in"],
+      ["/?auth=register", "Join the Agora invitation list"],
+      ["/?auth=reset", "Reset password"],
       ["/account", "Log in"],
-      ["/?auth=unknown&email=private@example.test", "Home"],
+      ["/?auth=unknown&email=private@example.test", "Your Agora account"],
+      ["/ext/account/create", "Create account: Incomplete link"],
+      ["/ext/password/reset", "Reset password: Incomplete link"],
+      ["/ext/email/validate", "Confirm email: Incomplete link"],
+      ["/ext/password/reset?result=invalid", "Reset password: Invalid link"],
       ["/page-that-does-not-exist", "Page not found"],
     ],
   },
   {
     locale: "fr-FR",
     routes: [
-      ["/", "Accueil"],
+      ["/", "Votre compte Agora"],
       ["/?auth=login", "Connectez-vous"],
+      ["/?auth=register", "Rejoignez la liste d’invitation Agora"],
+      ["/?auth=reset", "Réinitialiser le mot de passe"],
       ["/account", "Connectez-vous"],
-      ["/?auth=unknown&email=private@example.test", "Accueil"],
+      ["/?auth=unknown&email=private@example.test", "Votre compte Agora"],
+      ["/ext/account/create", "Créer un compte: Lien incomplet"],
+      ["/ext/password/reset", "Réinitialiser le mot de passe: Lien incomplet"],
+      ["/ext/email/validate", "Confirmer le courriel: Lien incomplet"],
+      ["/ext/password/reset?result=invalid", "Réinitialiser le mot de passe: Lien invalide"],
       ["/page-that-does-not-exist", "Page introuvable"],
     ],
   },
@@ -29,8 +41,10 @@ const locales = [
 
 /** Fixed checkpoint names, so a copy change shows as a reviewable diff. */
 const checkpoints: Partial<Record<string, string>> = {
-  "/": "home",
+  "/": "welcome",
   "/?auth=login": "login",
+  "/?auth=register": "join-the-agora-invitation-list",
+  "/?auth=reset": "reset-password",
 };
 
 /** Opens a route and checks its tab title. A capturing run also records the route's checkpoint. */

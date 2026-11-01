@@ -3,40 +3,37 @@ import { createShellController, readyAuthenticationModel } from "./controller.sv
 
 import { describe, expect, it, vi } from "vitest";
 
+const links = {
+  homeHref: "/",
+  accountHref: "/account",
+  logoutAction: "/logout",
+  privacyHref: "/privacy",
+  apps: { studio: "https://studio.example.test" },
+};
+
 describe("createShellController", () => {
   it("accepts semantic shell transitions", () => {
     const onAuthViewChange = vi.fn();
-    const onRailChange = vi.fn();
-    const onDrawerChange = vi.fn();
-    let url = new URL("https://template.example.test/base/?document=42&menu=open&returnTo=%2Faccount#selection");
+    let url = new URL("https://account.example.test/base/?document=42&returnTo=%2Faccount#selection");
     const authentication = createAuthenticationPanelController({
       model: readyAuthenticationModel("login"),
       action: "/auth",
       allowNativeSubmission: false,
     });
     const controller = createShellController({
-      model: {
-        activeNavigation: "home",
-        authView: "login",
-        drawerOpen: false,
-        rail: "expanded",
-        session: { status: "anonymous" },
-      },
-      homeHref: "/",
-      accountHref: "/account",
-      privacyHref: "/privacy",
-      logoutAction: "/logout",
+      ...links,
+      model: { authView: "login", session: { status: "anonymous" } },
       authentication,
       allowNativeLogout: false,
       onAuthViewChange,
-      onRailChange,
-      onDrawerChange,
       getUrl: () => url,
     });
 
-    expect(controller.authenticationHref("login")).toBe("/base/?document=42&returnTo=%2Faccount&auth=login#selection");
-    expect(controller.navigationHref(false)).toBe("/base/?document=42&returnTo=%2Faccount#selection");
-    url = new URL("https://template.example.test/base/account?auth=login");
+    expect(controller.state.apps).toEqual({ studio: "https://studio.example.test" });
+    expect(controller.authenticationHref("register")).toBe(
+      "/base/?document=42&returnTo=%2Faccount&auth=register#selection"
+    );
+    url = new URL("https://account.example.test/base/account?auth=login");
     expect(controller.authenticationHref(null)).toBe("/base/account");
 
     controller.authenticationDialog.close();
@@ -44,20 +41,10 @@ describe("createShellController", () => {
     expect(controller.authenticationDialog.state.open).toBe(false);
     expect(onAuthViewChange).toHaveBeenCalledExactlyOnceWith(null);
 
-    controller.navigationDialog.open();
-    expect(onDrawerChange).toHaveBeenCalledExactlyOnceWith(true);
-    controller.toggleRail();
-    expect(controller.state.model).toMatchObject({ drawerOpen: true, rail: "collapsed" });
-    expect(controller.navigationDialog.state.open).toBe(true);
-    expect(onRailChange).toHaveBeenCalledExactlyOnceWith("collapsed");
-
-    controller.navigationDialog.close();
-    expect(controller.state.model.drawerOpen).toBe(false);
-    controller.navigationDialog.toggle();
-    controller.navigationDialog.open();
-    expect(controller.navigationDialog.state.open).toBe(true);
-    controller.navigationDialog.toggle();
-    expect(controller.navigationDialog.state.open).toBe(false);
+    controller.appList.open();
+    expect(controller.appList.state.open).toBe(true);
+    controller.appList.close();
+    expect(controller.appList.state.open).toBe(false);
 
     controller.authenticationDialog.open();
     controller.authenticationDialog.open();
@@ -70,7 +57,7 @@ describe("createShellController", () => {
     expect(onAuthViewChange.mock.calls).toEqual([[null], ["login"], [null], ["login"]]);
 
     for (const session of [{ status: "anonymous" }, { status: "loading" }, { status: "error" }] as const) {
-      controller.synchronizeRoute({ activeNavigation: "home", authView: null, session });
+      controller.synchronizeRoute({ authView: null, session });
       expect(controller.logout()).toBe(false);
       expect(controller.state.model.session).toEqual(session);
     }
@@ -80,21 +67,12 @@ describe("createShellController", () => {
     const onAuthViewChange = vi.fn();
     const authentication = createAuthenticationPanelController({
       model: readyAuthenticationModel("login"),
-      action: "/auth",
+      action: "/auth/login",
       allowNativeSubmission: false,
     });
     const controller = createShellController({
-      model: {
-        activeNavigation: "home",
-        authView: null,
-        drawerOpen: false,
-        rail: "expanded",
-        session: { status: "anonymous" },
-      },
-      homeHref: "/",
-      accountHref: "/account",
-      privacyHref: "/privacy",
-      logoutAction: "/logout",
+      ...links,
+      model: { authView: null, session: { status: "anonymous" } },
       authentication,
       resolveAuthentication: (view) => ({
         model: readyAuthenticationModel(view),
@@ -104,41 +82,32 @@ describe("createShellController", () => {
       onAuthViewChange,
     });
 
-    controller.openAuthentication("login");
-    expect(controller.state.model.authView).toBe("login");
+    controller.openAuthentication("register");
+    expect(controller.state.model.authView).toBe("register");
     expect(controller.authentication.state).toEqual({
-      model: { journey: "login", state: { status: "ready" } },
-      action: "/auth/login",
+      model: { journey: "register", state: { status: "ready" } },
+      action: "/auth/register",
     });
-    expect(onAuthViewChange).toHaveBeenCalledExactlyOnceWith("login");
+    expect(onAuthViewChange).toHaveBeenCalledExactlyOnceWith("register");
 
-    controller.openAuthentication("login");
+    controller.openAuthentication("register");
     controller.authenticationDialog.close();
     expect(onAuthViewChange).toHaveBeenLastCalledWith(null);
 
-    controller.synchronizeRail("collapsed");
-    controller.synchronizeRail("collapsed");
-    controller.navigationDialog.open();
-    expect(controller.state.model.rail).toBe("collapsed");
-
     controller.synchronizeRoute({
-      activeNavigation: null,
-      authView: "login",
+      authView: "reset",
       session: { status: "authenticated", displayName: "Maya Chen" },
       authentication: {
-        model: readyAuthenticationModel("login"),
-        action: "/auth/login?returnTo=%2Faccount",
+        model: readyAuthenticationModel("reset"),
+        action: "/auth/reset",
       },
     });
-    expect(controller.state.model).toMatchObject({
-      activeNavigation: null,
-      authView: "login",
-      rail: "collapsed",
-      drawerOpen: true,
+    expect(controller.state.model).toEqual({
+      authView: "reset",
       session: { status: "authenticated", displayName: "Maya Chen" },
     });
-    expect(controller.authentication.state.action).toBe("/auth/login?returnTo=%2Faccount");
-    expect(onAuthViewChange.mock.calls).toEqual([["login"], [null]]);
+    expect(controller.authentication.state.action).toBe("/auth/reset");
+    expect(onAuthViewChange.mock.calls).toEqual([["register"], [null]]);
 
     expect(controller.logout()).toBe(false);
     expect(controller.state.model.session.status).toBe("anonymous");
@@ -150,17 +119,8 @@ describe("createShellController", () => {
       action: "/auth",
     });
     const controller = createShellController({
-      model: {
-        activeNavigation: "home",
-        authView: null,
-        drawerOpen: false,
-        rail: "expanded",
-        session: { status: "authenticated", displayName: "Maya Chen" },
-      },
-      homeHref: "/",
-      accountHref: "/account",
-      privacyHref: "/privacy",
-      logoutAction: "/logout",
+      ...links,
+      model: { authView: null, session: { status: "authenticated", displayName: "Maya Chen" } },
       authentication,
     });
 

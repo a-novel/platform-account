@@ -133,7 +133,7 @@ jobs:
       statuses: write
       id-token: write
     env:
-      COMPOSE_PROJECT_NAME: template-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_PROJECT_NAME: account-e2e-${{ github.run_id }}-${{ github.run_attempt }}
     outputs:
       artifact-id: ${{ steps.test.outputs.artifact-id }}
     steps:
@@ -142,7 +142,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           compose_file: builds/compose.e2e.yaml
-          report_artifact: template-browser-report
+          report_artifact: account-browser-report
           drive_ci_provider: ${{ vars.VISUAL_CI_PROVIDER }}
           drive_ci_account: ${{ vars.VISUAL_CI_ACCOUNT }}
           drive_maintenance_provider: ${{ vars.VISUAL_MAINTENANCE_PROVIDER }}
