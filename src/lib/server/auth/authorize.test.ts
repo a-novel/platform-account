@@ -228,16 +228,16 @@ describe("authorization endpoint", () => {
   });
 
   const failures = [
-    ["the session check fails", 503, "temporarily_unavailable"],
-    ["the code issue is rate-limited", 429, "temporarily_unavailable"],
-    ["the code issue fails", 500, "server_error"],
-    ["the code issue refuses the caller", 403, "server_error"],
+    ["the session check fails", "temporarily_unavailable", 503, false],
+    ["the code issue is rate-limited", "temporarily_unavailable", 429, true],
+    ["the code issue fails", "server_error", 500, true],
+    ["the code issue refuses the caller", "server_error", 403, true],
   ] as const;
 
-  it.each(failures)("returns %s to the client as %s", async (failure, status, error) => {
+  it.each(failures)("returns %s to the client as %s", async (_, error, status, sessionChecked) => {
     const { event } = request(query, sessionCookies);
     fetchService.mockResolvedValueOnce(Response.json({ redirect_uri: callback }));
-    if (failure !== "the session check fails") fetchService.mockResolvedValueOnce(Response.json(identity));
+    if (sessionChecked) fetchService.mockResolvedValueOnce(Response.json(identity));
     fetchService.mockResolvedValueOnce(new Response(null, { status }));
 
     await expect(outcome(event)).resolves.toEqual({
