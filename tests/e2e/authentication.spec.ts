@@ -185,14 +185,14 @@ test("dialog history and keyboard dismissal restore the shell focus", async ({ p
   await expect(trigger).toBeFocused();
 });
 
-test("the header lists the Agora apps", async ({ page }) => {
+test("the header opens each Agora app at its sign-in page", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Agora apps", exact: true }).click();
   const apps = page.getByRole("navigation", { name: "Agora apps" });
   await expect(apps).toBeVisible();
   await expect(apps.getByRole("link", { name: "Studio", exact: true })).toHaveAttribute(
     "href",
-    "https://studio.example.test"
+    "https://studio.example.test/auth/sign-in"
   );
   await page.keyboard.press("Escape");
   await expect(apps).toBeHidden();
