@@ -1,4 +1,4 @@
-# Contributing to platform-template
+# Contributing to platform-account
 
 This document is about working on a platform's code, copy and tests. Read the
 [project overview](./README.md) first. The [developer guide](https://a-novel-kit.github.io/stack/)
@@ -138,7 +138,7 @@ so a failure names its concern.
 
 CI runs on pull requests and in the merge queue. Open a draft pull request to check work in progress.
 The `with-feature-env` label publishes the pull request's image as
-`ghcr.io/a-novel/platform-template:pr-<number>` for its current commit, and a push removes the label.
+`ghcr.io/a-novel/platform-account:pr-<number>` for its current commit, and a push removes the label.
 
 ### End-to-end journeys
 
@@ -184,16 +184,16 @@ pinned version, and keep the suite and its services on the host:
 
 ```bash
 PLAYWRIGHT_VERSION="$(node -p 'require("playwright/package.json").version')"
-podman run --detach --rm --name template-playwright --network host --init \
+podman run --detach --rm --name account-playwright --network host --init \
   --volume "$PWD:$PWD:z" --workdir "$PWD" \
   "mcr.microsoft.com/playwright:v$PLAYWRIGHT_VERSION-noble" \
   node node_modules/playwright/cli.js run-server --port 3123 --host 127.0.0.1
 PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:3123/ PLAYWRIGHT_SNAPSHOT_DIR=.visual/snapshots \
   E2E_CONTAINER_ENGINE=podman pnpm test:e2e --update-snapshots=none
-podman stop template-playwright
+podman stop account-playwright
 ```
 
 ## Questions?
 
-[Open an issue](https://github.com/a-novel/platform-template/issues) and include the relevant logs and
+[Open an issue](https://github.com/a-novel/platform-account/issues) and include the relevant logs and
 environment details.

@@ -1,100 +1,81 @@
-# Platform Template
+<p align="center">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="https://raw.githubusercontent.com/a-novel-kit/ui-assets/master/packages/images/files/banner/960h/agora-banner.png"
+    />
+    <source
+      media="(prefers-color-scheme: light)"
+      srcset="https://raw.githubusercontent.com/a-novel-kit/ui-assets/master/packages/images/files/banner/960h/agora-banner-light.png"
+    />
+    <img
+      alt="Agora"
+      src="https://raw.githubusercontent.com/a-novel-kit/ui-assets/master/packages/images/files/banner/960h/agora-banner-light.png"
+      width="1010"
+    />
+  </picture>
+</p>
 
-A scaffold for new A-Novel platforms: fork it, rename it, and replace its sample account page with your own screens.
+# Account platform
+
+Where Agora users manage their account and complete the links Agora emails them.
 
 [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/agorastoryverse)](https://twitter.com/agorastoryverse)
 [![Discord](https://img.shields.io/discord/1315240114691248138?logo=discord)](https://discord.gg/rp4Qr8cA)
 
 <hr />
 
-![GitHub repo file or directory count](https://img.shields.io/github/directory-file-count/a-novel/platform-template)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/a-novel/platform-template)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/a-novel/platform-template/main.yaml)
-[![codecov](https://codecov.io/gh/a-novel/platform-template/graph/badge.svg)](https://codecov.io/gh/a-novel/platform-template)
+![GitHub repo file or directory count](https://img.shields.io/github/directory-file-count/a-novel/platform-account)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/a-novel/platform-account)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/a-novel/platform-account/main.yaml)
+[![codecov](https://codecov.io/gh/a-novel/platform-account/graph/badge.svg)](https://codecov.io/gh/a-novel/platform-account)
 
-![Coverage graph](https://codecov.io/gh/a-novel/platform-template/graphs/sunburst.svg)
-
-## Using this template
-
-This repository starts a new platform. It is not an application you deploy as is. The rest of this
-README shows the standard platform README your fork inherits.
-
-**1. Create the repository.** Follow the developer guide's
-[repository runbook](https://a-novel-kit.github.io/stack/sysadmins/create-repository), which creates a
-`platform-*` repository from this template.
-
-**2. Rename the platform.** Replace `platform-template` with the new repository's name, then each
-placeholder below. This command lists every `template` occurrence:
-
-```bash
-git grep -n -i template -- . ':!pnpm-lock.yaml'
-```
-
-| What                | Where                                                               | Why it changes                                                                         |
-| ------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Session cookies     | `src/lib/server/auth/session.ts`                                    | Platforms share one origin behind the gateway, so each names its cookies after itself. |
-| Rail preference key | `src/lib/client/shell/rail-preference.ts`                           | Local storage is shared across that origin too.                                        |
-| Product name        | `src/lib/i18n/locales/*/common.yaml`                                | `pageTitles.brand`, `shell.brand` and `shell.navigation` name the product users see.   |
-| Test placeholders   | `builds/compose.e2e.yaml`, the tests, `.github/workflows/main.yaml` | Test accounts, project names and report names follow the platform name.                |
-| Product logo        | `src/routes/+layout.svelte`, `src/routes/(app)/screen.svelte`       | The favicon, banner and icon show the Agora logo until the product has its own.        |
-
-**3. Replace the sample route.** The account page under `src/routes/(app)/account/` is the sample
-authenticated route. Its server module is `src/lib/server/auth/account-route.ts`, and its copy sits
-under `authUi.account` in the catalogs. `tests/e2e/authentication.spec.ts` covers it end to end. Copy
-its shape for your first screen, then remove what you no longer use.
-
-**4. Keep the foundations.** The foundations every platform shares stay as they are, along with the
-container, CI and the test setup. The [contribution guide](./CONTRIBUTING.md#where-code-goes) names
-the home of each foundation.
-
-**5. Verify.** Run the checks:
-
-```bash
-pnpm format
-pnpm lint
-a-novel test --type=pnpm -y
-a-novel build -y
-```
-
-Then delete this section and describe the new platform in this README.
+![Coverage graph](https://codecov.io/gh/a-novel/platform-account/graphs/sunburst.svg)
 
 ## What it does
 
-A platform is one of the A-Novel browser applications. Its SvelteKit server renders the pages and
-is the only caller of the platform services. Session tokens stay in server-set cookies and never
-reach browser code.
+The account platform is the browser application where users of every Agora app manage their
+account: the password, the email address and its pending change, and the privacy settings. It also
+serves the pages behind the authentication service's email links, which create an account, reset a
+password and confirm a new email. Its header lists the other Agora apps.
 
-This one is a working skeleton: a navigation shell, a login dialog and a protected account page,
-backed by the authentication service. The template ships as one container image. The
-[published Storybook](https://a-novel.github.io/platform-template/) shows every screen state.
+Its SvelteKit server renders the pages and is the only caller of the authentication service.
+Session tokens stay in server-set cookies and never reach browser code.
+
+The platform ships as one container image. The
+[published Storybook](https://a-novel.github.io/platform-account/) shows every screen state.
 
 ## Deploying
 
-Run a tag from the [latest release](https://github.com/a-novel/platform-template/releases/latest) and
-point it at the authentication service. The image runs as a non-root user on port `3000`, and its
-container healthcheck calls `/ping`.
+Run a tag from the [latest release](https://github.com/a-novel/platform-account/releases/latest) and
+point it at the authentication service and at Studio. The image runs as a non-root user on port
+`3000`, and its container healthcheck calls `/ping`.
 
 ```bash
-PLATFORM_TEMPLATE_VERSION="vX.Y.Z"
+PLATFORM_ACCOUNT_VERSION="vX.Y.Z"
 AUTHENTICATION_SERVICE_URL="https://authentication.example.com"
-podman run --detach --name platform-template --publish 3000:3000 \
+STUDIO_URL="https://studio.example.com"
+podman run --detach --name platform-account --publish 3000:3000 \
   --env AUTHENTICATION_SERVICE_URL="$AUTHENTICATION_SERVICE_URL" \
-  ghcr.io/a-novel/platform-template:"$PLATFORM_TEMPLATE_VERSION"
+  --env STUDIO_URL="$STUDIO_URL" \
+  ghcr.io/a-novel/platform-account:"$PLATFORM_ACCOUNT_VERSION"
 ```
 
-### Configuration
+The authentication service builds its email links from its `PLATFORM_AUTH_URL`, which names this
+platform's public URL.
 
-The server reads its configuration from the environment when it starts. Nothing is compiled into the
-browser bundle.
+### Configuration
 
 | Name                              | Required       | Description                                                                                                                |
 | --------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `AUTHENTICATION_SERVICE_URL`      | Yes            | Base HTTP or HTTPS URL for the authentication service.                                                                     |
+| `STUDIO_URL`                      | Yes            | Public URL of Studio, which the app list opens.                                                                            |
 | `AUTHENTICATION_SERVICE_AUDIENCE` | Cloud Run      | Audience of the Google ID token the authentication service's IAM admits. The platform fetches it from the metadata server. |
 | `SERVICE_TOKEN_PATH`              | Kubernetes     | File of the projected service token, sent instead of a Google ID token. The platform reads it on every call.               |
 | `ADDRESS_HEADER`, `XFF_DEPTH`     | Behind a proxy | Where the visitor's IP is read, which the platform forwards for rate limiting. On Cloud Run, `X-Forwarded-For` and `1`.    |
 | `HEALTHCHECK_TIMEOUT_MS`          | No             | Downstream timeout from 100 to 10,000 ms. The default is 2,000.                                                            |
 | `DOWNTIME_URL`                    | No             | Planned downtime document. The default is the one infra publishes.                                                         |
+| `PUBLIC_SENTRY_DSN`               | No             | Sentry project of the browser telemetry. Without it, the browser reports nothing and asks no consent.                      |
 | `OTEL`                            | No             | `true` records traces, continuing an incoming `traceparent`.                                                               |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`     | No             | Exports traces over OTLP/HTTP to this base URL instead of stdout.                                                          |
 | `OTEL_EXPORTER_OTLP_HEADERS`      | No             | Headers each export sends, such as the backend's key. Inject it as a secret.                                               |
@@ -122,8 +103,8 @@ pnpm install
 pnpm dev
 ```
 
-The committed `.env.local` reads the service port from that environment. `pnpm storybook` serves the
-screen catalog at `http://localhost:6006`.
+The committed `.env.local` reads the service port from that environment, and points the app list at
+Studio's development server. `pnpm storybook` serves the screen catalog at `http://localhost:6006`.
 
 ## Contributing
 
