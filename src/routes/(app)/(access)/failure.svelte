@@ -10,6 +10,7 @@
     homeHref,
     retryHref,
     downtime,
+    authorizationRequest = false,
   }: {
     status: number;
     loginHref: string;
@@ -17,6 +18,8 @@
     retryHref: string;
     /** Set when a planned downtime stopped the services the page needs. */
     downtime?: { end: Date; timeZone: string };
+    /** Set when Authentication refused an authorization request without a redirect URI to send the visitor back to. */
+    authorizationRequest?: boolean;
   } = $props();
   const { t } = getI18nContext();
 </script>
@@ -28,6 +31,19 @@
         <Link href={homeHref}>{t("access.home")}</Link>
       {/snippet}
     </DowntimeState>
+  </div>
+{:else if authorizationRequest}
+  <div class="error-page">
+    <StatusState
+      tone="error"
+      title={t("access.authorizationRequest.title")}
+      description={t("access.authorizationRequest.description")}
+      headingLevel={1}
+    >
+      {#snippet actions()}
+        <Link href={homeHref}>{t("access.home")}</Link>
+      {/snippet}
+    </StatusState>
   </div>
 {:else if status === 403 || status === 503}
   <ProtectedPage

@@ -7,6 +7,9 @@ x-postgres-environment: &postgres-environment
   POSTGRES_HOST_AUTH_METHOD: scram-sha-256
   POSTGRES_INITDB_ARGS: --auth=scram-sha-256
 
+# Stands in for the cluster's service-account issuer, so Authentication requires a service token as in production.
+x-service-token-issuer: &service-token-issuer http://service-token-issuer:8080
+
 x-postgres-healthcheck: &postgres-healthcheck
   test: ["CMD", "pg_isready", "-U", "postgres"]
   interval: 1s
@@ -52,6 +55,19 @@ services:
       POSTGRES_TLS_ENABLED: "false"
       APP_MASTER_KEY: fec0681a2f57242211c559ca347721766f8a3acd8ed2e63b36b3768051c702ca
 
+  service-token-issuer:
+    image: ghcr.io/a-novel/service-authentication/service-token-issuer:v2.23.0@sha256:2c5b45d9f187b83b0c5f8d1dc3907b778bae8ada10d1cb3bb1c515a6cfaf2685
+    ports:
+      - "127.0.0.1:14101:8080"
+    environment:
+      SERVICE_TOKEN_ISSUER: *service-token-issuer
+    # Podman ignores the image's own check, so the wait of authentication needs this one.
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8080/.well-known/openid-configuration"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
   # Holds the network authentication joins, so the outage journey's restart leaves the host's
   # interfaces alone. A new interface makes Chromium abort loading pages with ERR_NETWORK_CHANGED.
   authentication-network:
@@ -74,6 +90,8 @@ services:
         condition: service_healthy
       mailserver:
         condition: service_started
+      service-token-issuer:
+        condition: service_healthy
     command:
       - sh
       - -c
@@ -99,3 +117,10 @@ services:
       SMTP_FORCE_UNENCRYPTED: "true"
       # Every journey comes from one address and mints its own anonymous session.
       REST_RATE_LIMITS_ENABLED: "false"
+      SERVICE_TOKEN_ISSUER: *service-token-issuer
+      SERVICE_TOKEN_AUDIENCE: authentication
+      SERVICE_TOKEN_CALLERS: system:serviceaccount:account:web,system:serviceaccount:client:web
+      # The stub client of tests/e2e/client.ts. Its redirect URI has a query, which every response keeps.
+      OAUTH_CLIENTS: >-
+        {"client": {"redirectURI": "http://127.0.0.1:4181/auth/callback?tenant=e2e",
+        "caller": "system:serviceaccount:client:web"}}

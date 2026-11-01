@@ -20,4 +20,6 @@ export interface ShellApps {
 export interface ShellViewModel {
   authView: AuthDialogView | null;
   session: ShellSession;
+  /** Set while the dialog logs the visitor in for another Agora app's authorization request. */
+  authorizationRequest?: boolean;
 }

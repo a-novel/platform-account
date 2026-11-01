@@ -69,6 +69,10 @@ The platform server is the only caller of platform services.
   server-only unless it is declared public. ESLint rejects `import.meta.env`, because Vite inlines
   every value read through it into the browser bundle.
 - Pages render user content as text. ESLint rejects `{@html}`.
+- No page may be framed, since any page can open the login dialog. The server hook refuses framing
+  on every response.
+- The only external redirect is an authorization response, to a redirect URI the authentication
+  service matched against its client registry.
 - A service outage keeps the session cookies and shows a recoverable state. Only a rejected token
   logs the user out.
 - Logout revokes the session's refresh token, then clears the cookies. A failed revocation still
@@ -147,8 +151,12 @@ and create accounts from real invitation emails. They also replay the essential 
 disabled. One case stops the authentication container to simulate an outage, so the suite runs one
 worker at a time.
 
-Install the browser once, then run the suite. It needs ports 4173 to 4175, 4180, 14100, and 14825
-free. With Docker Compose, omit `E2E_CONTAINER_ENGINE`.
+A local issuer signs the service tokens the authentication service requires, as the cluster does in
+production. The authorization journeys sign a stub client in, which the service's registry holds and
+`tests/e2e/client.ts` serves.
+
+Install the browser once, then run the suite. It needs ports 4173 to 4175, 4180, 4181, 14100, 14101,
+and 14825 free. With Docker Compose, omit `E2E_CONTAINER_ENGINE`.
 
 ```bash
 pnpm exec playwright install --with-deps chromium

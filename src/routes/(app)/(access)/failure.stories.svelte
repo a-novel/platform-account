@@ -19,3 +19,4 @@
 
 <Story name="Maintenance" args={{ downtime: { end: new Date("2026-10-12T08:30:00Z"), timeZone: "UTC" } }} />
 <Story name="Page not found" args={{ status: 404 }} />
+<Story name="Authorization request refused" args={{ status: 400, authorizationRequest: true }} />

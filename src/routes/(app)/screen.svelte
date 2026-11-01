@@ -70,6 +70,7 @@
     if (!authActionsVisible) return undefined;
     if (model.authView === "register") return t("shell.auth.register.description");
     if (model.authView === "reset") return t("shell.auth.reset.description");
+    if (model.authorizationRequest) return t("shell.auth.login.authorizationDescription");
     return undefined;
   });
 

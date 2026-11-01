@@ -69,6 +69,15 @@ describe("request hook", () => {
     await expect(response.text()).resolves.toBe("private page");
   });
 
+  it.each([200, 303, 400])("refuses framing of every response with status %s", async (status) => {
+    const response = await handle({
+      event: event("/authorize?client_id=studio"),
+      resolve: vi.fn().mockResolvedValue(new Response(null, { status })),
+    });
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("content-security-policy")).toBe("frame-ancestors 'none'");
+  });
+
   it("preserves caching policy on ordinary pages", async () => {
     const response = await handle({
       event: event("/"),

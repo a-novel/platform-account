@@ -1,4 +1,4 @@
-import { loginHref, safeReturnTo } from "./navigation";
+import { loginHref, returnsToAuthorization, safeReturnTo } from "./navigation";
 
 import { describe, expect, it } from "vitest";
 
@@ -23,6 +23,22 @@ describe("authentication navigation", () => {
   it.each(returnDestinations)("sanitizes %s", (value, expected) => {
     expect(safeReturnTo(value)).toBe(expected);
   });
+
+  const authorizationReturns = [
+    ["/authorize?response_type=code&client_id=studio", true],
+    ["/authorize", true],
+    ["/authorize/other", false],
+    ["/account?next=/authorize", false],
+    ["//attacker.invalid/authorize", false],
+    [null, false],
+  ] as const;
+
+  it.each(authorizationReturns)(
+    "tells whether a login returning to %s continues an authorization request",
+    (value, expected) => {
+      expect(returnsToAuthorization(value)).toBe(expected);
+    }
+  );
 
   it("opens the existing modal with the safe target encoded once", () => {
     expect(loginHref("/account?panel=email")).toBe("/?auth=login&returnTo=%2Faccount%3Fpanel%3Demail");

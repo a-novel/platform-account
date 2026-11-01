@@ -51,8 +51,9 @@ export function shortCodePageTitle(t: TFunction<"common">, { journey, state }: S
 }
 
 /** Uses a readable error description instead of a bare HTTP status in the tab. */
-export function errorPageTitle(t: TFunction<"common">, status: number, downtime = false) {
+export function errorPageTitle(t: TFunction<"common">, status: number, downtime = false, authorizationRequest = false) {
   if (downtime) return t("access.downtime.title");
+  if (authorizationRequest) return t("access.authorizationRequest.title");
 
   switch (status) {
     case 404:

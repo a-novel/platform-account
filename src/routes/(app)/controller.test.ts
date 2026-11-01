@@ -97,6 +97,7 @@ describe("createShellController", () => {
     controller.synchronizeRoute({
       authView: "reset",
       session: { status: "authenticated", displayName: "Maya Chen" },
+      authorizationRequest: true,
       authentication: {
         model: readyAuthenticationModel("reset"),
         action: "/auth/reset",
@@ -105,6 +106,7 @@ describe("createShellController", () => {
     expect(controller.state.model).toEqual({
       authView: "reset",
       session: { status: "authenticated", displayName: "Maya Chen" },
+      authorizationRequest: true,
     });
     expect(controller.authentication.state.action).toBe("/auth/reset");
     expect(onAuthViewChange.mock.calls).toEqual([["register"], [null]]);

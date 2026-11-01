@@ -26,6 +26,7 @@ export interface ShellControllerState {
 export interface ShellRouteState {
   session: ShellSession;
   authView: AuthDialogView | null;
+  authorizationRequest?: boolean;
   authentication?: AuthenticationPanelControllerState;
 }
 
@@ -113,7 +114,12 @@ export function createShellController({
       return allowNativeLogout;
     },
     synchronizeRoute(routeState) {
-      model = { ...model, session: routeState.session, authView: routeState.authView };
+      model = {
+        ...model,
+        session: routeState.session,
+        authView: routeState.authView,
+        authorizationRequest: routeState.authorizationRequest,
+      };
       if (routeState.authentication) {
         authentication.synchronize(routeState.authentication.model, routeState.authentication.action);
       }

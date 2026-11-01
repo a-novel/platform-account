@@ -6,6 +6,10 @@ export default interface Resources {
         "description": "Log in to view this page.",
         "title": "Agora account required"
       },
+      "authorizationRequest": {
+        "description": "The app that sent you here made a request Agora doesn’t recognize. Go back to that app and try again.",
+        "title": "This request to log in can’t be accepted"
+      },
       "downtime": {
         "title": "Maintenance in progress"
       },
@@ -194,6 +198,7 @@ export default interface Resources {
         "createAccount": "Request an invitation",
         "forgotPassword": "Forgot password?",
         "login": {
+          "authorizationDescription": "Log in with your Agora account to return to the app you came from.",
           "title": "Log in"
         },
         "register": {

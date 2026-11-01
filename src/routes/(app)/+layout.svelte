@@ -1,5 +1,6 @@
 <script lang="ts">
   import { readAuthenticationActionModel } from "#lib/application/auth/action-data.js";
+  import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
   import { normalizeAuthUrl, readAuthView, withAuthView } from "#lib/application/shell/auth-dialog-state.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
@@ -33,7 +34,11 @@
     initialRoute.authentication ?? authenticationState("login")
   );
   const controller = createShellController({
-    model: { authView: initialRoute.authView, session: initialRoute.session },
+    model: {
+      authView: initialRoute.authView,
+      session: initialRoute.session,
+      authorizationRequest: initialRoute.authorizationRequest,
+    },
     homeHref: resolve(""),
     accountHref: resolve("account"),
     logoutAction: resolve("auth/logout"),
@@ -79,6 +84,7 @@
     return {
       session: data.session,
       authView,
+      authorizationRequest: returnsToAuthorization(parameters.get("returnTo")),
       authentication: authView ? authenticationState(authView) : undefined,
     };
   }

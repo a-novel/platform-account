@@ -7,8 +7,8 @@ import type { RequestEvent } from "@sveltejs/kit";
 import type { Handle } from "@sveltejs/kit/hooks";
 
 /**
- * Gives each request its own locale and translations, hands its trace to the page, keeps email-link
- * pages out of caches and referrers, and traces the response.
+ * Gives each request its own locale and translations, hands its trace to the page, refuses framing,
+ * keeps email-link pages out of caches and referrers, and traces the response.
  */
 export const handle: Handle = async ({ event, resolve }) => {
   const locale = resolveLocale(event.request.headers.get("accept-language"));
@@ -20,6 +20,10 @@ export const handle: Handle = async ({ event, resolve }) => {
   const response = await resolve(event, {
     transformPageChunk: ({ html }) => html.replace("%lang%", locale).replace("%trace%", trace),
   });
+
+  // Any page can open the login dialog, so no page may be framed by a site overlaying it (RFC 9700 §4.16).
+  response.headers.set("x-frame-options", "DENY");
+  response.headers.append("content-security-policy", "frame-ancestors 'none'");
 
   traceResponse(event, response);
   return event.url.pathname.startsWith("/ext/") ? secureShortCodeResponse(response) : response;
