@@ -13,7 +13,7 @@ import {
   tokenCreateAnon,
 } from "@a-novel/service-authentication-rest";
 
-import { test as base } from "playwright/test";
+import { type Page, test as base } from "playwright/test";
 import { z } from "zod";
 
 const api = new AuthenticationApi("http://127.0.0.1:14100", callerFetch(accountCaller));
@@ -25,6 +25,13 @@ export const compose = createCompose();
 /** Reads a delivered email's link, which must point at the application under test. */
 export function emailLink(email: string, pathname: string): Promise<string> {
   return deliveredLink(email, pathname, { mailpit: "http://127.0.0.1:14825", origin: "http://127.0.0.1:4173" });
+}
+
+/** Fills and submits the login dialog. */
+export async function login(page: Page, account: { email: string; password: string }) {
+  await page.getByLabel(/^Email address/).fill(account.email);
+  await page.getByLabel(/^Password/).fill(account.password);
+  await page.getByRole("dialog").getByRole("button", { name: "Log in", exact: true }).click();
 }
 
 async function completeInvitation(email: string, link: string) {

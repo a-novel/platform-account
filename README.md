@@ -39,6 +39,11 @@ account: the password, the email address and its pending change, and the privacy
 serves the pages behind the authentication service's email links, which create an account, reset a
 password and confirm a new email. Its header lists the other Agora apps.
 
+It is also where every other Agora app signs people in. An app sends the visitor to `/authorize`
+with an OAuth 2.0 authorization request ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749#section-4.1),
+with PKCE). The platform logs the visitor in if needed, then sends them back to the app with a
+one-time code, which the app's server exchanges with the authentication service.
+
 Its SvelteKit server renders the pages and is the only caller of the authentication service.
 Session tokens stay in server-set cookies and never reach browser code.
 

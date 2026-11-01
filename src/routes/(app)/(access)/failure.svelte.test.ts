@@ -1,3 +1,4 @@
+import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
 import Failure from "./failure.svelte";
@@ -20,4 +21,22 @@ describe("error page presentation", () => {
     render(Failure, { ...links, status }, withLocale("fr"));
     await expect.element(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
   });
+
+  it.each(["en", "fr"] as const)(
+    "explains a refused authorization request in %s and links home only",
+    async (locale) => {
+      const { t } = createI18n(locale);
+      render(Failure, { ...links, status: 400, authorizationRequest: true }, withLocale(locale));
+
+      await expect
+        .element(page.getByRole("heading", { name: t("access.authorizationRequest.title"), level: 1 }))
+        .toBeVisible();
+      await expect.element(page.getByText(t("access.authorizationRequest.description"))).toBeVisible();
+      const hrefs = page
+        .getByRole("link")
+        .elements()
+        .map((link) => link.getAttribute("href"));
+      expect(hrefs).toEqual(["/"]);
+    }
+  );
 });

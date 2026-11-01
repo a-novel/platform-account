@@ -10,6 +10,8 @@ declare global {
       message: string;
       /** Set when the request failed because a planned downtime stopped the services it needs. */
       downtime?: boolean;
+      /** Set when Authentication refused an authorization request the platform may not redirect. */
+      authorizationRequest?: boolean;
     }
     interface PageData {
       authorization?: AuthorizationStatus;

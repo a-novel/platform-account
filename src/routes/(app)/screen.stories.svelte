@@ -224,6 +224,19 @@
   <StoryHarness initialModel={{ ...anonymous, authView: "login" }} />
 </Story>
 
+<Story
+  name="Login for another app (desktop)"
+  exportName="LoginForAppDesktop"
+  globals={reviewStoryGlobals.desktop}
+  asChild
+>
+  <StoryHarness initialModel={{ ...anonymous, authView: "login", authorizationRequest: true }} />
+</Story>
+
+<Story name="Login for another app (mobile)" exportName="LoginForAppMobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness initialModel={{ ...anonymous, authView: "login", authorizationRequest: true }} />
+</Story>
+
 <Story name="Login submitting" asChild play={verifySubmittingIsLocked}>
   <StoryHarness
     initialModel={{ ...anonymous, authView: "login" }}

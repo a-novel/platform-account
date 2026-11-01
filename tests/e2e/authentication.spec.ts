@@ -1,15 +1,9 @@
-import { compose, emailLink, expect, test } from "./fixtures";
+import { compose, emailLink, expect, login, test } from "./fixtures";
 import { accountCaller, callerFetch } from "./service-token";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
 import type { Page } from "playwright/test";
-
-async function login(page: Page, account: { email: string; password: string }) {
-  await page.getByLabel(/^Email address/).fill(account.email);
-  await page.getByLabel(/^Password/).fill(account.password);
-  await page.getByRole("dialog").getByRole("button", { name: "Log in", exact: true }).click();
-}
 
 async function choosePassword(page: Page, password: string) {
   await page.getByLabel(/^New password/).fill(password);

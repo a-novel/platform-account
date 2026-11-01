@@ -23,7 +23,12 @@ const configs = Object.entries(downtimes).map(([state, { port }]) => platformSer
 
 export default defineConfig({
   ...configs[0],
-  globalSetup: ["./tests/e2e/setup.ts", "./tests/e2e/service-token.ts", "./tests/e2e/downtime.ts"],
+  globalSetup: [
+    "./tests/e2e/setup.ts",
+    "./tests/e2e/service-token.ts",
+    "./tests/e2e/downtime.ts",
+    "./tests/e2e/client.ts",
+  ],
   // The first server builds the application, and the downtime variants serve that same build.
   webServer: configs
     .flatMap(({ webServer }) => webServer ?? [])

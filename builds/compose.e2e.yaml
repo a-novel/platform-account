@@ -119,4 +119,8 @@ services:
       REST_RATE_LIMITS_ENABLED: "false"
       SERVICE_TOKEN_ISSUER: *service-token-issuer
       SERVICE_TOKEN_AUDIENCE: authentication
-      SERVICE_TOKEN_CALLERS: system:serviceaccount:account:web
+      SERVICE_TOKEN_CALLERS: system:serviceaccount:account:web,system:serviceaccount:client:web
+      # The stub client of tests/e2e/client.ts. Its redirect URI has a query, which every response keeps.
+      OAUTH_CLIENTS: >-
+        {"client": {"redirectURI": "http://127.0.0.1:4181/auth/callback?tenant=e2e",
+        "caller": "system:serviceaccount:client:web"}}

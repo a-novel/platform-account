@@ -20,7 +20,7 @@
   const currentPath = $derived(page.url.pathname + page.url.search);
 </script>
 
-<PageTitle title={errorPageTitle(t, page.status, downtime !== undefined)} />
+<PageTitle title={errorPageTitle(t, page.status, downtime !== undefined, page.error?.authorizationRequest)} />
 
 <Screen
   status={page.status}
@@ -28,4 +28,5 @@
   homeHref={resolve("")}
   retryHref={currentPath}
   {downtime}
+  authorizationRequest={page.error?.authorizationRequest}
 />

@@ -70,6 +70,7 @@
     if (!authActionsVisible) return undefined;
     if (model.authView === "register") return t("shell.auth.register.description");
     if (model.authView === "reset") return t("shell.auth.reset.description");
+    if (model.authorizationRequest) return t("shell.auth.login.authorizationDescription");
     return undefined;
   });
 
@@ -140,7 +141,9 @@
 
 {#snippet authActions()}
   {#if model.authView === "login"}
-    {@render authLink("reset", t("shell.auth.forgotPassword"))}
+    {#if !model.authorizationRequest}
+      {@render authLink("reset", t("shell.auth.forgotPassword"))}
+    {/if}
     {@render authLink("register", t("shell.auth.createAccount"))}
   {:else if model.authView}
     {@render authLink("login", t("shell.signIn"))}

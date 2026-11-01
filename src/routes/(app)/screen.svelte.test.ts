@@ -198,6 +198,19 @@ describe("account shell screen", () => {
     expect(dialog.element().scrollWidth).toBeLessThanOrEqual(dialog.element().clientWidth);
   });
 
+  it.each(["en", "fr"] as const)(
+    "logs a visitor in for another app with the invitation request alone in %s",
+    async (locale) => {
+      const { t } = createI18n(locale);
+      render(Screen, { controller: controller({ authView: "login", authorizationRequest: true }) }, withLocale(locale));
+
+      const dialog = page.getByRole("dialog", { name: t("shell.auth.login.title") });
+      await expect.element(dialog).toHaveAccessibleDescription(t("shell.auth.login.authorizationDescription"));
+      await expect.element(dialog.getByRole("link", { name: t("shell.auth.createAccount") })).toBeVisible();
+      await expect.element(dialog.getByRole("link", { name: t("shell.auth.forgotPassword") })).not.toBeInTheDocument();
+    }
+  );
+
   it("keeps a review dialog open when its controller rejects dismissal", async () => {
     const shell = controller({ authView: "login" });
     shell.authenticationDialog.close = () => {};

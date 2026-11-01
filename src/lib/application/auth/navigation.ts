@@ -25,6 +25,14 @@ export function safeReturnTo(value: string | null | undefined): string {
   }
 }
 
+/**
+ * Tells whether a login returns to the authorization endpoint, `/authorize`, which then sends the visitor back to the
+ * Agora app that asked for the login.
+ */
+export function returnsToAuthorization(returnTo: string | null | undefined): boolean {
+  return new URL(safeReturnTo(returnTo), placeholderOrigin).pathname === "/authorize";
+}
+
 /** Opens the shell's existing login modal and returns to a safe page after authentication. */
 export function loginHref(returnTo: string): string {
   return "/?" + new URLSearchParams({ auth: "login", returnTo: safeReturnTo(returnTo) });

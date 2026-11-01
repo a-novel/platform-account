@@ -2,6 +2,9 @@ access:
   anonymous:
     description: Connectez-vous pour consulter cette page.
     title: Compte Agora requis
+  authorizationRequest:
+    description: L’application qui vous a envoyé ici a fait une demande qu’Agora ne reconnaît pas. Revenez à cette application et réessayez.
+    title: Cette demande de connexion ne peut pas être acceptée
   downtime:
     title: Maintenance en cours
   error:
@@ -159,6 +162,7 @@ shell:
     createAccount: Demander une invitation
     forgotPassword: Mot de passe oublié ?
     login:
+      authorizationDescription: Connectez-vous avec votre compte Agora pour revenir à l’application d’où vous venez.
       title: Connectez-vous
     register:
       description: L’accès se fait actuellement sur invitation. Vous recevrez un courriel lorsque la vôtre sera disponible.
