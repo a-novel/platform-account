@@ -102,7 +102,8 @@ describe("account shell screen", () => {
     render(Screen, { controller: controller({ session: { ...maya, displayName } }) }, withLocale());
 
     const brand = page.getByRole("img", { name: "Agora" });
-    await expect.element(brand).toHaveAttribute("width", "24");
+    await expect.element(brand).toHaveAttribute("width", "96");
+    expect(brand.element().getBoundingClientRect().left).toBeGreaterThanOrEqual(16);
     const account = page.getByRole("link", { name: displayName });
     await expect.element(account).toBeVisible();
 
@@ -113,6 +114,22 @@ describe("account shell screen", () => {
       expect(bounds.bottom).toBeLessThanOrEqual(header.bottom);
     }
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  });
+
+  it("fits the wordmark beside the login control at 320px", async () => {
+    await page.viewport(320, 844);
+    render(Screen, { controller: controller() }, withLocale("fr"));
+    await expect.element(page.getByRole("img", { name: "Agora" })).toBeVisible();
+
+    const header = page.getByRole("banner").element().getBoundingClientRect();
+    const login = page
+      .getByRole("banner")
+      .getByRole("link", { name: "Se connecter" })
+      .element()
+      .getBoundingClientRect();
+    expect(login.right).toBeLessThanOrEqual(header.right);
+    expect(login.bottom).toBeLessThanOrEqual(header.bottom);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
   });
 
   it("renders URL-controlled auth views and delegates view changes", async () => {
