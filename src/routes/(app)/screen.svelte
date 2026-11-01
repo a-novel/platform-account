@@ -20,9 +20,7 @@
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import agoraBanner from "@a-novel-kit/ui-images/files/banner/80h/agora-banner.png";
-  import agoraIcon48 from "@a-novel-kit/ui-images/files/icon/48x48/agora-icon.png";
   import studioIcon48 from "@a-novel-kit/ui-images/files/icon/48x48/studio-icon.png";
-  import agoraIcon96 from "@a-novel-kit/ui-images/files/icon/96x96/agora-icon.png";
   import {
     Avatar,
     Button,
@@ -156,14 +154,6 @@
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The layout resolves the shell's links. -->
     <a class="brand" href={controller.state.homeHref}>
       <img class="brand-banner" src={agoraBanner} width="96" height="24" alt={t("shell.brand")} />
-      <img
-        class="brand-icon"
-        src={agoraIcon48}
-        srcset={`${agoraIcon48} 1x, ${agoraIcon96} 2x`}
-        width="24"
-        height="24"
-        alt={t("shell.brand")}
-      />
     </a>
 
     <div class="top-bar-actions">
@@ -267,7 +257,7 @@
     flex: none;
     align-items: center;
     border-radius: var(--radius-sm);
-    padding: var(--space-1);
+    padding-inline: var(--space-2);
   }
 
   .brand:focus-visible {
@@ -275,21 +265,11 @@
     outline-offset: var(--focus-ring-offset);
   }
 
-  .brand-banner,
-  .brand-icon {
-    display: block;
-    object-fit: contain;
-  }
-
   .brand-banner {
+    display: block;
     inline-size: calc(var(--control-height-sm) * 3);
     block-size: var(--control-height-sm);
-  }
-
-  .brand-icon {
-    display: none;
-    inline-size: var(--icon-size-lg);
-    block-size: var(--icon-size-lg);
+    object-fit: contain;
   }
 
   .top-bar-actions,
@@ -324,7 +304,10 @@
     white-space: nowrap;
   }
 
-  :global(.account-link) {
+  /* The avatar fills the link's height, so the link keeps the header's control height. Scoped under
+     the header so it outranks the button's own size padding. */
+  .top-bar :global(.account-link) {
+    padding-block: 0;
     min-inline-size: 0;
     max-inline-size: 16rem;
   }
@@ -336,8 +319,11 @@
     inset-block-start: 0;
   }
 
+  /* A column, so a page can fill the height left under the header and center itself in it. */
   .main-content {
+    display: flex;
     flex: 1;
+    flex-direction: column;
     outline: none;
     min-inline-size: 0;
   }
@@ -349,15 +335,7 @@
 
   @container account-shell (max-width: 47.999rem) {
     .top-bar {
-      padding-inline: var(--space-2);
-    }
-
-    .brand-banner {
-      display: none;
-    }
-
-    .brand-icon {
-      display: block;
+      padding: var(--space-4);
     }
 
     /* The avatar names the account on narrow screens; the name stays for assistive technology. */

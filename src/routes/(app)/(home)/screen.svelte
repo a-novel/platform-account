@@ -23,11 +23,12 @@
 </div>
 
 <style>
+  /* Fills the height under the header, so the welcome sits in its middle. */
   .home {
     display: grid;
+    flex: 1;
     place-items: center;
     box-sizing: border-box;
     padding: var(--space-6);
-    min-block-size: 60svh;
   }
 </style>

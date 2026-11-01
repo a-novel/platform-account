@@ -94,7 +94,7 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     const header = canvas.getByRole("banner");
-    await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "24");
+    await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
     await expect(within(header).getByRole("link", { name: "Maya Chen" })).toBeVisible();
     await expect(within(header).getByRole("button", { name: t("shell.logout") })).toBeVisible();
     await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
