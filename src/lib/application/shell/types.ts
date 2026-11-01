@@ -20,9 +20,6 @@ export interface ShellApps {
 export interface ShellViewModel {
   authView: AuthDialogView | null;
   session: ShellSession;
-  /**
-   * Set while the dialog logs the visitor in for another Agora app's authorization request. The login then offers
-   * the invitation request alone beside it.
-   */
+  /** Set while the dialog logs the visitor in for another Agora app's authorization request. */
   authorizationRequest?: boolean;
 }

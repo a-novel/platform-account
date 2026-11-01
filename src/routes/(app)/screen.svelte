@@ -141,9 +141,7 @@
 
 {#snippet authActions()}
   {#if model.authView === "login"}
-    {#if !model.authorizationRequest}
-      {@render authLink("reset", t("shell.auth.forgotPassword"))}
-    {/if}
+    {@render authLink("reset", t("shell.auth.forgotPassword"))}
     {@render authLink("register", t("shell.auth.createAccount"))}
   {:else if model.authView}
     {@render authLink("login", t("shell.signIn"))}

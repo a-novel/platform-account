@@ -55,8 +55,8 @@ test("a client signs a visitor in through the account platform, then again witho
   await expect(dialog).toHaveAccessibleDescription(
     "Log in with your Agora account to return to the app you came from."
   );
+  await expect(dialog.getByRole("link", { name: "Forgot password?" })).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Request an invitation" })).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Forgot password?" })).toHaveCount(0);
   await screenshot(page, info, "authorization-login");
 
   await login(page, account);

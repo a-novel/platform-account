@@ -199,15 +199,15 @@ describe("account shell screen", () => {
   });
 
   it.each(["en", "fr"] as const)(
-    "logs a visitor in for another app with the invitation request alone in %s",
+    "tells a visitor logging in for another app that the login returns them there in %s",
     async (locale) => {
       const { t } = createI18n(locale);
       render(Screen, { controller: controller({ authView: "login", authorizationRequest: true }) }, withLocale(locale));
 
       const dialog = page.getByRole("dialog", { name: t("shell.auth.login.title") });
       await expect.element(dialog).toHaveAccessibleDescription(t("shell.auth.login.authorizationDescription"));
+      await expect.element(dialog.getByRole("link", { name: t("shell.auth.forgotPassword") })).toBeVisible();
       await expect.element(dialog.getByRole("link", { name: t("shell.auth.createAccount") })).toBeVisible();
-      await expect.element(dialog.getByRole("link", { name: t("shell.auth.forgotPassword") })).not.toBeInTheDocument();
     }
   );
 
