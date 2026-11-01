@@ -6,9 +6,10 @@ import { Meta, ResponsiveStoryPair } from "@a-novel-kit/uikit-storybook";
 
 # Account screen
 
-The account screen is the template's sample authenticated route. It shows the account's email,
-recaps the verified session and ends it. Session details sit directly on the page background, and a
-retrieval failure never blocks the logout form.
+Account settings read in one column: password, email, then the session details and logout. Each
+form sits on a shared panel, with its feedback right above the submit button. The session details sit
+on the page background, and a failure to load them never blocks the forms. Section names are short,
+and descriptions only say what happens next.
 
 ## Account status
 
@@ -34,10 +35,60 @@ retrieval failure never blocks the logout form.
   startAt="account-claims"
 />
 
+## Password
+
+### Validation errors
+
+<ResponsiveStoryPair
+  desktop={AccountStories.PasswordValidationError}
+  mobile={AccountStories.PasswordValidationError}
+  meta={AccountStories}
+  startAt="account-password"
+/>
+
+### Submitting
+
+<ResponsiveStoryPair
+  desktop={AccountStories.PasswordSubmitting}
+  mobile={AccountStories.PasswordSubmitting}
+  meta={AccountStories}
+  startAt="account-password"
+/>
+
+### Service error
+
+<ResponsiveStoryPair
+  desktop={AccountStories.PasswordServiceError}
+  mobile={AccountStories.PasswordServiceError}
+  meta={AccountStories}
+  startAt="account-password"
+/>
+
+### Incorrect current password
+
+A rejected current password shows beside its field, with no form-level alert.
+
+<ResponsiveStoryPair
+  desktop={AccountStories.IncorrectCurrentPassword}
+  mobile={AccountStories.IncorrectCurrentPassword}
+  meta={AccountStories}
+  startAt="account-password"
+/>
+
+### Success
+
+<ResponsiveStoryPair
+  desktop={AccountStories.PasswordSuccess}
+  mobile={AccountStories.PasswordSuccess}
+  meta={AccountStories}
+  startAt="account-password"
+/>
+
 ## Email
 
 The card shows the email the account uses and, until it is confirmed, replaced or expired, the email
-waiting for confirmation.
+waiting for confirmation. The form sends a confirmation link. The email change completes on the
+secure email-link page.
 
 ### Change pending
 
@@ -50,11 +101,47 @@ waiting for confirmation.
 
 ### Email unavailable
 
-A failure to read the email leaves the rest of the page usable.
+A failure to read the email leaves the form usable.
 
 <ResponsiveStoryPair
   desktop={AccountStories.EmailUnavailable}
   mobile={AccountStories.EmailUnavailable}
+  meta={AccountStories}
+  startAt="account-email"
+/>
+
+### Validation error
+
+<ResponsiveStoryPair
+  desktop={AccountStories.EmailValidationError}
+  mobile={AccountStories.EmailValidationError}
+  meta={AccountStories}
+  startAt="account-email"
+/>
+
+### Submitting
+
+<ResponsiveStoryPair
+  desktop={AccountStories.EmailSubmitting}
+  mobile={AccountStories.EmailSubmitting}
+  meta={AccountStories}
+  startAt="account-email"
+/>
+
+### Service error
+
+<ResponsiveStoryPair
+  desktop={AccountStories.EmailServiceError}
+  mobile={AccountStories.EmailServiceError}
+  meta={AccountStories}
+  startAt="account-email"
+/>
+
+### Confirmation pending
+
+<ResponsiveStoryPair
+  desktop={AccountStories.EmailConfirmationPending}
+  mobile={AccountStories.EmailConfirmationPending}
   meta={AccountStories}
   startAt="account-email"
 />

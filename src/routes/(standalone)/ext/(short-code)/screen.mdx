@@ -1,0 +1,155 @@
+import * as SecureLinkStories from "./screen.stories.svelte";
+
+import { Meta, ResponsiveStoryPair } from "@a-novel-kit/uikit-storybook";
+
+<Meta of={SecureLinkStories} />
+
+# Secure email links
+
+Secure email links open standalone pages, without the Studio shell.
+
+The current outcome is the page’s only heading and its browser-tab title. Password instructions appear
+only while a password is needed. Failures explain the next useful step. An outage asks the visitor to
+wait, and an unusable link offers a fresh one.
+
+Validation examples use the API package’s password schema, including both length boundaries.
+Rejected, expired, and already-used links share the same error because the API does not distinguish
+them. Email confirmation has no editable form. Account creation logs the user in before continuing to
+Studio.
+
+## Supported journeys
+
+### Complete registration
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.CompleteRegistrationDesktop}
+  mobile={SecureLinkStories.CompleteRegistrationMobile}
+  meta={SecureLinkStories}
+/>
+
+### Updating email
+
+Opening the email link starts the confirmation at once. These previews hold the pending state, and its
+outcomes appear below.
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.UpdatingEmailDesktop}
+  mobile={SecureLinkStories.UpdatingEmailMobile}
+  meta={SecureLinkStories}
+/>
+
+### Complete password reset
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.CompletePasswordResetDesktop}
+  mobile={SecureLinkStories.CompletePasswordResetMobile}
+  meta={SecureLinkStories}
+/>
+
+## Link status
+
+### Missing details
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.MissingLinkDetails}
+  mobile={SecureLinkStories.MissingLinkDetails}
+  meta={SecureLinkStories}
+/>
+
+### Invalid
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.InvalidLink}
+  mobile={SecureLinkStories.InvalidLink}
+  meta={SecureLinkStories}
+/>
+
+## Submission
+
+### Registration submitting
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.RegistrationSubmitting}
+  mobile={SecureLinkStories.RegistrationSubmitting}
+  meta={SecureLinkStories}
+/>
+
+### Password reset submitting
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.PasswordResetSubmitting}
+  mobile={SecureLinkStories.PasswordResetSubmitting}
+  meta={SecureLinkStories}
+/>
+
+### Registration validation errors
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.ValidationError}
+  mobile={SecureLinkStories.ValidationError}
+  meta={SecureLinkStories}
+/>
+
+### Password length limit
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.PasswordLengthLimit}
+  mobile={SecureLinkStories.PasswordLengthLimit}
+  meta={SecureLinkStories}
+/>
+
+### Password reset validation errors
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.PasswordResetValidationError}
+  mobile={SecureLinkStories.PasswordResetValidationError}
+  meta={SecureLinkStories}
+/>
+
+### Registration unavailable
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.RegistrationUnavailable}
+  mobile={SecureLinkStories.RegistrationUnavailable}
+  meta={SecureLinkStories}
+/>
+
+### Password reset unavailable
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.ServiceError}
+  mobile={SecureLinkStories.ServiceError}
+  meta={SecureLinkStories}
+/>
+
+### Registration success
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.RegistrationSuccess}
+  mobile={SecureLinkStories.RegistrationSuccess}
+  meta={SecureLinkStories}
+/>
+
+### Email update success
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.EmailUpdateSuccess}
+  mobile={SecureLinkStories.EmailUpdateSuccess}
+  meta={SecureLinkStories}
+/>
+
+### Email update unavailable
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.EmailUpdateUnavailable}
+  mobile={SecureLinkStories.EmailUpdateUnavailable}
+  meta={SecureLinkStories}
+/>
+
+### Password reset success
+
+<ResponsiveStoryPair
+  desktop={SecureLinkStories.PasswordResetSuccess}
+  mobile={SecureLinkStories.PasswordResetSuccess}
+  meta={SecureLinkStories}
+/>

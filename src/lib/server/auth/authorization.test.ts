@@ -17,7 +17,7 @@ const cookies = { get: vi.fn(), set: vi.fn(), delete: vi.fn() } as unknown as Re
 const event = {
   cookies,
   getClientAddress: () => "192.0.2.1",
-  url: new URL("https://template.test/account?panel=email"),
+  url: new URL("https://account.test/account?panel=email"),
 };
 const session = {
   status: "available",

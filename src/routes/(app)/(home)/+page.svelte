@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { loginHref } from "#lib/application/auth/navigation.js";
   import PageTitle from "#lib/ui/PageTitle.svelte";
 
   import Screen from "./screen.svelte";
@@ -8,6 +9,6 @@
   const { t } = getI18nContext();
 </script>
 
-<PageTitle title={t("shell.homeTitle")} />
+<PageTitle title={t("home.title")} />
 
-<Screen />
+<Screen loginHref={loginHref("/account")} />

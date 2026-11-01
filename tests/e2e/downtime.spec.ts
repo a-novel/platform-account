@@ -35,7 +35,7 @@ test.describe("scheduled maintenance", () => {
 test.describe("maintenance in progress", () => {
   test.use({ baseURL: platformOrigin("started") });
 
-  test("locks sign-in and the account until operators clear it", async ({ page }, info) => {
+  test("locks sign-in, the account and emailed links until operators clear it", async ({ page }, info) => {
     await page.goto("/");
     await expect(banner(page, "Maintenance in progress")).toContainText("Jan 12, 2099");
 
@@ -44,10 +44,14 @@ test.describe("maintenance in progress", () => {
     await expect(page.getByLabel(/^Email address/)).toHaveCount(0);
     await screenshot(page, info, "maintenance-sign-in");
 
-    const response = await page.goto("/account");
-    expect(response?.status()).toBe(503);
-    await expect(page).toHaveTitle("Maintenance in progress | Agora");
-    await expect(page.getByRole("heading", { level: 1, name: "Temporarily unavailable" })).toBeVisible();
+    for (const route of ["/account", "/ext/account/create"]) {
+      await test.step(route, async () => {
+        const response = await page.goto(route);
+        expect(response?.status()).toBe(503);
+        await expect(page).toHaveTitle("Maintenance in progress | Agora");
+        await expect(page.getByRole("heading", { level: 1, name: "Temporarily unavailable" })).toBeVisible();
+      });
+    }
     await screenshot(page, info, "maintenance-page");
   });
 });

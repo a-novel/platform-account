@@ -1,7 +1,8 @@
 import { accountDisplayFromHandle } from "#lib/application/shell/account-display.js";
-import type { ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
+import type { ShellApps, ShellSession } from "#lib/application/shell/types.js";
 
 import { readPlatformDowntime } from "../downtime";
+import { getRuntimeConfig } from "../runtime-config.server";
 import { type AuthenticationEvent, getAuthenticationContext } from "./context";
 import type { ResolvedSession } from "./session";
 
@@ -21,19 +22,21 @@ const shellAuthorization = {
 
 type ShellEvent = AuthenticationEvent & Pick<RequestEvent, "locals">;
 
-/** The rail destination each page belongs to. */
-const navigation: Record<string, ShellViewModel["activeNavigation"]> = { "/": "home", "/privacy": "privacy" };
-
-/** Loads the shell's navigation state, session display and page authorization. */
+/** Loads the shell's app list, session display and page authorization. */
 export const loadShell = async (event: ShellEvent) => {
   const session = await readShellSession(event);
 
-  return {
-    activeNavigation: navigation[event.url.pathname] ?? null,
-    session,
-    authorization: shellAuthorization[session.status],
-  };
+  return { apps: readApps(), session, authorization: shellAuthorization[session.status] };
 };
+
+/** Lists the Agora apps, or none while the runtime configuration is invalid. */
+function readApps(): ShellApps | null {
+  try {
+    return { studio: getRuntimeConfig().studioUrl };
+  } catch {
+    return null;
+  }
+}
 
 /** Resolves the session the shell shows, exposing only a display identity to the browser. */
 async function readShellSession(event: ShellEvent): Promise<ShellSession> {

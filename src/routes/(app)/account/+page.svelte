@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { mergeAccountAction } from "#lib/application/auth/account-action.js";
   import { loginHref } from "#lib/application/auth/navigation.js";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { resolve } from "$app/paths";
@@ -12,16 +13,21 @@
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 
-  let { data } = $props();
+  let { data, form } = $props();
   const { t } = getI18nContext();
+  const actions = {
+    password: "?/password",
+    email: "?/email",
+    logout: "?/logout",
+  };
   const controller = createAccountScreenController({
-    model: untrack(() => data.accountModel),
-    logoutAction: "?/logout",
+    model: untrack(() => mergeAccountAction(data.accountModel, form)),
+    actions,
   });
 
   $effect(() => {
-    const model = data.accountModel;
-    untrack(() => controller.synchronize(model));
+    const model = mergeAccountAction(data.accountModel, form);
+    untrack(() => controller.synchronize(model, actions));
   });
 
   const currentPath = $derived(page.url.pathname + page.url.search);

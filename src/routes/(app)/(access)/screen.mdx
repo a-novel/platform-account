@@ -11,7 +11,7 @@ authentication outcomes. Each preview holds one decision fixed.
 
 ## Setup once
 
-The application layout creates one authorization controller from server-returned page data and installs
+The Studio layout creates one authorization controller from server-returned page data and installs
 one `AuthorizationProvider`. Only server modules use the authentication SDK. UIKit receives a
 decision, never credentials or an API client.
 
@@ -40,7 +40,7 @@ receive HTTP 403. A failed verification receives HTTP 503 and keeps the session.
 A protected route wraps its UI in `screen.svelte` from this directory. The wrapper inherits the
 provider. Its `when` prop further restricts access, and its `controller` prop supplies a fixed
 preview state. Its `unavailable` snippet renders **public** content only. The account page uses it
-for the failed recap and its logout form, and the logout action does its own server work.
+for the blank forms and the failed recap, and each submission still checks access on the server.
 
 ## Conditional content
 
@@ -56,7 +56,7 @@ Neither creates another application provider:
 </script>
 
 <AuthorizationBoundary>
-  <!-- Account-only content. It is not instantiated while access is unresolved or denied. -->
+  <!-- Account-only content; not instantiated while access is unresolved or denied. -->
 </AuthorizationBoundary>
 ```
 

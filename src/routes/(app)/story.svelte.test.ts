@@ -10,19 +10,14 @@ import { page, userEvent } from "vitest/browser";
 import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 
-const shell: ShellViewModel = {
-  activeNavigation: "home",
-  authView: "login",
-  drawerOpen: false,
-  rail: "expanded",
-  session: { status: "anonymous" },
-};
+const shell: ShellViewModel = { authView: "login", session: { status: "anonymous" } };
 
 describe("fixed visual review controllers", () => {
-  it("keeps the login journey open and ready after dismissal and submission", async () => {
+  it("keeps the login journey open and ready after dismissal, navigation, and submission", async () => {
     render(ShellStory, { initialModel: shell }, withLocale());
     await page.getByRole("link", { name: "Close dialog" }).click();
     await userEvent.keyboard("{Escape}");
+    await page.getByRole("link", { name: "Request an invitation" }).click();
     await expect.element(page.getByRole("dialog", { name: "Log in" })).toBeVisible();
     await page.getByRole("textbox", { name: "Email address" }).fill("review@example.test");
     await page.getByLabelText(/^Password/).fill("long memorable test password");

@@ -17,6 +17,7 @@ const runtimeEnvironmentSchema = {
     maximum: 10_000,
     minimum: 100,
   }),
+  studioUrl: environmentHttpUrl("STUDIO_URL"),
 } as const;
 
 /** RuntimeConfig contains the platform's private server settings. */

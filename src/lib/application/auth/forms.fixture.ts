@@ -3,6 +3,8 @@ import type { ValidationResult } from "./forms";
 const validFields = {
   email: "creator@example.test",
   password: "new-password",
+  confirmPassword: "new-password",
+  currentPassword: "old-password",
 };
 
 /** Builds the form data a browser submits for these field values. */

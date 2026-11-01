@@ -1,7 +1,16 @@
-import { validateLogin } from "#lib/application/auth/forms.js";
-import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
+import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
+import type { AuthenticationJourney, AuthenticationPanelModel } from "#lib/application/auth/types.js";
 
 import { type PasswordInputController, createPressedController } from "@a-novel-kit/uikit";
+
+const validators = {
+  login: validateLogin,
+  register: validateInvitationRequest,
+  reset: validateEmailRequest,
+} satisfies Record<AuthenticationJourney, unknown>;
+
+/** A form in one of these statuses is sending or done, and ignores another submission. */
+const lockedStatuses = new Set(["submitting", "pending-email", "recorded"]);
 
 /** State rendered by the authentication form component. */
 export interface AuthenticationPanelControllerState {
@@ -47,14 +56,14 @@ export function createAuthenticationPanelController({
       action = nextAction;
     },
     submit(form) {
-      if (model.state.status === "submitting") return false;
+      if (lockedStatuses.has(model.state.status)) return false;
 
-      const result = validateLogin(form);
+      const result = validators[model.journey](form);
       if (!result.success) {
-        model = { ...model, state: { status: "validation-error", issues: result.issues } };
+        model = { ...model, state: { status: "validation-error", issues: result.issues } } as AuthenticationPanelModel;
         return false;
       }
-      model = { ...model, state: { status: "submitting" } };
+      model = { ...model, state: { status: "submitting" } } as AuthenticationPanelModel;
       return allowNativeSubmission;
     },
   };

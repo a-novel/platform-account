@@ -1,8 +1,10 @@
+import type { Locale } from "#lib/i18n/config.js";
+
 import { getRuntimeConfig } from "../runtime-config.server";
 import { serviceFetch } from "../service-fetch";
 import { AuthenticationSession, createSessionClient } from "./session";
 
-import { AuthenticationApi } from "@a-novel/service-authentication-rest";
+import { AuthenticationApi, Lang } from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
 
@@ -39,4 +41,9 @@ export function getAuthenticationContext(event: AuthenticationEvent): Authentica
 
   requestContexts.set(event.cookies, context);
   return context;
+}
+
+/** Picks the language the authentication service writes the visitor's emails in. */
+export function emailLanguage(locale: Locale): Lang {
+  return locale === "fr" ? Lang.Fr : Lang.En;
 }

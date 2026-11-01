@@ -8,11 +8,11 @@
   export interface ShellStoryProps {
     initialModel: ShellViewModel;
     initialAuthenticationModel?: AuthenticationPanelModel;
-    /** Whether the platform collects browser telemetry, which adds the Privacy destination. */
+    /** Whether the platform collects browser telemetry, which adds the Privacy link. */
     collectsTelemetry?: boolean;
     /** A started planned downtime, which the shell announces and locks the sign-in dialog for. */
     downtime?: { start: Date; end: Date };
-    /** Content after the home page, such as filler to scroll past sticky elements. */
+    /** Page content, such as filler to scroll past sticky elements. */
     children?: Snippet;
   }
 </script>
@@ -21,11 +21,12 @@
   import { setPlatformDowntime } from "#lib/ui/downtime.svelte.js";
   import { setTelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
-  import HomeScreen from "./(home)/screen.svelte";
   import { type ShellController, readyAuthenticationModel } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
   import { untrack } from "svelte";
+
+  import { createOpenController } from "@a-novel-kit/uikit";
 
   let { initialModel, initialAuthenticationModel, collectsTelemetry, downtime, children }: ShellStoryProps = $props();
 
@@ -47,8 +48,9 @@
         model: initialModel,
         homeHref: "#home",
         accountHref: "#account",
-        privacyHref: "#privacy",
         logoutAction: "#logout",
+        privacyHref: "#privacy",
+        apps: { studio: "#studio" },
       };
     },
     authentication: {
@@ -62,14 +64,6 @@
       synchronize: () => {},
       submit: () => false,
     },
-    navigationDialog: {
-      get state() {
-        return { open: initialModel.drawerOpen };
-      },
-      open: () => {},
-      close: () => {},
-      toggle: () => {},
-    },
     authenticationDialog: {
       get state() {
         return { open: initialModel.authView !== null };
@@ -78,19 +72,17 @@
       close: () => {},
       toggle: () => {},
     },
+    // The popover anchors to the button that opens it, so the app list opens for real.
+    appList: createOpenController(),
     openAuthentication: () => {},
     authenticationHref: (view) => `#${view ?? "home"}`,
-    navigationHref: (open) => (open ? "#navigation" : "#home"),
-    toggleRail: () => {},
     logout: () => false,
     synchronizeRoute: () => {},
-    synchronizeRail: () => {},
   };
 </script>
 
 <div class="story-frame">
   <Screen {controller}>
-    <HomeScreen />
     {@render children?.()}
   </Screen>
 </div>

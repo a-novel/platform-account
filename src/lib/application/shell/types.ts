@@ -11,11 +11,13 @@ export type ShellSession =
   | { status: "downtime" }
   | { status: "authenticated"; displayName: string; initials?: string };
 
+/** The address of each Agora app the shell's app list opens. */
+export interface ShellApps {
+  studio: string;
+}
+
 /** Serializable state consumed by the pure application shell. */
 export interface ShellViewModel {
-  activeNavigation: "home" | "privacy" | null;
-  rail: "expanded" | "collapsed";
-  drawerOpen: boolean;
   authView: AuthDialogView | null;
   session: ShellSession;
 }

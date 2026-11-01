@@ -1,6 +1,14 @@
 import type { AuthenticationValidation, FormIssue } from "./types";
 
-import { EmailSchema, TokenCreateRequestSchema } from "@a-novel/service-authentication-rest";
+import {
+  CredentialsCreateRequestSchema,
+  CredentialsUpdatePasswordRequestSchema,
+  EmailSchema,
+  PasswordSchema,
+  ShortCodeCreateRegisterRequestSchema,
+  TokenCreateRequestSchema,
+  WaitlistJoinRequestSchema,
+} from "@a-novel/service-authentication-rest";
 
 import { z } from "zod";
 
@@ -8,15 +16,41 @@ import { z } from "zod";
 export type ValidationResult<Value, Field extends string> =
   { success: true; value: Value } | { success: false; issues: readonly FormIssue<Field>[] };
 
-const loginSchema = TokenCreateRequestSchema.extend({ email: z.string().trim().toLowerCase().pipe(EmailSchema) });
+const emailSchema = z.string().trim().toLowerCase().pipe(EmailSchema);
+const loginSchema = TokenCreateRequestSchema.extend({ email: emailSchema });
+const emailRequestSchema = ShortCodeCreateRegisterRequestSchema.pick({ email: true }).extend({ email: emailSchema });
+const invitationRequestSchema = WaitlistJoinRequestSchema.pick({ email: true }).extend({
+  email: z.string().trim().pipe(WaitlistJoinRequestSchema.shape.email),
+});
+const passwordSchema = CredentialsCreateRequestSchema.pick({ password: true }).extend({
+  confirmPassword: PasswordSchema,
+});
+const matchingPasswords = ({ password, confirmPassword }: z.infer<typeof passwordSchema>) =>
+  password === confirmPassword;
+const confirmationError = { path: ["confirmPassword"], error: "passwordMismatch" };
+const newPasswordSchema = passwordSchema
+  .refine(matchingPasswords, confirmationError)
+  .transform(({ password }) => ({ password }));
+const passwordChangeSchema = CredentialsUpdatePasswordRequestSchema.extend({ confirmPassword: PasswordSchema })
+  .refine(matchingPasswords, confirmationError)
+  .transform(({ currentPassword, password }) => ({ currentPassword, password }));
 
 function validationMessage(issue: z.core.$ZodIssue, empty: boolean): AuthenticationValidation {
   if (issue.code === "too_big") return { feedback: "maxLength", limit: Number(issue.maximum) };
   if (issue.code === "too_small" && !empty) return { feedback: "minLength", limit: Number(issue.minimum) };
-  return { feedback: issue.path[0] === "email" ? "email" : "password" };
+  if (issue.code === "custom") return { feedback: "passwordMismatch" };
+  switch (issue.path[0]) {
+    case "email":
+      return { feedback: "email" };
+    case "currentPassword":
+      return { feedback: "currentPassword" };
+    case "confirmPassword":
+      return { feedback: "confirmPassword" };
+    default:
+      return { feedback: "password" };
+  }
 }
 
-/** Reads a form control as text. A missing or file control reads as empty. */
 function textValue(form: FormData, name: string): string {
   const value = form.get(name);
   return typeof value === "string" ? value : "";
@@ -43,3 +77,25 @@ function formValidator<Value, Field extends string>(schema: z.ZodType<Value>, fi
 
 /** Checks login fields against the service contract and normalizes the email. */
 export const validateLogin = formValidator(loginSchema, { email: "email", password: "password" } as const);
+
+/** Checks the email used by password-recovery requests. */
+export const validateEmailRequest = formValidator(emailRequestSchema, { email: "email" } as const);
+
+/** Preserves email casing for the service's case-sensitive membership checks. */
+export const validateInvitationRequest = formValidator(invitationRequestSchema, { email: "email" } as const);
+
+/** Returns email-update errors under the account screen's field name. */
+export const validateEmailUpdate = formValidator(emailRequestSchema, { email: "newEmail" } as const);
+
+/** Extends the service password-change request with confirmation, stripped from successful output. */
+export const validatePasswordChange = formValidator(passwordChangeSchema, {
+  currentPassword: "currentPassword",
+  password: "newPassword",
+  confirmPassword: "confirmPassword",
+} as const);
+
+/** Checks registration/reset passwords and strips the UI-only confirmation. */
+export const validateNewPassword = formValidator(newPasswordSchema, {
+  password: "newPassword",
+  confirmPassword: "confirmPassword",
+} as const);

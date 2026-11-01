@@ -1,9 +1,11 @@
 <script module lang="ts">
+  import type { AuthDialogView } from "#lib/application/shell/types.js";
+
   import type { ShellController } from "./controller.svelte";
 
   import type { Snippet } from "svelte";
 
-  /** Props for the pure platform shell. */
+  /** Props for the pure account shell. */
   export interface ShellProps {
     controller: ShellController;
     children?: Snippet;
@@ -19,9 +21,9 @@
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import agoraBanner from "@a-novel-kit/ui-images/files/banner/80h/agora-banner.png";
   import agoraIcon48 from "@a-novel-kit/ui-images/files/icon/48x48/agora-icon.png";
+  import studioIcon48 from "@a-novel-kit/ui-images/files/icon/48x48/studio-icon.png";
   import agoraIcon96 from "@a-novel-kit/ui-images/files/icon/96x96/agora-icon.png";
   import {
-    Alert,
     Avatar,
     Button,
     Dialog,
@@ -30,10 +32,11 @@
     IconButton,
     InlineMessage,
     NavList,
+    Popover,
     SkipLink,
   } from "@a-novel-kit/uikit";
 
-  import { House, LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, X } from "@lucide/svelte";
+  import { LayoutGrid, LogIn, LogOut, ShieldCheck, X } from "@lucide/svelte";
 
   let { controller, children }: ShellProps = $props();
 
@@ -42,29 +45,14 @@
   const stoppedUntil = $derived(platformDowntime?.started ? platformDowntime.downtime?.end : undefined);
 
   const model = $derived(controller.state.model);
-  const homeHref = $derived(controller.state.homeHref);
-  const accountHref = $derived(controller.state.accountHref);
-  const logoutAction = $derived(controller.state.logoutAction);
+  const authenticationState = $derived(controller.authentication.state.model.state.status);
+  const authActionsVisible = $derived(authenticationState !== "pending-email" && authenticationState !== "recorded");
 
   const componentId = $props.id();
-  const desktopNavigationId = `${componentId}-desktop-navigation`;
-  const drawerId = `${componentId}-navigation-drawer`;
   const authenticationId = `${componentId}-authentication`;
-  const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
   // Only a platform that collects browser telemetry asks for consent, so only it offers to change the answer.
-  const privacyItems = $derived(
-    hasTelemetryPreference()
-      ? [
-          {
-            href: controller.state.privacyHref,
-            label: t("shell.privacy"),
-            current: model.activeNavigation === "privacy",
-            icon: privacyIcon,
-          },
-        ]
-      : []
-  );
+  const collectsTelemetry = hasTelemetryPreference();
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
   /** The account widget's notice while the session is loading, unavailable or stopped for maintenance. */
   const sessionNotice = $derived.by(() => {
@@ -73,10 +61,19 @@
     if (model.session.status === "downtime") return { tone: "warning", message: t("shell.sessionDowntime") } as const;
     return null;
   });
-
-  function closeDrawerAfterNavigation(event: MouseEvent) {
-    if (event.target instanceof Element && event.target.closest("a")) controller.navigationDialog.close();
-  }
+  const authDialogTitle = $derived.by(() => {
+    if (authenticationState === "pending-email") return t("authUi.authentication.pendingTitle");
+    if (authenticationState === "recorded") return t("authUi.authentication.journeys.register.recordedTitle");
+    if (model.authView === "register") return t("shell.auth.register.title");
+    if (model.authView === "reset") return t("shell.auth.reset.title");
+    return t("shell.auth.login.title");
+  });
+  const authDialogDescription = $derived.by(() => {
+    if (!authActionsVisible) return undefined;
+    if (model.authView === "register") return t("shell.auth.register.description");
+    if (model.authView === "reset") return t("shell.auth.reset.description");
+    return undefined;
+  });
 
   function submitLogout(event: SubmitEvent) {
     if (!controller.logout()) event.preventDefault();
@@ -95,19 +92,70 @@
   }
 </script>
 
-{#snippet homeIcon()}<House size="var(--icon-size-sm)" />{/snippet}
+{#snippet studioIcon()}
+  <img class="app-icon" src={studioIcon48} width="24" height="24" alt="" />
+{/snippet}
 
-{#snippet privacyIcon()}<ShieldCheck size="var(--icon-size-sm)" />{/snippet}
+{#snippet accountWidget()}
+  <div class="account-widget" data-session={model.session.status}>
+    {#if sessionNotice}
+      <InlineMessage tone={sessionNotice.tone}>{sessionNotice.message}</InlineMessage>
+    {:else if authenticatedSession}
+      <Button class="account-link" variant="ghost" tone="neutral" size="sm" href={controller.state.accountHref}>
+        <!-- The name beside it labels the link, so the avatar stays silent. -->
+        <span class="account-avatar" aria-hidden="true">
+          <Avatar label={authenticatedSession.displayName} initials={authenticatedSession.initials} size="sm" />
+        </span>
+        <span class="account-name">{authenticatedSession.displayName}</span>
+      </Button>
+      <form class="logout-form" method="POST" action={controller.state.logoutAction} onsubmit={submitLogout}>
+        <IconButton label={t("shell.logout")} type="submit" variant="ghost" tone="neutral" size="sm">
+          <LogOut size="var(--icon-size-sm)" aria-hidden="true" />
+        </IconButton>
+      </form>
+    {:else}
+      <Button
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        href={controller.authenticationHref("login")}
+        onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication("login"))}
+      >
+        <LogIn size="var(--icon-size-sm)" aria-hidden="true" />
+        <span>{t("shell.signIn")}</span>
+      </Button>
+    {/if}
+  </div>
+{/snippet}
 
-{#snippet accountIcon()}
-  {#if authenticatedSession}
-    <Avatar label={authenticatedSession.displayName} initials={authenticatedSession.initials} size="sm" />
+{#snippet authLink(view: AuthDialogView, label: string)}
+  <Button
+    variant="ghost"
+    tone="neutral"
+    size="sm"
+    href={controller.authenticationHref(view)}
+    onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication(view))}
+  >
+    {label}
+  </Button>
+{/snippet}
+
+{#snippet authActions()}
+  {#if model.authView === "login"}
+    {@render authLink("reset", t("shell.auth.forgotPassword"))}
+    {@render authLink("register", t("shell.auth.createAccount"))}
+  {:else if model.authView}
+    {@render authLink("login", t("shell.signIn"))}
   {/if}
 {/snippet}
 
-{#snippet brand(compact: boolean)}
-  <span class="brand" class:compact>
-    {#if compact}
+<div class="shell">
+  <SkipLink href="#main-content">{t("shell.skipToContent")}</SkipLink>
+
+  <header class="top-bar">
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The layout resolves the shell's links. -->
+    <a class="brand" href={controller.state.homeHref}>
+      <img class="brand-banner" src={agoraBanner} width="96" height="24" alt={t("shell.brand")} />
       <img
         class="brand-icon"
         src={agoraIcon48}
@@ -116,186 +164,61 @@
         height="24"
         alt={t("shell.brand")}
       />
-    {:else}
-      <img class="brand-banner" src={agoraBanner} width="96" height="24" alt={t("shell.brand")} />
-    {/if}
-  </span>
-{/snippet}
+    </a>
 
-{#snippet navigationTitle()}
-  {@render brand(false)}
-{/snippet}
-
-{#snippet primaryNavigation(compact: boolean, onNavigate?: (event: MouseEvent) => void)}
-  <nav aria-label={t("shell.navigation")}>
-    <NavList
-      {compact}
-      onclick={onNavigate}
-      items={[
-        {
-          href: homeHref,
-          label: t("shell.home"),
-          current: model.activeNavigation === "home",
-          icon: homeIcon,
-        },
-        ...privacyItems,
-      ]}
-    />
-  </nav>
-{/snippet}
-
-{#snippet accountWidget(compact: boolean)}
-  <div class="account-widget" data-session={model.session.status}>
-    {#if sessionNotice}
-      {#if compact}
-        <div class="compact-status" title={sessionNotice.message}>
-          <InlineMessage tone={sessionNotice.tone} aria-label={sessionNotice.message} />
-        </div>
-      {:else}
-        <!-- A title crowds the narrow rail, so the alert has none. -->
-        <Alert tone={sessionNotice.tone}>{sessionNotice.message}</Alert>
+    <div class="top-bar-actions">
+      {#if collectsTelemetry}
+        <IconButton
+          label={t("shell.privacy")}
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          href={controller.state.privacyHref}
+        >
+          <ShieldCheck size="var(--icon-size-sm)" aria-hidden="true" />
+        </IconButton>
       {/if}
-    {:else if authenticatedSession}
-      <NavList
-        {compact}
-        title={compact ? authenticatedSession.displayName : t("shell.manageAccount")}
-        items={[
-          {
-            href: accountHref,
-            label: compact
-              ? t("shell.manageAccountFor", { name: authenticatedSession.displayName })
-              : authenticatedSession.displayName,
-            icon: accountIcon,
-          },
-        ]}
+      {#if controller.state.apps}
+        <Popover controller={controller.appList} position="bottom">
+          {#snippet trigger(attributes)}
+            <IconButton {...attributes} label={t("shell.apps.label")} variant="ghost" tone="neutral" size="sm">
+              <LayoutGrid size="var(--icon-size-sm)" aria-hidden="true" />
+            </IconButton>
+          {/snippet}
+          <nav class="app-list" aria-label={t("shell.apps.label")}>
+            <NavList
+              items={[{ href: controller.state.apps.studio, label: t("shell.apps.studio"), icon: studioIcon }]}
+            />
+          </nav>
+        </Popover>
+      {/if}
+
+      {@render accountWidget()}
+    </div>
+  </header>
+
+  {#if platformDowntime?.downtime}
+    <div class="downtime">
+      <DowntimeBanner
+        start={platformDowntime.downtime.start}
+        end={platformDowntime.downtime.end}
+        started={platformDowntime.started}
+        timeZone={platformDowntime.timeZone}
       />
-      <form class="logout-form" method="POST" action={logoutAction} onsubmit={submitLogout}>
-        <Button
-          class="shell-account-button {compact ? 'compact-control' : ''}"
-          type="submit"
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          square={compact}
-          aria-label={compact ? t("shell.logout") : undefined}
-          title={compact ? t("shell.logout") : undefined}
-        >
-          <span class="account-action-icon" aria-hidden="true">
-            <LogOut size="var(--icon-size-sm)" />
-          </span>
-          {#if !compact}<span>{t("shell.logout")}</span>{/if}
-        </Button>
-      </form>
-    {:else}
-      <Button
-        class="shell-account-button {compact ? 'compact-control' : ''}"
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        square={compact}
-        aria-label={compact ? t("shell.signIn") : undefined}
-        title={compact ? t("shell.signIn") : undefined}
-        href={controller.authenticationHref("login")}
-        onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication("login"))}
-      >
-        <span class="account-action-icon" aria-hidden="true">
-          <LogIn size="var(--icon-size-sm)" />
-        </span>
-        {#if !compact}<span>{t("shell.signIn")}</span>{/if}
-      </Button>
-    {/if}
-  </div>
-{/snippet}
-
-<div class="shell-viewport">
-  <SkipLink href="#main-content">{t("shell.skipToContent")}</SkipLink>
-
-  <div class="shell" data-rail={model.rail}>
-    <aside class="rail" class:collapsed={compactRail} aria-label={t("shell.navigation")}>
-      <div class="rail-header">
-        {@render brand(compactRail)}
-        <IconButton
-          label={compactRail ? t("shell.expandNavigation") : t("shell.collapseNavigation")}
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          aria-controls={desktopNavigationId}
-          aria-expanded={!compactRail}
-          onclick={() => controller.toggleRail()}
-        >
-          {#if compactRail}
-            <PanelLeftOpen size="var(--icon-size-sm)" aria-hidden="true" />
-          {:else}
-            <PanelLeftClose size="var(--icon-size-sm)" aria-hidden="true" />
-          {/if}
-        </IconButton>
-      </div>
-
-      <div id={desktopNavigationId} class="rail-navigation">
-        {@render primaryNavigation(compactRail)}
-      </div>
-
-      <div class="rail-account">
-        {@render accountWidget(compactRail)}
-      </div>
-    </aside>
-
-    <div class="workspace">
-      <header class="mobile-header">
-        {@render brand(false)}
-        <IconButton
-          label={t("shell.openNavigation")}
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          aria-controls={drawerId}
-          aria-expanded={controller.navigationDialog.state.open}
-          href={controller.navigationHref(true)}
-          onclick={(event: MouseEvent) => navigate(event, () => controller.navigationDialog.open())}
-        >
-          <Menu size="var(--icon-size-sm)" aria-hidden="true" />
-        </IconButton>
-      </header>
-
-      {#if platformDowntime?.downtime}
-        <div class="downtime">
-          <DowntimeBanner
-            start={platformDowntime.downtime.start}
-            end={platformDowntime.downtime.end}
-            started={platformDowntime.started}
-            timeZone={platformDowntime.timeZone}
-          />
-        </div>
-      {/if}
-
-      <main id="main-content" class="main-content" tabindex="-1">
-        {@render children?.()}
-      </main>
     </div>
-  </div>
+  {/if}
 
-  <Dialog id={drawerId} controller={controller.navigationDialog} title={navigationTitle} presentation="fullscreen">
-    {#snippet headerActions()}
-      <IconButton
-        label={t("shell.closeNavigation")}
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        href={controller.navigationHref(false)}
-        onclick={(event: MouseEvent) => navigate(event, () => controller.navigationDialog.close())}
-      >
-        <X size="var(--icon-size-sm)" aria-hidden="true" />
-      </IconButton>
-    {/snippet}
-    <div class="drawer-content">
-      <div class="drawer-navigation">{@render primaryNavigation(false, closeDrawerAfterNavigation)}</div>
-      <div class="drawer-account">
-        {@render accountWidget(false)}
-      </div>
-    </div>
-  </Dialog>
+  <main id="main-content" class="main-content" tabindex="-1">
+    {@render children?.()}
+  </main>
 
-  <Dialog id={authenticationId} controller={controller.authenticationDialog} title={t("shell.auth.login.title")}>
+  <Dialog
+    id={authenticationId}
+    controller={controller.authenticationDialog}
+    title={authDialogTitle}
+    description={authDialogDescription}
+    actions={authActionsVisible && !stoppedUntil ? authActions : undefined}
+  >
     {#snippet headerActions()}
       <IconButton
         label={t("shell.closeAuthentication")}
@@ -317,142 +240,93 @@
 </div>
 
 <style>
-  .shell-viewport {
-    container: app-shell / inline-size;
+  /* A column, so the sticky header and banner can stay in view across the whole content. */
+  .shell {
+    display: flex;
+    flex-direction: column;
+    container: account-shell / inline-size;
     background: var(--color-surface-canvas);
     min-block-size: 100dvb;
     color: var(--color-text-primary);
   }
 
-  .shell {
-    --shell-rail-width: clamp(var(--layout-sidebar-min), var(--layout-sidebar), 18rem);
-
-    display: grid;
-    grid-template-columns: var(--shell-rail-width) minmax(0, 1fr);
-    min-block-size: 100dvb;
-  }
-
-  .shell[data-rail="collapsed"] {
-    --shell-rail-width: calc(var(--control-height-sm) + var(--space-4));
-  }
-
-  .rail {
-    display: grid;
-    position: sticky;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    gap: var(--space-4);
-    z-index: var(--layer-sticky);
-    box-sizing: border-box;
-    inset-block-start: 0;
-    padding: var(--space-2);
-    inline-size: var(--shell-rail-width);
-    block-size: 100dvb;
-    overflow: hidden;
-  }
-
-  .rail,
-  .mobile-header {
-    background: var(--color-surface-island-strong);
-  }
-
-  .rail-header {
+  .top-bar {
     display: flex;
+    position: sticky;
     justify-content: space-between;
     align-items: center;
-    gap: var(--space-1);
-    min-inline-size: 0;
-  }
-
-  .collapsed .rail-header {
-    flex-direction: column;
-    justify-content: center;
+    gap: var(--space-2);
+    z-index: var(--layer-sticky);
+    inset-block-start: 0;
+    background: var(--color-surface-island-strong);
+    padding: var(--space-2) var(--space-4);
   }
 
   .brand {
     display: flex;
+    flex: none;
     align-items: center;
-    padding-inline: var(--space-2);
-    min-inline-size: 0;
+    border-radius: var(--radius-sm);
+    padding: var(--space-1);
   }
 
-  .brand.compact {
-    padding: var(--space-1);
+  .brand:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
   }
 
   .brand-banner,
   .brand-icon {
     display: block;
-    flex: none;
     object-fit: contain;
   }
 
   .brand-banner {
     inline-size: calc(var(--control-height-sm) * 3);
-    max-inline-size: 100%;
     block-size: var(--control-height-sm);
   }
 
   .brand-icon {
+    display: none;
     inline-size: var(--icon-size-lg);
     block-size: var(--icon-size-lg);
   }
 
-  .rail-navigation {
-    min-block-size: 0;
-    overflow-y: auto;
-    overscroll-behavior-block: contain;
-  }
-
-  .rail-account,
-  .drawer-account {
-    min-inline-size: 0;
-  }
-
+  .top-bar-actions,
   .account-widget {
-    display: grid;
-    gap: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
     min-inline-size: 0;
+  }
+
+  .app-list {
+    min-inline-size: 12rem;
+  }
+
+  .app-icon {
+    display: block;
+    inline-size: var(--icon-size-md);
+    block-size: var(--icon-size-md);
+  }
+
+  .account-avatar {
+    display: contents;
   }
 
   .logout-form {
     margin: 0;
-    min-inline-size: 0;
   }
 
-  .account-action-icon {
-    display: inline-flex;
-    flex: none;
-    justify-content: center;
-    align-items: center;
-    inline-size: var(--control-height-sm);
-  }
-
-  .compact-status {
-    display: grid;
-    place-items: center;
-    inline-size: var(--control-height-sm);
-    block-size: var(--control-height-sm);
-  }
-
-  :global(.shell-account-button) {
-    max-inline-size: 100%;
-  }
-
-  :global(:is(a, button).shell-account-button:not(.compact-control)) {
-    justify-content: flex-start;
-    border: 0;
-    padding: var(--space-2) var(--space-3);
-    inline-size: 100%;
+  .account-name {
     overflow: hidden;
-    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  /* A column, so the sticky header and banner can stay in view across the whole content. */
-  .workspace {
-    display: flex;
-    flex-direction: column;
+  :global(.account-link) {
     min-inline-size: 0;
-    min-block-size: 100dvb;
+    max-inline-size: 16rem;
   }
 
   /* The maintenance banner stays above the content while it scrolls. */
@@ -460,10 +334,6 @@
     position: sticky;
     z-index: var(--layer-sticky);
     inset-block-start: 0;
-  }
-
-  .mobile-header {
-    display: none;
   }
 
   .main-content {
@@ -477,27 +347,27 @@
     outline-offset: calc(var(--focus-ring-offset) * -1);
   }
 
-  .drawer-navigation {
-    min-block-size: 0;
-    overflow-y: auto;
-    overscroll-behavior-block: contain;
-  }
-
-  .drawer-content {
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: var(--space-2);
-    min-inline-size: 0;
-    min-block-size: 0;
-  }
-
-  @container app-shell (max-width: 47.999rem) {
-    .shell {
-      grid-template-columns: minmax(0, 1fr);
+  @container account-shell (max-width: 47.999rem) {
+    .top-bar {
+      padding-inline: var(--space-2);
     }
 
-    .rail {
+    .brand-banner {
       display: none;
+    }
+
+    .brand-icon {
+      display: block;
+    }
+
+    /* The avatar names the account on narrow screens; the name stays for assistive technology. */
+    .account-name {
+      position: absolute;
+      clip-path: inset(50%);
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     /* On narrow screens it waits at the bottom, away from where reading starts, and never covers the end. */
@@ -506,23 +376,11 @@
       inset-block-end: 0;
       inset-block-start: auto;
     }
-
-    .mobile-header {
-      display: flex;
-      position: sticky;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-2);
-      z-index: var(--layer-sticky);
-      inset-block-start: 0;
-      padding: var(--space-4);
-    }
   }
 
   @media (forced-colors: active) {
-    .rail,
-    .mobile-header {
-      border: var(--border-width-thin) solid CanvasText;
+    .top-bar {
+      border-block-end: var(--border-width-thin) solid CanvasText;
     }
   }
 </style>
