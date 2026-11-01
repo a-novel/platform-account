@@ -29,13 +29,10 @@ export const loadShell = async (event: ShellEvent) => {
   return { apps: readApps(), session, authorization: shellAuthorization[session.status] };
 };
 
-/**
- * Lists the Agora apps by their sign-in page, which signs the visitor in through this platform's session. A server
- * with an invalid runtime configuration lists none.
- */
+/** Lists the Agora apps, or none while the runtime configuration is invalid. */
 function readApps(): ShellApps | null {
   try {
-    return { studio: `${getRuntimeConfig().studioUrl}/auth/sign-in` };
+    return { studio: getRuntimeConfig().studioUrl };
   } catch {
     return null;
   }

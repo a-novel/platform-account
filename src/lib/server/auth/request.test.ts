@@ -163,7 +163,7 @@ describe("account session at the request boundary", () => {
   it("serves an anonymous home without calling authentication", async () => {
     const { event } = request("/");
     await expect(loadShell(event)).resolves.toEqual({
-      apps: { studio: "https://studio.test/auth/sign-in" },
+      apps: { studio: "https://studio.test" },
       session: { status: "anonymous" },
       authorization: "anonymous",
     });
@@ -174,7 +174,7 @@ describe("account session at the request boundary", () => {
     const { event } = request("/account", { ...tokenCookies, account_identity_handle: "maya.chen" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toEqual({
-      apps: { studio: "https://studio.test/auth/sign-in" },
+      apps: { studio: "https://studio.test" },
       session: { status: "authenticated", displayName: "Maya Chen", initials: "MC" },
       authorization: "allowed",
     });
@@ -238,7 +238,7 @@ describe("account session at the request boundary", () => {
       .mockResolvedValueOnce(new Response("expired", { status: 401 }))
       .mockResolvedValueOnce(new Response("private service detail", { status: 503 }));
     await expect(loadShell(event)).resolves.toEqual({
-      apps: { studio: "https://studio.test/auth/sign-in" },
+      apps: { studio: "https://studio.test" },
       session: { status: "error" },
       authorization: "unavailable",
     });
@@ -543,7 +543,7 @@ describe("planned downtime at the request boundary", () => {
     const { event } = request("/", { account_access_token: "access", account_refresh_token: "refresh" });
 
     await expect(loadShell(event)).resolves.toEqual({
-      apps: { studio: "https://studio.test/auth/sign-in" },
+      apps: { studio: "https://studio.test" },
       session: { status: "downtime" },
       authorization: "unavailable",
     });
