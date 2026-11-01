@@ -45,15 +45,15 @@
     "test:unit": "vitest run --project=unit --coverage.reportsDirectory=coverage/unit"
   },
   "dependencies": {
-    "@a-novel-kit/nodelib-browser": "2.3.0",
-    "@a-novel-kit/nodelib-i18n": "2.3.0",
-    "@a-novel-kit/nodelib-server": "2.3.0",
+    "@a-novel-kit/nodelib-browser": "2.4.0",
+    "@a-novel-kit/nodelib-i18n": "2.4.0",
+    "@a-novel-kit/nodelib-server": "2.4.0",
     "@a-novel-kit/ui-images": "0.2.0",
     "@a-novel-kit/uikit": "0.12.2",
     "@a-novel-kit/uikit-fonts": "0.12.2",
     "@a-novel-kit/uikit-tokens": "0.12.2",
     "@a-novel/service-authentication-rest": "2.20.1",
-    "@lucide/svelte": "1.63.0",
+    "@lucide/svelte": "1.64.0",
     "@opentelemetry/api": "1.10.0",
     "@opentelemetry/exporter-trace-otlp-proto": "0.300.0",
     "@opentelemetry/instrumentation": "0.300.0",
@@ -65,8 +65,8 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@a-novel-kit/nodelib-config": "2.3.0",
-    "@a-novel-kit/nodelib-test": "2.3.0",
+    "@a-novel-kit/nodelib-config": "2.4.0",
+    "@a-novel-kit/nodelib-test": "2.4.0",
     "@a-novel-kit/uikit-storybook": "0.12.2",
     "@eslint/compat": "2.1.1",
     "@eslint/config-helpers": "0.7.0",
