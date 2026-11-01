@@ -1,3 +1,5 @@
+import { accountCaller, callerFetch } from "./service-token";
+
 import { randomUUID } from "node:crypto";
 
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
@@ -14,7 +16,7 @@ import {
 import { test as base } from "playwright/test";
 import { z } from "zod";
 
-const api = new AuthenticationApi("http://127.0.0.1:14100");
+const api = new AuthenticationApi("http://127.0.0.1:14100", callerFetch(accountCaller));
 const password = "Account-test-password-42!";
 
 /** Controls only the disposable stack owned by this test run. */

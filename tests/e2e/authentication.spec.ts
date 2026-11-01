@@ -1,4 +1,5 @@
 import { compose, emailLink, expect, test } from "./fixtures";
+import { accountCaller, callerFetch } from "./service-token";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
@@ -59,7 +60,7 @@ test("login returns to the protected account, survives reload and logout protect
 
   // Logout revoked the refresh token, so the service refuses to renew the session with it.
   const tokens = Object.fromEntries(cookies.map((cookie) => [cookie.name, cookie.value]));
-  const renewal = await fetch("http://127.0.0.1:14100/v2/session", {
+  const renewal = await callerFetch(accountCaller)("http://127.0.0.1:14100/v2/session", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ accessToken: tokens.account_access_token, refreshToken: tokens.account_refresh_token }),
