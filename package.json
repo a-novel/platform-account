@@ -1,6 +1,6 @@
 {
   "name": "@a-novel/platform-account",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Agora account management: sign-in, email links and account settings",
   "repository": {
