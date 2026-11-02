@@ -27,13 +27,13 @@ authFlow:
   expiryUnavailable: Non renseignée
   feedback:
     emailUpdated: Votre courriel a été mis à jour.
-    invalidCredentials: Le courriel ou le mot de passe est incorrect.
+    invalidCredentials: Votre courriel ou votre mot de passe est incorrect.
     invalidCurrentPassword: Votre mot de passe actuel est incorrect.
     passwordChanged: Votre mot de passe a été modifié.
     passwordReset: Votre mot de passe a été réinitialisé.
     registrationCompleted: Votre compte est prêt.
     serviceUnavailable: Veuillez réessayer dans quelques minutes.
-    sessionUnavailable: Impossible de vérifier votre session. Veuillez recharger la page dans quelques minutes.
+    sessionUnavailable: Nous n’avons pas pu vérifier votre session. Veuillez recharger la page dans quelques minutes.
     tooManyAttempts: Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.
   validation:
     confirmPassword: Confirmez votre nouveau mot de passe.
@@ -66,8 +66,8 @@ authUi:
       pendingDescription: Si aucun autre compte n’utilise la nouvelle adresse, vous y recevrez un lien de confirmation.
       pendingExpiry: Le lien expire le {{date}}
       pendingTitle: Consultez votre messagerie
-      resend: Envoyer un autre lien
-      submit: Envoyer le lien
+      resend: M’envoyer un autre lien
+      submit: M’envoyer le lien
       submitting: Envoi du lien…
       title: Courriel
       unavailable: Votre courriel actuel ne peut pas être affiché pour le moment.
@@ -75,14 +75,14 @@ authUi:
     loadingTitle: Chargement de la session
     logout:
       description: Vous serez déconnecté de votre compte Agora sur cet appareil.
-      submit: Se déconnecter
+      submit: Me déconnecter
       submitting: Déconnexion…
     password:
-      confirmLabel: Confirmez le nouveau mot de passe
+      confirmLabel: Confirmez votre nouveau mot de passe
       currentLabel: Mot de passe actuel
       hint: Choisissez un mot de passe long et facile à retenir.
       newLabel: Nouveau mot de passe
-      submit: Changer le mot de passe
+      submit: Changer mon mot de passe
       submitting: Modification du mot de passe…
       title: Mot de passe
     title: Gérez votre compte
@@ -90,7 +90,7 @@ authUi:
     emailLabel: Courriel
     journeys:
       login:
-        submit: Se connecter
+        submit: Me connecter
         submitting: Connexion…
       register:
         accountExists: Ce courriel est déjà associé à un compte. Vous pouvez vous connecter.
@@ -101,27 +101,27 @@ authUi:
         submitting: Inscription à la liste…
       reset:
         pendingDescription: Si ce courriel est associé à un compte, vous recevrez un lien de réinitialisation à
-        submit: Envoyer le lien
+        submit: M’envoyer le lien
         submitting: Envoi du lien…
     passwordLabel: Mot de passe
     pendingTitle: Consultez votre messagerie
   serviceUnavailable: Temporairement indisponible
   shortCode:
-    confirmPasswordLabel: Confirmez le nouveau mot de passe
-    continue: Continuer vers votre compte
+    confirmPasswordLabel: Confirmez votre nouveau mot de passe
+    continue: Continuer vers mon compte
     journeys:
       emailUpdate:
-        submit: Mettre à jour le courriel
+        submit: Mettre à jour mon courriel
         submitting: Mise à jour du courriel…
         unavailableTitle: Mise à jour du courriel indisponible
       passwordReset:
         description: Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.
-        submit: Réinitialiser le mot de passe
+        submit: Réinitialiser mon mot de passe
         submitting: Réinitialisation du mot de passe…
         title: Réinitialisez votre mot de passe Agora
       register:
         description: Choisissez un mot de passe pour vous connecter.
-        submit: Créer le compte
+        submit: Créer mon compte
         submitting: Création du compte…
         title: Créez votre compte Agora
     newPasswordLabel: Nouveau mot de passe
@@ -140,21 +140,21 @@ pageTitles:
   account: Paramètres du compte
   accountCreated: Compte créé
   brand: Agora
-  confirmEmail: Confirmer le courriel
-  createAccount: Créer un compte
+  confirmEmail: Confirmer mon courriel
+  createAccount: Créer mon compte
   emailUpdated: Courriel mis à jour
   incompleteLink: Lien incomplet
   invalidLink: Lien invalide
   passwordReset: Mot de passe réinitialisé
   privacy: Confidentialité
-  resetPassword: Réinitialiser le mot de passe
+  resetPassword: Réinitialiser mon mot de passe
   withState: "{{title}}: {{status}}"
 privacy:
   description: Choisissez ce que nous collectons sur cet appareil.
   noTelemetry: Nous ne collectons ni métriques ni journaux sur cet appareil.
   title: Confidentialité
 shell:
-  accountFallback: Compte
+  accountFallback: Mon compte
   apps:
     label: Applications Agora
     studio: Studio
@@ -172,15 +172,15 @@ shell:
       title: Réinitialisez votre mot de passe
   brand: Agora
   closeAuthentication: Fermer la fenêtre
-  logout: Se déconnecter
+  logout: Me déconnecter
   privacy: Confidentialité
-  register: S’inscrire
+  register: M’inscrire
   sessionDowntime: Compte indisponible pendant la maintenance.
   sessionLoading: Chargement du compte
   sessionUnavailable: Informations du compte indisponibles.
-  signIn: Se connecter
+  signIn: Me connecter
   skipToContent: Aller au contenu
 telemetryConsent:
-  change: Modifiable à tout moment depuis la page Confidentialité.
+  change: Vous pouvez modifier ce choix à tout moment depuis la page Confidentialité.
   message: Nous collectons parfois des journaux d’erreurs et des métriques de performances, à des fins d’amélioration de nos produits. Aucune information personnelle n’est enregistrée ou partagée.
   title: Collecte des métriques et des journaux

@@ -124,7 +124,7 @@ describe("account shell screen", () => {
     const header = page.getByRole("banner").element().getBoundingClientRect();
     const login = page
       .getByRole("banner")
-      .getByRole("link", { name: "Se connecter" })
+      .getByRole("link", { name: "Me connecter" })
       .element()
       .getBoundingClientRect();
     expect(login.right).toBeLessThanOrEqual(header.right);

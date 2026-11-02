@@ -135,7 +135,7 @@ describe("authentication panel", () => {
       withLocale("fr")
     );
 
-    await expect.element(page.getByText("Le courriel ou le mot de passe est incorrect.")).toBeVisible();
+    await expect.element(page.getByText("Votre courriel ou votre mot de passe est incorrect.")).toBeVisible();
   });
 
   it("shows the complete address the user just submitted without a redundant label", async () => {
