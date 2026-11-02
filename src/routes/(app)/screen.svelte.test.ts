@@ -207,7 +207,7 @@ describe("account shell screen", () => {
       const dialog = page.getByRole("dialog", { name: t("shell.auth.login.title") });
       await expect.element(dialog).toHaveAccessibleDescription(t("shell.auth.login.authorizationDescription"));
       await expect.element(dialog.getByRole("link", { name: t("shell.auth.forgotPassword") })).toBeVisible();
-      await expect.element(dialog.getByRole("link", { name: t("shell.auth.createAccount") })).toBeVisible();
+      await expect.element(dialog.getByRole("link", { name: t("shell.register") })).toBeVisible();
     }
   );
 

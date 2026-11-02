@@ -236,7 +236,7 @@ test.describe("native forms without JavaScript", () => {
     await expect(dialog.getByText("Enter a valid email address.", { exact: true })).toBeVisible();
 
     await dialog.getByRole("link", { name: "Log in", exact: true }).click();
-    await dialog.getByRole("link", { name: "Request an invitation", exact: true }).click();
+    await dialog.getByRole("link", { name: "Register", exact: true }).click();
     await expect(page).toHaveTitle("Join the Agora invitation list | Agora");
     await dialog.getByLabel(/^Email address/).fill("invalid");
     await dialog.getByRole("button", { name: "Join the list", exact: true }).click();
