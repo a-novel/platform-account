@@ -104,15 +104,15 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     const forgotPassword = canvas.getByRole("link", { name: t("shell.auth.forgotPassword") });
-    const createAccount = canvas.getByRole("link", { name: t("shell.auth.createAccount") });
+    const register = canvas.getByRole("link", { name: t("shell.register") });
     const forgotPasswordBounds = forgotPassword.getBoundingClientRect();
-    const createAccountBounds = createAccount.getBoundingClientRect();
+    const registerBounds = register.getBoundingClientRect();
 
-    await expect(createAccountBounds.top).toBeGreaterThanOrEqual(forgotPasswordBounds.bottom);
-    await expect(Math.abs(createAccountBounds.left - forgotPasswordBounds.left)).toBeLessThanOrEqual(1);
-    await expect(Math.abs(createAccountBounds.right - forgotPasswordBounds.right)).toBeLessThanOrEqual(1);
+    await expect(registerBounds.top).toBeGreaterThanOrEqual(forgotPasswordBounds.bottom);
+    await expect(Math.abs(registerBounds.left - forgotPasswordBounds.left)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(registerBounds.right - forgotPasswordBounds.right)).toBeLessThanOrEqual(1);
     await expect(forgotPassword.scrollWidth).toBeLessThanOrEqual(forgotPassword.clientWidth);
-    await expect(createAccount.scrollWidth).toBeLessThanOrEqual(createAccount.clientWidth);
+    await expect(register.scrollWidth).toBeLessThanOrEqual(register.clientWidth);
   }
 
   async function verifyValidationFeedback({ canvasElement }: { canvasElement: HTMLElement }) {

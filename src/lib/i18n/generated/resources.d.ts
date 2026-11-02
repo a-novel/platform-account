@@ -214,6 +214,7 @@ export default interface Resources {
       "closeAuthentication": "Close dialog",
       "logout": "Log out",
       "privacy": "Privacy",
+      "register": "Register",
       "sessionDowntime": "Account unavailable during maintenance.",
       "sessionLoading": "Loading account",
       "sessionUnavailable": "Account details are unavailable.",
