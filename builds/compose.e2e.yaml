@@ -18,7 +18,7 @@ x-postgres-healthcheck: &postgres-healthcheck
 
 services:
   postgres-authentication:
-    image: ghcr.io/a-novel/service-authentication/database:v2.23.0@sha256:cce2b62f9486ddbf490e142525c444777782593845b1c2a6ab4ddab06eb94846
+    image: ghcr.io/a-novel/service-authentication/database:v2.23.1@sha256:cce2b62f9486ddbf490e142525c444777782593845b1c2a6ab4ddab06eb94846
     environment: *postgres-environment
     healthcheck: *postgres-healthcheck
 
@@ -56,7 +56,7 @@ services:
       APP_MASTER_KEY: fec0681a2f57242211c559ca347721766f8a3acd8ed2e63b36b3768051c702ca
 
   service-token-issuer:
-    image: ghcr.io/a-novel/service-authentication/service-token-issuer:v2.23.0@sha256:2c5b45d9f187b83b0c5f8d1dc3907b778bae8ada10d1cb3bb1c515a6cfaf2685
+    image: ghcr.io/a-novel/service-authentication/service-token-issuer:v2.23.1@sha256:b9fdb3f6e087186d90c6cb337f4f89ffbadedeae41e428b0651becec8f219adc
     ports:
       - "127.0.0.1:14101:8080"
     environment:
@@ -76,7 +76,7 @@ services:
       - "127.0.0.1:14100:8080"
 
   authentication:
-    image: ghcr.io/a-novel/service-authentication/standalone-rest:v2.23.0@sha256:6b4da2a63e8cc71f236df2644ff95f8bc60588c0abf674ed2657c803a2d5895c
+    image: ghcr.io/a-novel/service-authentication/standalone-rest:v2.23.1@sha256:43f7322fb919a42e2555b7dfc9ac72f80670684ec08d63ae516208cc9eace5fb
     network_mode: service:authentication-network
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8080/v2/ping"]
