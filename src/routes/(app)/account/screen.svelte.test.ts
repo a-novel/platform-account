@@ -124,7 +124,7 @@ describe("account screen", () => {
       },
       withLocale(locale)
     );
-    const button = page.getByRole("button", { name: locale === "fr" ? "Se déconnecter" : "Log out" });
+    const button = page.getByRole("button", { name: locale === "fr" ? "Me déconnecter" : "Log out" });
     const description =
       locale === "fr"
         ? "Vous serez déconnecté de votre compte Agora sur cet appareil."

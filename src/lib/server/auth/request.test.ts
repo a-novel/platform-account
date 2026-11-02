@@ -208,7 +208,7 @@ describe("account session at the request boundary", () => {
     const { event } = request("/", { ...tokenCookies, account_identity_handle: "maya.chen@example.com" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toMatchObject({
-      session: { status: "authenticated", displayName: "Compte", initials: "A" },
+      session: { status: "authenticated", displayName: "Mon compte", initials: "A" },
     });
   });
 

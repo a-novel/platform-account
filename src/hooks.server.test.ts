@@ -40,7 +40,7 @@ describe("request hook", () => {
       return new Response(html + request.locals.i18n.t("shell.accountFallback"));
     });
     const [fr, en] = await Promise.all([handle({ event: french, resolve }), handle({ event: english, resolve })]);
-    await expect(fr.text()).resolves.toBe('<html lang="fr">Compte');
+    await expect(fr.text()).resolves.toBe('<html lang="fr">Mon compte');
     await expect(en.text()).resolves.toBe('<html lang="en">Account');
     expect(french.locals.locale).toBe("fr");
     expect(english.locals.locale).toBe("en");

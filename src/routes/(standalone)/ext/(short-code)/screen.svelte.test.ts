@@ -36,7 +36,7 @@ describe("secure-link screen", () => {
     const password = "x".repeat(minimum - 1);
     await page.getByLabelText(locale === "fr" ? /^Nouveau mot de passe/ : /^New password/).fill(password);
     await page
-      .getByLabelText(locale === "fr" ? /Confirmez le nouveau mot de passe/ : /Confirm new password/)
+      .getByLabelText(locale === "fr" ? /Confirmez votre nouveau mot de passe/ : /Confirm new password/)
       .fill("different-password");
     await submit.click();
     const message =
@@ -50,7 +50,7 @@ describe("secure-link screen", () => {
     expect(form.elements.namedItem("password")).toHaveValue(password);
     await page.getByLabelText(locale === "fr" ? /^Nouveau mot de passe/ : /^New password/).fill("valid-password");
     await page
-      .getByLabelText(locale === "fr" ? /Confirmez le nouveau mot de passe/ : /Confirm new password/)
+      .getByLabelText(locale === "fr" ? /Confirmez votre nouveau mot de passe/ : /Confirm new password/)
       .fill("valid-password");
     await submit.click();
     await expect.element(submit).toBeDisabled();
