@@ -99,6 +99,13 @@
     await expect(pending).toHaveTextContent(pendingChange.credentials.pendingEmail.email);
   }
 
+  async function verifyEmailUnavailable({ canvasElement, globals }: PlayContext) {
+    const t = createStorybookTranslator(globals);
+    const email = within(within(canvasElement).getByRole("region", { name: t("authUi.account.email.title") }));
+    await expect(email.getByRole("alert")).toHaveTextContent(t("authUi.account.email.unavailable"));
+    await expect(email.getByRole("textbox", { name: t("authUi.account.email.label") })).toBeEnabled();
+  }
+
   async function verifyPasswordValidation({ canvasElement }: { canvasElement: HTMLElement }) {
     await expect(canvasElement.querySelectorAll('[aria-invalid="true"]')).toHaveLength(2);
     expect(canvasElement.querySelector('a[href$="-confirm-password"]')).toBeNull();
@@ -175,7 +182,7 @@
   <StoryHarness initialModel={pendingChange} />
 </Story>
 
-<Story name="Email unavailable" asChild>
+<Story name="Email unavailable" asChild play={verifyEmailUnavailable}>
   <StoryHarness initialModel={{ ...ready, credentials: { status: "unavailable" } }} />
 </Story>
 

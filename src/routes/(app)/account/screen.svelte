@@ -170,7 +170,7 @@
                 </Alert>
               {/if}
             {:else}
-              <p class="feedback-message">{t("authUi.account.email.unavailable")}</p>
+              <Alert tone="error" title={t("authUi.account.email.unavailable")} />
             {/if}
 
             <form method="POST" action={actions.email} aria-busy={emailSubmitting} novalidate onsubmit={submitEmail}>
