@@ -13,9 +13,6 @@
 </script>
 
 <script lang="ts">
-  import { getPlatformDowntime, hasPlatformDowntime } from "#lib/ui/downtime.svelte.js";
-  import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
-
   import AuthenticationPanel from "./authentication-panel.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
@@ -51,8 +48,8 @@
 
   let { controller, children }: ShellProps = $props();
 
-  // Stories and tests render the shell without the app's downtime tracking.
-  const platformDowntime = hasPlatformDowntime() ? getPlatformDowntime() : undefined;
+  const platformDowntime = $derived(controller.state.platformDowntime);
+  const privacyHref = $derived(controller.state.privacyHref);
   const stoppedUntil = $derived(platformDowntime?.started ? platformDowntime.downtime?.end : undefined);
 
   const model = $derived(controller.state.model);
@@ -65,12 +62,11 @@
   const authenticationId = `${componentId}-authentication`;
   const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
-  // Only a platform that collects browser telemetry asks for consent, so only it offers to change the answer.
   const privacyItems = $derived(
-    hasTelemetryPreference()
+    privacyHref
       ? [
           {
-            href: controller.state.privacyHref,
+            href: privacyHref,
             label: t("shell.privacy"),
             current: model.activeNavigation === "privacy",
             icon: privacyIcon,

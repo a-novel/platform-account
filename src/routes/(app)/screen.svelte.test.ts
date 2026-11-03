@@ -46,7 +46,7 @@ function controller(
     homeHref: "/",
     accountHref: "/account",
     logoutAction: "/auth/logout",
-    privacyHref: "/privacy",
+    privacyHref: null,
     apps: { studio: "https://studio.example.test" },
     authentication,
     resolveAuthentication: (view) => ({ model: readyAuthenticationModel(view), action: "/auth" }),
@@ -139,15 +139,11 @@ describe("account shell screen", () => {
   });
 
   it("lists Privacy only while the platform collects browser telemetry", async () => {
-    const view = await render(ShellStory, { initialModel: model() }, withLocale());
+    const view = await render(ShellStory, { model: model() }, withLocale());
     await expect.element(page.getByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
     await view.unmount();
 
-    render(
-      ShellStory,
-      { initialModel: model({ activeNavigation: "privacy" }), collectsTelemetry: true },
-      withLocale("fr")
-    );
+    render(ShellStory, { model: model({ activeNavigation: "privacy" }), collectsTelemetry: true }, withLocale("fr"));
     const privacy = page.getByRole("complementary").getByRole("link", { name: "Confidentialité" });
     await expect.element(privacy).toHaveAttribute("href", "#privacy");
     await expect.element(privacy).toHaveAttribute("aria-current", "page");

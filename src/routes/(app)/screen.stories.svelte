@@ -224,7 +224,7 @@
   asChild
   play={verifyAnonymousAuthentication}
 >
-  <StoryHarness initialModel={anonymous} />
+  <StoryHarness model={anonymous} />
 </Story>
 
 <Story
@@ -234,11 +234,11 @@
   asChild
   play={verifyExpandedMobileNavigation}
 >
-  <StoryHarness initialModel={withOpenMobileNavigation(anonymous)} />
+  <StoryHarness model={withOpenMobileNavigation(anonymous)} />
 </Story>
 
 <Story name="Collapsed rail" exportName="CollapsedRail" asChild play={verifyRailToggle}>
-  <StoryHarness initialModel={{ ...anonymous, rail: "collapsed" }} />
+  <StoryHarness model={{ ...anonymous, rail: "collapsed" }} />
 </Story>
 
 <Story
@@ -248,19 +248,27 @@
   asChild
   play={verifyCollapsedMobileNavigation}
 >
-  <StoryHarness initialModel={{ ...anonymous, rail: "collapsed" }} />
+  <StoryHarness model={{ ...anonymous, rail: "collapsed" }} />
 </Story>
 
 <Story name="App list" asChild play={verifyAppList}>
-  <StoryHarness initialModel={authenticated} />
+  <StoryHarness model={authenticated} />
+</Story>
+
+<Story name="Without the app list" exportName="WithoutTheAppList" asChild>
+  <StoryHarness model={authenticated} apps={false} />
+</Story>
+
+<Story name="Collapsed authenticated" asChild>
+  <StoryHarness model={{ ...authenticated, rail: "collapsed" }} collectsTelemetry />
 </Story>
 
 <Story name="Privacy link" asChild>
-  <StoryHarness initialModel={{ ...authenticated, activeNavigation: "privacy" }} collectsTelemetry />
+  <StoryHarness model={{ ...authenticated, activeNavigation: "privacy" }} collectsTelemetry />
 </Story>
 
 <Story name="Authenticated" asChild play={verifyAuthenticatedActions}>
-  <StoryHarness initialModel={authenticated} />
+  <StoryHarness model={authenticated} />
 </Story>
 
 <Story
@@ -270,11 +278,11 @@
   asChild
   play={verifyAuthenticatedMobileLayout}
 >
-  <StoryHarness initialModel={withOpenMobileNavigation(authenticated)} />
+  <StoryHarness model={withOpenMobileNavigation(authenticated)} />
 </Story>
 
 <Story name="Loading account" asChild>
-  <StoryHarness initialModel={loadingAccount} />
+  <StoryHarness model={loadingAccount} />
 </Story>
 
 <Story
@@ -284,11 +292,11 @@
   asChild
   play={verifyExpandedMobileNavigation}
 >
-  <StoryHarness initialModel={withOpenMobileNavigation(loadingAccount)} />
+  <StoryHarness model={withOpenMobileNavigation(loadingAccount)} />
 </Story>
 
 <Story name="Account error" asChild>
-  <StoryHarness initialModel={accountError} />
+  <StoryHarness model={accountError} />
 </Story>
 
 <Story
@@ -298,23 +306,27 @@
   asChild
   play={verifyExpandedMobileNavigation}
 >
-  <StoryHarness initialModel={withOpenMobileNavigation(accountError)} />
+  <StoryHarness model={withOpenMobileNavigation(accountError)} />
 </Story>
 
 <Story name="Maintenance" asChild>
-  <StoryHarness initialModel={maintenance} {downtime}><ScrollPreview /></StoryHarness>
+  <StoryHarness model={maintenance} {downtime}><ScrollPreview /></StoryHarness>
 </Story>
 
 <Story name="Maintenance — mobile" exportName="MaintenanceMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={maintenance} {downtime}><ScrollPreview /></StoryHarness>
+  <StoryHarness model={maintenance} {downtime}><ScrollPreview /></StoryHarness>
+</Story>
+
+<Story name="Upcoming maintenance" asChild>
+  <StoryHarness model={anonymous} {downtime} started={false}><ScrollPreview /></StoryHarness>
 </Story>
 
 <Story name="Login modal during maintenance" asChild>
-  <StoryHarness initialModel={{ ...maintenance, authView: "login" }} {downtime} />
+  <StoryHarness model={{ ...maintenance, authView: "login" }} {downtime} />
 </Story>
 
 <Story name="Login modal — desktop" exportName="LoginModalDesktop" globals={reviewStoryGlobals.desktop} asChild>
-  <StoryHarness initialModel={{ ...anonymous, authView: "login" }} />
+  <StoryHarness model={{ ...anonymous, authView: "login" }} />
 </Story>
 
 <Story
@@ -324,7 +336,7 @@
   asChild
   play={verifyMobileAuthenticationActions}
 >
-  <StoryHarness initialModel={{ ...anonymous, authView: "login" }} />
+  <StoryHarness model={{ ...anonymous, authView: "login" }} />
 </Story>
 
 <Story
@@ -333,24 +345,28 @@
   globals={reviewStoryGlobals.desktop}
   asChild
 >
-  <StoryHarness initialModel={{ ...anonymous, authView: "login", authorizationRequest: true }} />
+  <StoryHarness model={{ ...anonymous, authView: "login", authorizationRequest: true }} />
 </Story>
 
 <Story name="Login for another app (mobile)" exportName="LoginForAppMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={{ ...anonymous, authView: "login", authorizationRequest: true }} />
+  <StoryHarness model={{ ...anonymous, authView: "login", authorizationRequest: true }} />
+</Story>
+
+<Story name="Login with the password shown" exportName="LoginPasswordShown" asChild>
+  <StoryHarness model={{ ...anonymous, authView: "login" }} passwordShown />
 </Story>
 
 <Story name="Login submitting" asChild play={verifySubmittingIsLocked}>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "login" }}
-    initialAuthenticationModel={{ journey: "login", state: { status: "submitting" } }}
+    model={{ ...anonymous, authView: "login" }}
+    authenticationModel={{ journey: "login", state: { status: "submitting" } }}
   />
 </Story>
 
 <Story name="Login validation error" asChild play={verifyValidationFeedback}>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "login" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "login" }}
+    authenticationModel={{
       journey: "login",
       state: validationFixture(validateLogin, { email: "not-an-email", password: "" }),
     }}
@@ -359,8 +375,8 @@
 
 <Story name="Login service error" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "login" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "login" }}
+    authenticationModel={{
       journey: "login",
       state: {
         status: "service-error",
@@ -371,17 +387,17 @@
 </Story>
 
 <Story name="Invitation list — desktop" exportName="InvitationListDesktop" globals={reviewStoryGlobals.desktop} asChild>
-  <StoryHarness initialModel={{ ...anonymous, authView: "register" }} />
+  <StoryHarness model={{ ...anonymous, authView: "register" }} />
 </Story>
 
 <Story name="Invitation list — mobile" exportName="InvitationListMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={{ ...anonymous, authView: "register" }} />
+  <StoryHarness model={{ ...anonymous, authView: "register" }} />
 </Story>
 
 <Story name="Invitation request recorded" asChild play={verifyRecordedInvitation}>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{
       journey: "register",
       state: { status: "recorded", email: "maya.chen@example.test" },
     }}
@@ -394,7 +410,7 @@
   globals={reviewStoryGlobals.desktop}
   asChild
 >
-  <StoryHarness initialModel={{ ...anonymous, authView: "reset" }} />
+  <StoryHarness model={{ ...anonymous, authView: "reset" }} />
 </Story>
 
 <Story
@@ -403,13 +419,13 @@
   globals={reviewStoryGlobals.mobile}
   asChild
 >
-  <StoryHarness initialModel={{ ...anonymous, authView: "reset" }} />
+  <StoryHarness model={{ ...anonymous, authView: "reset" }} />
 </Story>
 
 <Story name="Password reset email pending" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "reset" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "reset" }}
+    authenticationModel={{
       journey: "reset",
       state: { status: "pending-email", targetHint: "maya.chen@example.test" },
     }}
@@ -418,8 +434,8 @@
 
 <Story name="Login service unavailable" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "login" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "login" }}
+    authenticationModel={{
       journey: "login",
       state: {
         status: "service-error",
@@ -431,8 +447,8 @@
 
 <Story name="Login too many attempts" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "login" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "login" }}
+    authenticationModel={{
       journey: "login",
       state: { status: "service-error", feedback: "tooManyAttempts" },
     }}
@@ -441,15 +457,15 @@
 
 <Story name="Invitation request submitting" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{ journey: "register", state: { status: "submitting" } }}
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{ journey: "register", state: { status: "submitting" } }}
   />
 </Story>
 
 <Story name="Invitation request validation error" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{
       journey: "register",
       state: validationFixture(validateInvitationRequest, { email: "not-an-email" }),
     }}
@@ -458,8 +474,8 @@
 
 <Story name="Invitation list unavailable" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{
       journey: "register",
       state: { status: "service-error", feedback: "serviceUnavailable" },
     }}
@@ -468,8 +484,8 @@
 
 <Story name="Invitation account exists" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{
       journey: "register",
       state: { status: "conflict", code: "account_exists" },
     }}
@@ -478,8 +494,8 @@
 
 <Story name="Invitation already requested" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "register" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "register" }}
+    authenticationModel={{
       journey: "register",
       state: { status: "conflict", code: "already_waitlisted" },
     }}
@@ -488,15 +504,15 @@
 
 <Story name="Password reset submitting" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "reset" }}
-    initialAuthenticationModel={{ journey: "reset", state: { status: "submitting" } }}
+    model={{ ...anonymous, authView: "reset" }}
+    authenticationModel={{ journey: "reset", state: { status: "submitting" } }}
   />
 </Story>
 
 <Story name="Password reset validation error" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "reset" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "reset" }}
+    authenticationModel={{
       journey: "reset",
       state: validationFixture(validateEmailRequest, { email: "not-an-email" }),
     }}
@@ -505,8 +521,8 @@
 
 <Story name="Password reset service unavailable" asChild>
   <StoryHarness
-    initialModel={{ ...anonymous, authView: "reset" }}
-    initialAuthenticationModel={{
+    model={{ ...anonymous, authView: "reset" }}
+    authenticationModel={{
       journey: "reset",
       state: { status: "service-error", feedback: "serviceUnavailable" },
     }}
@@ -514,7 +530,7 @@
 </Story>
 
 <Story name="Long account name" asChild>
-  <StoryHarness initialModel={longAccountName} />
+  <StoryHarness model={longAccountName} />
 </Story>
 
 <Story
@@ -524,5 +540,5 @@
   asChild
   play={verifyExpandedMobileNavigation}
 >
-  <StoryHarness initialModel={withOpenMobileNavigation(longAccountName)} />
+  <StoryHarness model={withOpenMobileNavigation(longAccountName)} />
 </Story>

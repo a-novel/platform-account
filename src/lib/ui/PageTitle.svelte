@@ -1,15 +1,16 @@
 <script module lang="ts">
-  /** Supplies the open authentication dialog's title, which the tab shows in place of the route's own. */
-  export const authenticationTitleContext = Symbol("authenticationTitle");
+  import { createContext } from "svelte";
+
+  /** Reads, installs and detects the open authentication dialog's title, which the tab shows in place of the route's own. */
+  export const [getAuthenticationTitle, setAuthenticationTitle, hasAuthenticationTitle] =
+    createContext<() => string | undefined>();
 </script>
 
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 
   let { title }: { title: string } = $props();
-  const authenticationTitle = getContext<(() => string | undefined) | undefined>(authenticationTitleContext);
+  const authenticationTitle = hasAuthenticationTitle() ? getAuthenticationTitle() : undefined;
   const { t } = getI18nContext();
 </script>
 

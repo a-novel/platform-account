@@ -1,6 +1,7 @@
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
 import type { AuthenticationJourney, AuthenticationPanelModel } from "#lib/application/auth/types.js";
 import type { AuthDialogView, ShellApps, ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
+import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
 
 import { withAuthView } from "./auth-dialog-state";
 import { withNavigationOpen } from "./navigation-state";
@@ -15,9 +16,12 @@ export interface ShellControllerState {
   homeHref: string;
   accountHref: string;
   logoutAction: string;
-  privacyHref: string;
+  /** The Privacy page, absent on a platform that collects no browser telemetry and so asks nothing. */
+  privacyHref: string | null;
   /** The app list, absent while the server cannot read where the apps live. */
   apps: ShellApps | null;
+  /** The planned downtime the shell announces and locks the sign-in dialog for, absent where nothing tracks it. */
+  platformDowntime?: PlatformDowntime;
 }
 
 /** Route-owned state synchronized into the shell after navigation. */
@@ -77,6 +81,7 @@ export function createShellController({
   logoutAction,
   privacyHref,
   apps,
+  platformDowntime,
   authentication,
   resolveAuthentication,
   allowNativeLogout = true,
@@ -128,7 +133,7 @@ export function createShellController({
 
   return {
     get state() {
-      return { model, homeHref, accountHref, logoutAction, privacyHref, apps };
+      return { model, homeHref, accountHref, logoutAction, privacyHref, apps, platformDowntime };
     },
     authentication,
     authenticationDialog,
