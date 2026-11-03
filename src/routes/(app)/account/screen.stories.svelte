@@ -92,11 +92,11 @@
     const t = createStorybookTranslator(globals);
     const email = within(within(canvasElement).getByRole("region", { name: t("authUi.account.email.title") }));
     const current = email.getByLabelText(t("authUi.account.email.current"));
-    const pending = email.getByLabelText(t("authUi.account.email.pending"));
     await expect(current).toHaveValue(ready.credentials.email);
-    await expect(pending).toHaveValue(pendingChange.credentials.pendingEmail.email);
     await expect(current).toHaveAttribute("readonly");
-    await expect(pending).toHaveAttribute("readonly");
+    const pending = email.getByRole("note");
+    await expect(pending).toHaveTextContent(t("authUi.account.email.pending"));
+    await expect(pending).toHaveTextContent(pendingChange.credentials.pendingEmail.email);
   }
 
   async function verifyPasswordValidation({ canvasElement }: { canvasElement: HTMLElement }) {

@@ -28,7 +28,7 @@
     Stack,
   } from "@a-novel-kit/uikit";
 
-  import { ShieldCheck } from "@lucide/svelte";
+  import { Hourglass, ShieldCheck } from "@lucide/svelte";
 
   let { controller }: AccountScreenProps = $props();
 
@@ -42,7 +42,6 @@
   const newPasswordId = `${componentId}-new-password`;
   const confirmPasswordId = `${componentId}-confirm-password`;
   const currentEmailId = `${componentId}-current-email`;
-  const pendingEmailId = `${componentId}-pending-email`;
   const newEmailId = `${componentId}-new-email`;
 
   const passwordSubmitting = $derived(model.passwordState.status === "submitting");
@@ -160,15 +159,14 @@
               </Field>
               {#if model.credentials.pendingEmail}
                 {@const pending = model.credentials.pendingEmail}
-                <Field
-                  controlId={pendingEmailId}
-                  label={t("authUi.account.email.pending")}
-                  hint={t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-                >
-                  {#snippet children(control)}
-                    <Input {...control} type="email" value={pending.email} readonly />
+                <!-- Stored state rather than feedback, so a note: the form's status already announces a new link. -->
+                <Alert tone="warning" role="note" title={t("authUi.account.email.pending")}>
+                  {#snippet icon()}
+                    <Hourglass size="var(--icon-size-sm)" />
                   {/snippet}
-                </Field>
+                  <span class="pending-email">{pending.email}</span>
+                  {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+                </Alert>
               {/if}
             {:else}
               <p class="feedback-message">{t("authUi.account.email.unavailable")}</p>
@@ -383,6 +381,12 @@
     margin: 0;
     line-height: var(--line-height-normal);
     overflow-wrap: anywhere;
+  }
+
+  .pending-email {
+    display: block;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
   }
 
   .roles {
