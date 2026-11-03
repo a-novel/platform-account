@@ -2,8 +2,8 @@ import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { expectFormActionLayout, submitForm } from "#lib/ui/forms.fixture.js";
 
+import AuthenticationPanel from "./authentication-panel.svelte";
 import { createAuthenticationPanelController } from "./controller.svelte";
-import AuthenticationPanel from "./screen.svelte";
 
 import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";

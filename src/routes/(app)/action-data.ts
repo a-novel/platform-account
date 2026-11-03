@@ -1,4 +1,4 @@
-import type { AuthenticationJourney, AuthenticationPanelModel } from "./types";
+import type { AuthenticationJourney, AuthenticationPanelModel } from "#lib/application/auth/types.js";
 
 /** AuthenticationActionData is the result the shell dialog's action returns to the page. */
 export interface AuthenticationActionData {

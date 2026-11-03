@@ -3,8 +3,11 @@ import type { ShellViewModel } from "#lib/application/shell/types.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
-import { createAuthenticationPanelController } from "./(authentication)/controller.svelte";
-import { createShellController, readyAuthenticationModel } from "./controller.svelte";
+import {
+  createAuthenticationPanelController,
+  createShellController,
+  readyAuthenticationModel,
+} from "./controller.svelte";
 import Screen from "./screen.svelte";
 import ShellStory from "./story.svelte";
 

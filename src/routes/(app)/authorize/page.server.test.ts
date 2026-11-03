@@ -1,4 +1,4 @@
-import { authorize } from "./authorize";
+import { load as authorize } from "./+page.server";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -1,5 +1,4 @@
-import { loadShortCodeRoute, submitShortCodeRoute } from "#lib/server/auth/short-code-route.js";
-
+import { loadShortCodeRoute, submitShortCodeRoute } from "../../short-code.server";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = (event) => loadShortCodeRoute("password-reset", event);
