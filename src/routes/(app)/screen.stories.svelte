@@ -13,7 +13,13 @@
   import type { StoryContext } from "@storybook/sveltekit";
   import { expect, userEvent, within } from "storybook/test";
 
-  const anonymous: ShellViewModel = { authView: null, session: { status: "anonymous" } };
+  const anonymous: ShellViewModel = {
+    activeNavigation: "home",
+    rail: "expanded",
+    drawerOpen: false,
+    authView: null,
+    session: { status: "anonymous" },
+  };
   const authenticated: ShellViewModel = {
     ...anonymous,
     session: {
@@ -45,6 +51,10 @@
     },
   };
 
+  function withOpenMobileNavigation(model: ShellViewModel): ShellViewModel {
+    return { ...model, drawerOpen: true };
+  }
+
   const { Story } = defineMeta({
     title: "Shell/Account shell",
     tags: ["!autodocs"],
@@ -62,19 +72,65 @@
   async function verifyAnonymousAuthentication({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("link", { name: t("shell.brand") })).toHaveAttribute("href", "#home");
+    await expect(canvas.getByRole("link", { name: t("shell.home") })).toHaveAttribute("aria-current", "page");
+    await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
+    await expect(canvas.getByRole("link", { name: t("shell.register") })).toHaveAttribute("href", "#register");
+    await expect(canvas.queryByRole("button", { name: t("shell.logout") })).not.toBeInTheDocument();
 
     const signIn = canvas.getByRole("link", { name: t("shell.signIn") });
+    await expect(signIn).toHaveAttribute("href", "#login");
     await userEvent.click(signIn);
     await expect(canvas.queryByRole("dialog", { name: t("shell.auth.login.title") })).not.toBeInTheDocument();
+    clearFocus();
+  }
+
+  async function verifyRailToggle({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "24");
+    await expect(canvas.getByRole("link", { name: t("shell.signIn") })).toHaveAttribute("title", t("shell.signIn"));
+    const toggle = canvas.getByRole("button", { name: t("shell.expandNavigation") });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    clearFocus();
+  }
+
+  async function verifyExpandedMobileNavigation({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    const navigation = canvas.getByRole("dialog", { name: t("shell.brand") });
+    await expect(navigation).toBeVisible();
+    await expect(within(navigation).getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
+
+    await userEvent.click(within(navigation).getByRole("link", { name: t("shell.closeNavigation") }));
+    await expect(navigation).toBeVisible();
+    clearFocus();
+  }
+
+  async function verifyCollapsedMobileNavigation({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    const openNavigation = canvas.getByRole("link", { name: t("shell.openNavigation") });
+    const mobileHeader = openNavigation.closest("header");
+    if (!mobileHeader) throw new Error("The mobile navigation control must live in the shell header");
+    const navigationRail = canvas.getByRole("complementary", { hidden: true });
+    await expect(navigationRail).toHaveAttribute("aria-label", t("shell.navigation"));
+    await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
+    await expect(canvas.queryByRole("dialog", { name: t("shell.brand") })).not.toBeInTheDocument();
+    await expect(getComputedStyle(mobileHeader).backgroundColor).toBe(getComputedStyle(navigationRail).backgroundColor);
+
+    await userEvent.click(openNavigation);
+    await expect(canvas.queryByRole("dialog", { name: t("shell.brand") })).not.toBeInTheDocument();
+    await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
     clearFocus();
   }
 
   async function verifyAppList({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await userEvent.click(canvas.getByRole("button", { name: t("shell.apps.label") }));
-    const apps = canvas.getByRole("navigation", { name: t("shell.apps.label") });
+    const apps = within(canvas.getByRole("complementary")).getByRole("navigation", { name: t("shell.apps.label") });
     await expect(apps).toBeVisible();
     await expect(within(apps).getByRole("link", { name: t("shell.apps.studio") })).toHaveAttribute("href", "#studio");
   }
@@ -82,21 +138,32 @@
   async function verifyAuthenticatedActions({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("link", { name: "Maya Chen" })).toHaveAttribute("href", "#account");
+    const account = canvas.getByRole("link", { name: "Maya Chen" });
+    await expect(account).toHaveAttribute("href", "#account");
+    // This platform serves the account page, so the link stays in the tab.
+    await expect(account).not.toHaveAttribute("target");
     await expect(canvas.getByRole("button", { name: t("shell.logout") })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: t("shell.logout") }));
-    await expect(canvas.getByRole("link", { name: "Maya Chen" })).toBeVisible();
+    await expect(account).toBeVisible();
     await expect(canvas.queryByRole("link", { name: t("shell.signIn") })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("link", { name: t("shell.register") })).not.toBeInTheDocument();
     clearFocus();
   }
 
   async function verifyAuthenticatedMobileLayout({ canvasElement, globals }: PlayContext) {
+    await verifyExpandedMobileNavigation({ canvasElement, globals });
+
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    const header = canvas.getByRole("banner");
-    await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
-    await expect(within(header).getByRole("link", { name: "Maya Chen" })).toBeVisible();
-    await expect(within(header).getByRole("button", { name: t("shell.logout") })).toBeVisible();
+    const navigation = canvas.getByRole("dialog", { name: t("shell.brand") });
+    const labelStarts = [
+      within(navigation).getByText(t("shell.home")).getBoundingClientRect().left,
+      within(navigation).getByText(t("shell.apps.studio")).getBoundingClientRect().left,
+      within(navigation).getByText("Maya Chen").getBoundingClientRect().left,
+      within(navigation).getByText(t("shell.logout")).getBoundingClientRect().left,
+    ];
+
+    await expect(Math.max(...labelStarts) - Math.min(...labelStarts)).toBeLessThanOrEqual(1);
     await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
   }
 
@@ -105,12 +172,16 @@
     const t = createStorybookTranslator(globals);
     const forgotPassword = canvas.getByRole("link", { name: t("shell.auth.forgotPassword") });
     const register = canvas.getByRole("link", { name: t("shell.register") });
+    const submit = canvas.getByRole("button", { name: t("shell.signIn") });
     const forgotPasswordBounds = forgotPassword.getBoundingClientRect();
-    const registerBounds = register.getBoundingClientRect();
+    const password = canvasElement.querySelector('input[type="password"]');
+    if (!password) throw new Error("Login form must hold a password input");
+    const passwordBounds = password.getBoundingClientRect();
+    const submitBounds = submit.getBoundingClientRect();
 
-    await expect(registerBounds.top).toBeGreaterThanOrEqual(forgotPasswordBounds.bottom);
-    await expect(Math.abs(registerBounds.left - forgotPasswordBounds.left)).toBeLessThanOrEqual(1);
-    await expect(Math.abs(registerBounds.right - forgotPasswordBounds.right)).toBeLessThanOrEqual(1);
+    await expect(forgotPasswordBounds.bottom).toBeLessThanOrEqual(passwordBounds.top);
+    await expect(Math.abs(forgotPasswordBounds.right - submitBounds.right)).toBeLessThanOrEqual(1);
+    await expect(register.getBoundingClientRect().top).toBeGreaterThanOrEqual(submitBounds.bottom);
     await expect(forgotPassword.scrollWidth).toBeLessThanOrEqual(forgotPassword.clientWidth);
     await expect(register.scrollWidth).toBeLessThanOrEqual(register.clientWidth);
   }
@@ -156,8 +227,28 @@
   <StoryHarness initialModel={anonymous} />
 </Story>
 
-<Story name="Anonymous — mobile" exportName="AnonymousMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={anonymous} />
+<Story
+  name="Anonymous — mobile"
+  exportName="AnonymousMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyExpandedMobileNavigation}
+>
+  <StoryHarness initialModel={withOpenMobileNavigation(anonymous)} />
+</Story>
+
+<Story name="Collapsed rail" exportName="CollapsedRail" asChild play={verifyRailToggle}>
+  <StoryHarness initialModel={{ ...anonymous, rail: "collapsed" }} />
+</Story>
+
+<Story
+  name="Collapsed rail (mobile)"
+  exportName="CollapsedRailMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyCollapsedMobileNavigation}
+>
+  <StoryHarness initialModel={{ ...anonymous, rail: "collapsed" }} />
 </Story>
 
 <Story name="App list" asChild play={verifyAppList}>
@@ -165,7 +256,7 @@
 </Story>
 
 <Story name="Privacy link" asChild>
-  <StoryHarness initialModel={authenticated} collectsTelemetry />
+  <StoryHarness initialModel={{ ...authenticated, activeNavigation: "privacy" }} collectsTelemetry />
 </Story>
 
 <Story name="Authenticated" asChild play={verifyAuthenticatedActions}>
@@ -179,23 +270,35 @@
   asChild
   play={verifyAuthenticatedMobileLayout}
 >
-  <StoryHarness initialModel={authenticated} />
+  <StoryHarness initialModel={withOpenMobileNavigation(authenticated)} />
 </Story>
 
 <Story name="Loading account" asChild>
   <StoryHarness initialModel={loadingAccount} />
 </Story>
 
-<Story name="Loading account — mobile" exportName="LoadingAccountMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={loadingAccount} />
+<Story
+  name="Loading account — mobile"
+  exportName="LoadingAccountMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyExpandedMobileNavigation}
+>
+  <StoryHarness initialModel={withOpenMobileNavigation(loadingAccount)} />
 </Story>
 
 <Story name="Account error" asChild>
   <StoryHarness initialModel={accountError} />
 </Story>
 
-<Story name="Account error — mobile" exportName="AccountErrorMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={accountError} />
+<Story
+  name="Account error — mobile"
+  exportName="AccountErrorMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyExpandedMobileNavigation}
+>
+  <StoryHarness initialModel={withOpenMobileNavigation(accountError)} />
 </Story>
 
 <Story name="Maintenance" asChild>
@@ -414,6 +517,12 @@
   <StoryHarness initialModel={longAccountName} />
 </Story>
 
-<Story name="Long account name — mobile" exportName="LongAccountNameMobile" globals={reviewStoryGlobals.mobile} asChild>
-  <StoryHarness initialModel={longAccountName} />
+<Story
+  name="Long account name — mobile"
+  exportName="LongAccountNameMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyExpandedMobileNavigation}
+>
+  <StoryHarness initialModel={withOpenMobileNavigation(longAccountName)} />
 </Story>

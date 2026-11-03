@@ -163,6 +163,7 @@ describe("account session at the request boundary", () => {
   it("serves an anonymous home without calling authentication", async () => {
     const { event } = request("/");
     await expect(loadShell(event)).resolves.toEqual({
+      activeNavigation: "home",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "anonymous" },
       authorization: "anonymous",
@@ -170,10 +171,18 @@ describe("account session at the request boundary", () => {
     expect(fetchService).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["/privacy", "privacy"],
+    ["/authorize", null],
+  ] as const)("marks %s with the %s rail destination", async (path, activeNavigation) => {
+    await expect(loadShell(request(path).event)).resolves.toMatchObject({ activeNavigation });
+  });
+
   it("exposes only a verified display identity to the browser", async () => {
     const { event } = request("/account", { ...tokenCookies, account_identity_handle: "maya.chen" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toEqual({
+      activeNavigation: "home",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "authenticated", displayName: "Maya Chen", initials: "MC" },
       authorization: "allowed",
@@ -225,6 +234,7 @@ describe("account session at the request boundary", () => {
     env.AUTHENTICATION_SERVICE_URL = "";
     const { event } = request("/", tokenCookies);
     await expect(loadShell(event)).resolves.toEqual({
+      activeNavigation: "home",
       apps: null,
       session: { status: "error" },
       authorization: "unavailable",
@@ -238,6 +248,7 @@ describe("account session at the request boundary", () => {
       .mockResolvedValueOnce(new Response("expired", { status: 401 }))
       .mockResolvedValueOnce(new Response("private service detail", { status: 503 }));
     await expect(loadShell(event)).resolves.toEqual({
+      activeNavigation: "home",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "error" },
       authorization: "unavailable",
@@ -543,6 +554,7 @@ describe("planned downtime at the request boundary", () => {
     const { event } = request("/", { account_access_token: "access", account_refresh_token: "refresh" });
 
     await expect(loadShell(event)).resolves.toEqual({
+      activeNavigation: "home",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "downtime" },
       authorization: "unavailable",

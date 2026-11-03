@@ -91,10 +91,12 @@
   async function verifyPendingEmail({ canvasElement, globals }: PlayContext) {
     const t = createStorybookTranslator(globals);
     const email = within(within(canvasElement).getByRole("region", { name: t("authUi.account.email.title") }));
-    const terms = email.getAllByRole("term").map((term) => term.textContent);
-    await expect(terms).toEqual([t("authUi.account.email.current"), t("authUi.account.email.pending")]);
-    await expect(email.getByText(ready.credentials.email)).toBeVisible();
-    await expect(email.getByText(pendingChange.credentials.pendingEmail.email)).toBeVisible();
+    const current = email.getByLabelText(t("authUi.account.email.current"));
+    await expect(current).toHaveValue(ready.credentials.email);
+    await expect(current).toHaveAttribute("readonly");
+    const pending = email.getByRole("note");
+    await expect(pending).toHaveTextContent(t("authUi.account.email.pending"));
+    await expect(pending).toHaveTextContent(pendingChange.credentials.pendingEmail.email);
   }
 
   async function verifyPasswordValidation({ canvasElement }: { canvasElement: HTMLElement }) {

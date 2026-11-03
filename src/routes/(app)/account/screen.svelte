@@ -28,7 +28,7 @@
     Stack,
   } from "@a-novel-kit/uikit";
 
-  import { ShieldCheck } from "@lucide/svelte";
+  import { Hourglass, ShieldCheck } from "@lucide/svelte";
 
   let { controller }: AccountScreenProps = $props();
 
@@ -41,6 +41,7 @@
   const currentPasswordId = `${componentId}-current-password`;
   const newPasswordId = `${componentId}-new-password`;
   const confirmPasswordId = `${componentId}-confirm-password`;
+  const currentEmailId = `${componentId}-current-email`;
   const newEmailId = `${componentId}-new-email`;
 
   const passwordSubmitting = $derived(model.passwordState.status === "submitting");
@@ -150,22 +151,23 @@
             </header>
 
             {#if model.credentials.status === "ready"}
-              <dl class="details">
-                <div>
-                  <dt>{t("authUi.account.email.current")}</dt>
-                  <dd>{model.credentials.email}</dd>
-                </div>
-                {#if model.credentials.pendingEmail}
-                  {@const pending = model.credentials.pendingEmail}
-                  <div>
-                    <dt>{t("authUi.account.email.pending")}</dt>
-                    <dd>{pending.email}</dd>
-                    <dd class="pending-expiry">
-                      {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-                    </dd>
-                  </div>
-                {/if}
-              </dl>
+              {@const email = model.credentials.email}
+              <Field controlId={currentEmailId} label={t("authUi.account.email.current")}>
+                {#snippet children(control)}
+                  <Input {...control} type="email" value={email} readonly />
+                {/snippet}
+              </Field>
+              {#if model.credentials.pendingEmail}
+                {@const pending = model.credentials.pendingEmail}
+                <!-- Stored state rather than feedback, so a note: the form's status already announces a new link. -->
+                <Alert tone="warning" role="note" title={t("authUi.account.email.pending")}>
+                  {#snippet icon()}
+                    <Hourglass size="var(--icon-size-sm)" />
+                  {/snippet}
+                  <span class="pending-email">{pending.email}</span>
+                  {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+                </Alert>
+              {/if}
             {:else}
               <p class="feedback-message">{t("authUi.account.email.unavailable")}</p>
             {/if}
@@ -381,6 +383,12 @@
     overflow-wrap: anywhere;
   }
 
+  .pending-email {
+    display: block;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+  }
+
   .roles {
     display: flex;
     flex-wrap: wrap;
@@ -390,11 +398,6 @@
   .monospace {
     font-size: var(--font-size-sm);
     font-family: var(--font-family-mono);
-  }
-
-  .details .pending-expiry {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
   }
 
   @media (max-width: 34.999rem) {

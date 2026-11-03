@@ -10,6 +10,16 @@ async function choosePassword(page: Page, password: string) {
   await page.getByLabel(/^Confirm new password/).fill(password);
 }
 
+/** Opens the menu that holds the account controls on a phone. The rail shows them on a desktop. */
+async function openAccountControls(page: Page, isMobile: boolean) {
+  if (isMobile) await page.getByRole("link", { name: "Open navigation", exact: true }).click();
+}
+
+/** The account controls: the rail on a wide screen, the open menu on a phone. Pages repeat "Log in". */
+function accountControls(page: Page, isMobile: boolean) {
+  return isMobile ? page.getByRole("dialog") : page.getByRole("complementary");
+}
+
 async function authenticationResponds(): Promise<boolean> {
   try {
     return (await fetch("http://127.0.0.1:14100/v2/ping")).ok;
@@ -42,9 +52,12 @@ test("login returns to the protected account, survives reload and logout protect
   await page.reload();
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
   await expect(page).toHaveTitle("Account settings | Agora");
-  const perRunValues = ["Account ID", "Current email", "Access expires", "Session expires"].map((label) =>
-    page.getByText(label, { exact: true }).locator("+ dd")
-  );
+  const perRunValues = [
+    page.getByLabel("Current email", { exact: true }),
+    ...["Account ID", "Access expires", "Session expires"].map((label) =>
+      page.getByText(label, { exact: true }).locator("+ dd")
+    ),
+  ];
   await screenshot(page, info, "authenticated-account", perRunValues);
 
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
@@ -133,7 +146,7 @@ test("account forms change the password and confirm an email update", async ({ p
   await page.getByLabel(/^New email address/).fill(email);
   await page.getByRole("button", { name: "Send link", exact: true }).click();
   await expect(page.getByText("Check your inbox", { exact: true })).toBeVisible();
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  await expect(page.getByRole("note")).toContainText(email);
 
   await page.goto(await emailLink(email, "/ext/email/validate"));
   await expect(page).toHaveURL("/ext/email/validate?result=success");
@@ -149,14 +162,20 @@ test("account forms change the password and confirm an email update", async ({ p
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
 });
 
-test("dialog history and keyboard dismissal restore the shell focus", async ({ page }) => {
+test("dialog history and keyboard dismissal restore the shell focus", async ({ page, isMobile }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Your Agora account | Agora");
 
-  const trigger = page.getByRole("banner").getByRole("link", { name: "Log in", exact: true });
-  await trigger.click();
+  // On a phone, the menu closes as the dialog opens, so its control takes the focus back.
+  const trigger = isMobile
+    ? page.getByRole("link", { name: "Open navigation", exact: true })
+    : page.getByRole("complementary").getByRole("link", { name: "Log in", exact: true });
+  await openAccountControls(page, isMobile);
+  await accountControls(page, isMobile).getByRole("link", { name: "Log in", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Log in", exact: true })).toBeVisible();
   await expect(page).toHaveTitle("Log in | Agora");
+  await expect(page.getByRole("dialog")).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Close dialog" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel(/^Email address/)).toBeFocused();
@@ -180,17 +199,35 @@ test("dialog history and keyboard dismissal restore the shell focus", async ({ p
   await expect(trigger).toBeFocused();
 });
 
-test("the header opens each Agora app at its sign-in page", async ({ page }) => {
+test("the navigation opens each Agora app at its sign-in page", async ({ page, isMobile }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Agora apps", exact: true }).click();
+  await openAccountControls(page, isMobile);
   const apps = page.getByRole("navigation", { name: "Agora apps" });
   await expect(apps).toBeVisible();
   await expect(apps.getByRole("link", { name: "Studio", exact: true })).toHaveAttribute(
     "href",
     "https://studio.example.test/auth/sign-in"
   );
-  await page.keyboard.press("Escape");
-  await expect(apps).toBeHidden();
+});
+
+test("navigation controls preserve the rail preference and drawer focus", async ({ page, isMobile }) => {
+  await page.goto("/");
+  if (isMobile) {
+    await page.getByRole("link", { name: "Open navigation", exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Open navigation", exact: true })).toBeFocused();
+    return;
+  }
+
+  await page.getByRole("button", { name: "Collapse navigation", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Expand navigation", exact: true })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Expand navigation", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Expand navigation", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Collapse navigation", exact: true })).toBeVisible();
 });
 
 test("an authentication outage preserves the session and recovers after reload", async ({
@@ -223,10 +260,11 @@ test("an authentication outage preserves the session and recovers after reload",
 test.describe("native forms without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("shell links open, switch and close usable authentication forms", async ({ page }) => {
+  test("shell links open, switch and close usable authentication forms", async ({ page, isMobile }) => {
     await page.goto("/?returnTo=%2Faccount");
 
-    await page.getByRole("banner").getByRole("link", { name: "Log in", exact: true }).click();
+    await openAccountControls(page, isMobile);
+    await accountControls(page, isMobile).getByRole("link", { name: "Log in", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByLabel(/^Email address/)).toBeVisible();
 

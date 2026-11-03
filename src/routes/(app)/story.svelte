@@ -26,8 +26,6 @@
 
   import { untrack } from "svelte";
 
-  import { createOpenController } from "@a-novel-kit/uikit";
-
   let { initialModel, initialAuthenticationModel, collectsTelemetry, downtime, children }: ShellStoryProps = $props();
 
   if (untrack(() => collectsTelemetry))
@@ -72,12 +70,21 @@
       close: () => {},
       toggle: () => {},
     },
-    // The popover anchors to the button that opens it, so the app list opens for real.
-    appList: createOpenController(),
+    navigationDialog: {
+      get state() {
+        return { open: initialModel.drawerOpen };
+      },
+      open: () => {},
+      close: () => {},
+      toggle: () => {},
+    },
+    navigationHref: (open) => (open ? "#menu" : "#"),
     openAuthentication: () => {},
     authenticationHref: (view) => `#${view ?? "home"}`,
+    toggleRail: () => {},
     logout: () => false,
     synchronizeRoute: () => {},
+    synchronizeRail: () => {},
   };
 </script>
 

@@ -161,18 +161,27 @@ shell:
   auth:
     createAccount: Demander une invitation
     forgotPassword: Mot de passe oublié ?
+    hasAccount: Vous avez déjà un compte ?
     login:
       authorizationDescription: Connectez-vous avec votre compte Agora pour revenir à l’application d’où vous venez.
       title: Connectez-vous
+    noAccount: Pas encore de compte ?
     register:
       description: L’accès se fait actuellement sur invitation. Vous recevrez un courriel lorsque la vôtre sera disponible.
       title: Rejoignez la liste d’invitation Agora
+    remembersPassword: Vous vous souvenez de votre mot de passe ?
     reset:
       description: Vous recevrez un lien par courriel pour choisir un nouveau mot de passe.
       title: Réinitialisez votre mot de passe
   brand: Agora
   closeAuthentication: Fermer la fenêtre
+  closeNavigation: Fermer la navigation
+  collapseNavigation: Réduire la navigation
+  expandNavigation: Développer la navigation
+  home: Accueil
   logout: Me déconnecter
+  navigation: Navigation d’Agora
+  openNavigation: Ouvrir la navigation
   privacy: Confidentialité
   register: M’inscrire
   sessionDowntime: Compte indisponible pendant la maintenance.
