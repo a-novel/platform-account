@@ -1,5 +1,6 @@
 import { resolveLocale } from "#lib/i18n/config.js";
 import { createI18n } from "#lib/i18n/instance.js";
+import { hasSession } from "#lib/server/auth/session.js";
 import { secureShortCodeResponse } from "#lib/server/auth/short-code-response.js";
 
 import { SpanStatusCode } from "@opentelemetry/api";
@@ -8,7 +9,7 @@ import type { Handle } from "@sveltejs/kit/hooks";
 
 /**
  * Gives each request its own locale and translations, hands its trace to the page, refuses framing,
- * keeps email-link pages out of caches and referrers, and traces the response.
+ * keeps signed-in and email-link pages out of caches, and traces the response.
  */
 export const handle: Handle = async ({ event, resolve }) => {
   const locale = resolveLocale(event.request.headers.get("accept-language"));
@@ -24,6 +25,8 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Any page can open the login dialog, so no page may be framed by a site overlaying it (RFC 9700 §4.16).
   // Pages refuse framing in their CSP, set in vite.config.ts; this header covers every response.
   response.headers.set("x-frame-options", "DENY");
+  // A response rendered with a session is the visitor's alone, so no cache may keep it (RFC 9111 §5.2.2.5).
+  if (hasSession(event.cookies)) response.headers.set("cache-control", "private, no-store");
 
   traceResponse(event, response);
   return isEmailLinkPage(event) ? secureShortCodeResponse(response) : response;

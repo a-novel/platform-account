@@ -110,6 +110,7 @@
         <Field
           controlId={newPasswordId}
           label={t("authUi.shortCode.newPasswordLabel")}
+          hint={t("authUi.passwordHint")}
           error={fieldError("newPassword")}
           required
         >

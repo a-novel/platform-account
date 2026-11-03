@@ -43,11 +43,13 @@ test("login returns to the protected account, survives reload and logout protect
   await expect(page.getByRole("heading", { name: "Manage your account", exact: true })).toBeVisible();
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
 
-  const cookies = (await context.cookies()).filter((cookie) => cookie.name.startsWith("account_"));
+  const cookies = (await context.cookies()).filter((cookie) => cookie.name.startsWith("__Host-account_"));
   expect(cookies.map((cookie) => cookie.name)).toEqual(
-    expect.arrayContaining(["account_access_token", "account_refresh_token"])
+    expect.arrayContaining(["__Host-account_access_token", "__Host-account_refresh_token"])
   );
-  expect(cookies.every((cookie) => cookie.httpOnly && cookie.sameSite === "Lax")).toBe(true);
+  expect(
+    cookies.every((cookie) => cookie.httpOnly && cookie.secure && cookie.path === "/" && cookie.sameSite === "Lax")
+  ).toBe(true);
 
   await page.reload();
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
@@ -63,14 +65,17 @@ test("login returns to the protected account, survives reload and logout protect
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
   await expect(page).toHaveURL("/");
   await expect(page).toHaveTitle("Your Agora account | Agora");
-  expect((await context.cookies()).filter((cookie) => cookie.name.startsWith("account_"))).toEqual([]);
+  expect((await context.cookies()).filter((cookie) => cookie.name.startsWith("__Host-account_"))).toEqual([]);
 
   // Logout revoked the refresh token, so the service refuses to renew the session with it.
   const tokens = Object.fromEntries(cookies.map((cookie) => [cookie.name, cookie.value]));
   const renewal = await callerFetch(accountCaller)("http://127.0.0.1:14100/v2/session", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accessToken: tokens.account_access_token, refreshToken: tokens.account_refresh_token }),
+    body: JSON.stringify({
+      accessToken: tokens["__Host-account_access_token"],
+      refreshToken: tokens["__Host-account_refresh_token"],
+    }),
   });
   expect(renewal.status).toBe(403);
 

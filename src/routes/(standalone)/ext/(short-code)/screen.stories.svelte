@@ -41,7 +41,7 @@
       })
     ).toBeVisible();
     await expect(canvas.getByText(t("authUi.shortCode.journeys.register.description"))).toBeVisible();
-    await expect(canvas.queryByText(t("authUi.account.password.hint"))).not.toBeInTheDocument();
+    await expect(canvas.getByText(t("authUi.passwordHint"))).toBeVisible();
     expect(canvasElement.textContent).not.toContain("@");
 
     const pageBounds = canvas.getByRole("main").getBoundingClientRect();

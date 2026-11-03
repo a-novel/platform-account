@@ -18,6 +18,7 @@ function event(path: string, language?: string, traced = false, routeId?: string
     locals: {},
     request: new Request(url, { headers: language ? { "accept-language": language } : undefined }),
     route: { id: routeId === undefined ? url.pathname : routeId },
+    cookies: { get: () => undefined },
     tracing: { enabled: traced, root, current: root },
   } as unknown as RequestEvent;
 }
@@ -88,6 +89,18 @@ describe("request hook", () => {
     });
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(response.headers.get("referrer-policy")).toBe("strict-origin");
+  });
+
+  it("keeps a response rendered with a session out of every cache", async () => {
+    const signedIn = {
+      ...event("/privacy"),
+      cookies: { get: (name: string) => (name === "__Host-account_refresh_token" ? "refresh" : undefined) },
+    } as RequestEvent;
+    const response = await handle({
+      event: signedIn,
+      resolve: vi.fn().mockResolvedValue(new Response("page", { headers: { "cache-control": "public, max-age=60" } })),
+    });
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
   it.each([200, 303, 400])("refuses framing of every response with status %s", async (status) => {
