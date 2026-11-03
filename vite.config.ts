@@ -10,8 +10,15 @@ export default SvelteKitVite(
     },
     plugins: [Yaml()],
   },
-  // Deployments derive the origin from each request. A build for a known address, such as the
-  // Playwright server, trusts ORIGIN instead.
-  // The release version names the build, so browser telemetry reports which release it runs.
-  { paths: { origin: process.env.ORIGIN }, tracing: { server: true }, version: { name: manifest.version } }
+  {
+    // Any page can open the login dialog, so no site may frame one (RFC 9700 §4.16). nodelib's preset
+    // sends this directive by default from 2.4.3, which a directive of the same name replaces.
+    csp: { directives: { "frame-ancestors": ["none"] } },
+    // Deployments derive the origin from each request. A build for a known address, such as the
+    // Playwright server, trusts ORIGIN instead.
+    paths: { origin: process.env.ORIGIN },
+    tracing: { server: true },
+    // The release version names the build, so browser telemetry reports which release it runs.
+    version: { name: manifest.version },
+  }
 );

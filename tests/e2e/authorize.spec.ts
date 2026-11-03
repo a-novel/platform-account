@@ -90,10 +90,10 @@ async function expectErrorPage(page: Page, href: string) {
   const response = await page.goto(href);
 
   expect(response?.status()).toBe(400);
-  expect(response?.headers()).toMatchObject({
-    "x-frame-options": "DENY",
-    "content-security-policy": "frame-ancestors 'none'",
-  });
+  expect(response?.headers()["x-frame-options"]).toBe("DENY");
+  // The page's one policy, from kit.csp, refuses framing once among its directives.
+  const policy = response?.headers()["content-security-policy"] ?? "";
+  expect(policy.match(/frame-ancestors 'none'/g)).toHaveLength(1);
   await expect(page).toHaveURL(href);
   await expect(page).toHaveTitle("This request to log in can’t be accepted | Agora");
   await expect(page.getByRole("heading", { name: "This request to log in can’t be accepted", level: 1 })).toBeVisible();

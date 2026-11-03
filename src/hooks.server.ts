@@ -22,8 +22,8 @@ export const handle: Handle = async ({ event, resolve }) => {
   });
 
   // Any page can open the login dialog, so no page may be framed by a site overlaying it (RFC 9700 §4.16).
+  // Pages refuse framing in their CSP, set in vite.config.ts; this header covers every response.
   response.headers.set("x-frame-options", "DENY");
-  response.headers.append("content-security-policy", "frame-ancestors 'none'");
 
   traceResponse(event, response);
   return event.url.pathname.startsWith("/ext/") ? secureShortCodeResponse(response) : response;
