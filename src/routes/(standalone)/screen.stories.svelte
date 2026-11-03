@@ -34,7 +34,7 @@
 </Story>
 
 <Story
-  name="Maintenance — mobile"
+  name="Maintenance, mobile"
   exportName="MaintenanceMobile"
   globals={reviewStoryGlobals.mobile}
   args={{ platformDowntime: { downtime, started: true, timeZone: "UTC" } }}
