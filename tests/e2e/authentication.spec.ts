@@ -15,6 +15,11 @@ async function openAccountControls(page: Page, isMobile: boolean) {
   if (isMobile) await page.getByRole("link", { name: "Open navigation", exact: true }).click();
 }
 
+/** The account controls: the rail on a wide screen, the open menu on a phone. Pages repeat "Log in". */
+function accountControls(page: Page, isMobile: boolean) {
+  return isMobile ? page.getByRole("dialog") : page.getByRole("complementary");
+}
+
 async function authenticationResponds(): Promise<boolean> {
   try {
     return (await fetch("http://127.0.0.1:14100/v2/ping")).ok;
@@ -163,7 +168,7 @@ test("dialog history and keyboard dismissal restore the shell focus", async ({ p
     ? page.getByRole("link", { name: "Open navigation", exact: true })
     : page.getByRole("complementary").getByRole("link", { name: "Log in", exact: true });
   await openAccountControls(page, isMobile);
-  await page.getByRole("link", { name: "Log in", exact: true }).click();
+  await accountControls(page, isMobile).getByRole("link", { name: "Log in", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Log in", exact: true })).toBeVisible();
   await expect(page).toHaveTitle("Log in | Agora");
   await expect(page.getByRole("dialog")).toBeFocused();
@@ -256,7 +261,7 @@ test.describe("native forms without JavaScript", () => {
     await page.goto("/?returnTo=%2Faccount");
 
     await openAccountControls(page, isMobile);
-    await page.getByRole("link", { name: "Log in", exact: true }).click();
+    await accountControls(page, isMobile).getByRole("link", { name: "Log in", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByLabel(/^Email address/)).toBeVisible();
 
