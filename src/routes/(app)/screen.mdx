@@ -6,12 +6,14 @@ import { Canvas, Meta, ResponsiveStoryPair } from "@a-novel-kit/uikit-storybook"
 
 # Account shell
 
-The shell frames every account page with one header: the Agora mark, the app list and the account
-controls, and the authentication dialogs. It has no navigation menu. Each preview holds one state
+The shell frames every account page with the Agora navigation rail: the platform's destinations, the
+Agora apps and the account controls, and the authentication dialogs. Each preview holds one state
 fixed, so dismissing a dialog or a menu leaves it as it was.
 
-Wide headers show the Agora wordmark, and narrow ones show the icon, with the account name kept for
-assistive technology behind its avatar. The app list opens from the header's grid control.
+The expanded rail shows the Agora wordmark, and the collapsed rail shows its icon, with every
+destination and account control named for assistive technology. On mobile, a header keeps the
+wordmark and the menu control, and the menu holds the same navigation. "Log in" and "Register" open
+their dialogs in place, from the rail or the menu.
 
 Dialog titles and fields share a leading edge. UIKit owns the header controls and the action spacing. Service errors sit above the submit button, which
 stays apart from the fields. Mobile actions stack at full width. Desktop actions keep their natural
@@ -26,7 +28,7 @@ redirects. Invitation requests acknowledge list membership, with distinct warnin
 accounts and repeated requests. Recovery acknowledges delivery without disclosing whether an account
 exists.
 
-## Header and account
+## Navigation and account
 
 ### Anonymous
 
@@ -36,18 +38,31 @@ exists.
   meta={ShellStories}
 />
 
+### Collapsed rail
+
+<ResponsiveStoryPair
+  desktop={ShellStories.CollapsedRail}
+  mobile={ShellStories.CollapsedRailMobile}
+  meta={ShellStories}
+/>
+
 ### App list
+
+The Agora apps follow the platform's own destinations, each opening at its sign-in page.
 
 <Canvas of={ShellStories.AppList} />
 
 ### Privacy link
 
-While the platform collects browser telemetry, the header links Privacy, where the visitor changes the
+While the platform collects browser telemetry, the rail lists Privacy, where the visitor changes the
 consent banner's answer.
 
 <Canvas of={ShellStories.PrivacyLink} />
 
 ### Authenticated
+
+The account link shows the visitor's name and initials and opens the account page. "Log out" ends
+the session on every platform.
 
 <ResponsiveStoryPair
   desktop={ShellStories.Authenticated}

@@ -2,7 +2,9 @@
   import { readAuthenticationActionModel } from "#lib/application/auth/action-data.js";
   import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
   import { normalizeAuthUrl, readAuthView, withAuthView } from "#lib/application/shell/auth-dialog-state.js";
+  import { readNavigationOpen, withNavigationOpen } from "#lib/application/shell/navigation-state.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
+  import { readRailCollapsed, writeRailCollapsed } from "#lib/client/shell/rail-preference.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { authenticationTitleContext } from "#lib/ui/PageTitle.svelte";
   import { afterNavigate, goto } from "$app/navigation";
@@ -35,6 +37,9 @@
   );
   const controller = createShellController({
     model: {
+      activeNavigation: initialRoute.activeNavigation,
+      rail: "expanded",
+      drawerOpen: initialRoute.drawerOpen,
       authView: initialRoute.authView,
       session: initialRoute.session,
       authorizationRequest: initialRoute.authorizationRequest,
@@ -48,6 +53,8 @@
     authentication,
     resolveAuthentication: authenticationState,
     onAuthViewChange: changeAuthView,
+    onDrawerChange: (open) => showShallow(withNavigationOpen(new URL(currentHref), open)),
+    onRailChange: (rail) => writeRailCollapsed(window.localStorage, rail === "collapsed"),
     getUrl: () => new URL(currentHref),
   });
 
@@ -71,6 +78,8 @@
   });
 
   onMount(() => {
+    controller.synchronizeRail(readRailCollapsed(window.localStorage) ? "collapsed" : "expanded");
+
     window.addEventListener("popstate", synchronizeUrl);
 
     return () => window.removeEventListener("popstate", synchronizeUrl);
@@ -82,7 +91,9 @@
     const authView = readAuthView(parameters);
 
     return {
+      activeNavigation: data.activeNavigation,
       session: data.session,
+      drawerOpen: readNavigationOpen(parameters),
       authView,
       authorizationRequest: returnsToAuthorization(parameters.get("returnTo")),
       authentication: authView ? authenticationState(authView) : undefined,
@@ -121,10 +132,14 @@
     return target.pathname + target.search;
   }
 
+  /**
+   * Shows an authentication view in the URL. A journey opened from the menu also closes the menu, before the router
+   * updates the address bar, so each change builds on the shell's current URL rather than the browser's.
+   */
   function changeAuthView(view: AuthDialogView | null) {
-    const previousView = readAuthView(new URL(window.location.href).searchParams);
+    const previousView = readAuthView(new URL(currentHref).searchParams);
     // Opening the dialog adds a history entry. Any other change replaces the current one.
-    showShallow(withAuthView(new URL(window.location.href), view), previousView !== null || view === null);
+    showShallow(withAuthView(new URL(currentHref), view), previousView !== null || view === null);
   }
 </script>
 

@@ -8,7 +8,7 @@
 
 <script lang="ts">
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Link, StatusState } from "@a-novel-kit/uikit";
+  import { Button, StatusState } from "@a-novel-kit/uikit";
 
   let { loginHref }: HomeScreenProps = $props();
   const { t } = getI18nContext();
@@ -17,7 +17,7 @@
 <div class="home">
   <StatusState title={t("home.title")} description={t("home.description")} headingLevel={1}>
     {#snippet actions()}
-      <Link href={loginHref}>{t("shell.signIn")}</Link>
+      <Button href={loginHref}>{t("shell.signIn")}</Button>
     {/snippet}
   </StatusState>
 </div>

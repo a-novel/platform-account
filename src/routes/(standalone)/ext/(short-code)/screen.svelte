@@ -167,7 +167,6 @@
   .standalone-page {
     display: grid;
     box-sizing: border-box;
-    background: var(--color-surface-canvas);
     padding: clamp(var(--space-4), 5vi, var(--space-12));
     min-block-size: 100dvb;
     color: var(--color-text-primary);

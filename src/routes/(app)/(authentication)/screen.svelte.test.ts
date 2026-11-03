@@ -30,7 +30,7 @@ describe("authentication panel", () => {
     await page.getByLabelText(/Password/).fill("valid-example-password");
     const form = await submitForm("Log in");
 
-    await expectFormActionLayout(form);
+    await expectFormActionLayout(form, { stretch: true });
     expect(form.getAttribute("action")).toBe("/auth?/login");
     expect(form.getAttribute("method")).toBe("POST");
     expect(controller.state.model.state.status).toBe("submitting");
@@ -99,7 +99,7 @@ describe("authentication panel", () => {
     await expect.element(page.getByRole("alert")).toMatchTextContent("Please try again in a few minutes.");
     const form = (submit as HTMLButtonElement).form;
     if (!form) throw new Error("Submit button must belong to a form");
-    await expectFormActionLayout(form);
+    await expectFormActionLayout(form, { stretch: true });
   });
 
   it("translates stable feedback codes through the active locale", async () => {

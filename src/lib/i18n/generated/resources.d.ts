@@ -197,14 +197,17 @@ export default interface Resources {
       "auth": {
         "createAccount": "Request an invitation",
         "forgotPassword": "Forgot password?",
+        "hasAccount": "Already have an account?",
         "login": {
           "authorizationDescription": "Log in with your Agora account to return to the app you came from.",
           "title": "Log in"
         },
+        "noAccount": "No account yet?",
         "register": {
           "description": "Access is currently by invitation. We’ll contact you when yours is available.",
           "title": "Join the Agora invitation list"
         },
+        "remembersPassword": "Remember your password?",
         "reset": {
           "description": "You’ll receive an email link to choose a new password.",
           "title": "Reset your password"
@@ -212,7 +215,13 @@ export default interface Resources {
       },
       "brand": "Agora",
       "closeAuthentication": "Close dialog",
+      "closeNavigation": "Close navigation",
+      "collapseNavigation": "Collapse navigation",
+      "expandNavigation": "Expand navigation",
+      "home": "Home",
       "logout": "Log out",
+      "navigation": "Agora navigation",
+      "openNavigation": "Open navigation",
       "privacy": "Privacy",
       "register": "Register",
       "sessionDowntime": "Account unavailable during maintenance.",

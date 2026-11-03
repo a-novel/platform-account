@@ -18,6 +18,9 @@ export interface ShellApps {
 
 /** Serializable state consumed by the pure application shell. */
 export interface ShellViewModel {
+  activeNavigation: "home" | "privacy" | null;
+  rail: "expanded" | "collapsed";
+  drawerOpen: boolean;
   authView: AuthDialogView | null;
   session: ShellSession;
   /** Set while the dialog logs the visitor in for another Agora app's authorization request. */

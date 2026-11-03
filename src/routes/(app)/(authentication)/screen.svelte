@@ -1,9 +1,13 @@
 <script module lang="ts">
   import type { AuthenticationPanelController } from "./controller.svelte";
 
+  import type { Snippet } from "svelte";
+
   /** Props for the pure form rendered inside the shell authentication dialog. */
   export interface AuthenticationPanelProps {
     controller: AuthenticationPanelController;
+    /** Link beside the password label that leads to the password reset journey. */
+    forgotPassword?: Snippet;
   }
 </script>
 
@@ -16,7 +20,7 @@
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { Alert, Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
 
-  let { controller }: AuthenticationPanelProps = $props();
+  let { controller, forgotPassword }: AuthenticationPanelProps = $props();
 
   const model = $derived(controller.state.model);
   const action = $derived(controller.state.action);
@@ -62,6 +66,7 @@
       <Field
         controlId={passwordId}
         label={t("authUi.authentication.passwordLabel")}
+        labelActions={forgotPassword}
         error={fieldError("password")}
         required
       >
@@ -77,7 +82,7 @@
       </Field>
     {/if}
 
-    <FormActions>
+    <FormActions align="stretch">
       {#snippet feedback()}
         {#if model.state.status === "service-error"}
           <AuthenticationError feedback={model.state.feedback} />
