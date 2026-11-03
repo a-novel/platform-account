@@ -54,7 +54,7 @@
             <Alert tone="error" title={t("authUi.account.email.unavailable")} />
           {:else if credentials.pendingEmail}
             {@const pending = credentials.pendingEmail}
-            <Alert tone="warning" role="note" title={t("authUi.account.email.pending")}>
+            <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
               {#snippet icon()}
                 <Hourglass size="var(--icon-size-sm)" />
               {/snippet}

@@ -72,7 +72,7 @@
               {#if role === Role.SuperAdmin}
                 <Badge tone="danger">{t("authUi.account.roles.superAdmin")}</Badge>
               {:else if role === Role.Admin}
-                <Badge tone="warning">{t("authUi.account.roles.admin")}</Badge>
+                <Badge tone="highlight">{t("authUi.account.roles.admin")}</Badge>
               {:else if role === Role.User}
                 <Badge tone="brand">{t("authUi.account.roles.user")}</Badge>
               {:else}
