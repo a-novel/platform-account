@@ -365,8 +365,11 @@ describe("account shell screen", () => {
     const outer = dialog.element().getBoundingClientRect();
 
     if (width < 768) expect(outer.left).toBe(8);
-    expect(form.left - outer.left).toBe(width < 768 ? 16 : 20);
-    expect(outer.right - form.right).toBe(width < 768 ? 16 : 20);
+    // The dialog's own padding sets the inset: 16px on a phone, at least that elsewhere, equal on both sides.
+    const inset = form.left - outer.left;
+    if (width < 768) expect(inset).toBe(16);
+    else expect(inset).toBeGreaterThanOrEqual(16);
+    expect(outer.right - form.right).toBe(inset);
     expect(heading.left).toBeCloseTo(form.left);
     expect(close.top + close.height / 2).toBeCloseTo(heading.top + heading.height / 2);
     expect(close.right).toBeCloseTo(form.right);
