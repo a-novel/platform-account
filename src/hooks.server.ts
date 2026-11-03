@@ -26,8 +26,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   response.headers.set("x-frame-options", "DENY");
 
   traceResponse(event, response);
-  return event.url.pathname.startsWith("/ext/") ? secureShortCodeResponse(response) : response;
+  return isEmailLinkPage(event) ? secureShortCodeResponse(response) : response;
 };
+
+// SvelteKit routes on the decoded path, so an encoded `/%65xt/…` still renders an email-link page: the
+// matched route decides, and the raw path covers the requests no route matched.
+function isEmailLinkPage({ route, url }: RequestEvent): boolean {
+  return route.id ? route.id.startsWith("/(standalone)/ext/") : url.pathname.startsWith("/ext/");
+}
 
 // The browser's page load continues the request's trace from this tag, as `traceId-spanId-sampled`.
 function pageTrace({ tracing }: RequestEvent): string {
