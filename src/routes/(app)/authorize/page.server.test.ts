@@ -28,7 +28,10 @@ const callback = "https://client.test/auth/callback?tenant=a%20b";
 const query =
   "response_type=code&client_id=client&redirect_uri=https%3A%2F%2Fclient.test%2Fauth%2Fcallback%3Ftenant%3Da%2520b" +
   "&state=opaque+state%2F1&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256";
-const sessionCookies = { account_access_token: "private-access", account_refresh_token: "private-refresh" };
+const sessionCookies = {
+  "__Host-account_access_token": "private-access",
+  "__Host-account_refresh_token": "private-refresh",
+};
 const identity = { userID: "140f24ee-1531-4a9d-ace8-20b38e1b21bc", roles: ["auth:user"] };
 
 /** An OAuth error response, as Authentication answers a refused authorization request. */

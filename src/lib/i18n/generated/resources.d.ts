@@ -96,7 +96,6 @@ export default interface Resources {
         "password": {
           "confirmLabel": "Confirm new password",
           "currentLabel": "Current password",
-          "hint": "Choose a long, memorable password.",
           "newLabel": "New password",
           "submit": "Change password",
           "submitting": "Changing password…",
@@ -128,6 +127,7 @@ export default interface Resources {
         "passwordLabel": "Password",
         "pendingTitle": "Check your inbox"
       },
+      "passwordHint": "We recommend at least 15 characters, such as a few words that are easy for you to remember.",
       "serviceUnavailable": "Temporarily unavailable",
       "shortCode": {
         "confirmPasswordLabel": "Confirm new password",

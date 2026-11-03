@@ -97,7 +97,7 @@
               <Field
                 controlId={newPasswordId}
                 label={t("authUi.account.password.newLabel")}
-                hint={t("authUi.account.password.hint")}
+                hint={t("authUi.passwordHint")}
                 error={passwordError("newPassword")}
                 required
               >

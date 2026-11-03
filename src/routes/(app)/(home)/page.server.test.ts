@@ -32,7 +32,7 @@ function event(
     cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
     request: new Request(url, { method: "POST", body: new URLSearchParams(fields) }),
   } as unknown as RequestEvent;
-  vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies, url));
+  vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
   return request;
 }
 

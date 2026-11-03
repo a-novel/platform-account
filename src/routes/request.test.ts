@@ -48,7 +48,10 @@ const credentials = {
   updatedAt: "2026-01-01T00:00:00Z",
 };
 const identity = { userID: userId, roles: [Role.User] };
-const tokenCookies = { account_access_token: "private-access", account_refresh_token: "private-refresh" };
+const tokenCookies = {
+  "__Host-account_access_token": "private-access",
+  "__Host-account_refresh_token": "private-refresh",
+};
 const password = { password: "replacement-password", confirmPassword: "replacement-password" };
 const encodedEmail = Buffer.from("maya.chen@example.com").toString("base64url");
 const registrationLink = `/ext/account/create?shortCode=private-code&target=${encodedEmail}`;
@@ -109,7 +112,7 @@ describe("invitation requests at the request boundary", () => {
       },
       body: JSON.stringify({ email, lang: locale }),
     });
-    expect(cookies.set).toHaveBeenCalledWith("account_access_token", "anonymous-access", {
+    expect(cookies.set).toHaveBeenCalledWith("__Host-account_access_token", "anonymous-access", {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
@@ -179,7 +182,7 @@ describe("account session at the request boundary", () => {
   });
 
   it("exposes only a verified display identity to the browser", async () => {
-    const { event } = request("/account", { ...tokenCookies, account_identity_handle: "maya.chen" });
+    const { event } = request("/account", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
@@ -214,7 +217,7 @@ describe("account session at the request boundary", () => {
   });
 
   it("uses a localized account label when the identity cookie contains a full email", async () => {
-    const { event } = request("/", { ...tokenCookies, account_identity_handle: "maya.chen@example.com" });
+    const { event } = request("/", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen@example.com" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toMatchObject({
       session: { status: "authenticated", displayName: "Mon compte", initials: "A" },
@@ -291,9 +294,9 @@ describe("account session at the request boundary", () => {
       password: "private-password",
     });
     expect(Object.fromEntries(values)).toEqual({
-      account_access_token: "new-access",
-      account_refresh_token: "new-refresh",
-      account_identity_handle: "maya.chen",
+      "__Host-account_access_token": "new-access",
+      "__Host-account_refresh_token": "new-refresh",
+      "__Host-account_identity_handle": "maya.chen",
     });
     for (const [, , options] of cookies.set.mock.calls) {
       expect(options).toEqual({ httpOnly: true, path: "/", sameSite: "lax", secure: true });
@@ -322,14 +325,14 @@ describe("account session at the request boundary", () => {
   it("logs out locally even while authentication is unreachable", async () => {
     const { event, values, cookies } = request("/auth/logout?returnTo=https://attacker.invalid", {
       ...tokenCookies,
-      account_identity_handle: "maya.chen",
+      "__Host-account_identity_handle": "maya.chen",
     });
     await expect(logoutAuthentication(event)).rejects.toMatchObject({ status: 303, location: "/" });
     expect(values.size).toBe(0);
     expect(cookies.delete.mock.calls).toEqual([
-      ["account_access_token", { path: "/" }],
-      ["account_refresh_token", { path: "/" }],
-      ["account_identity_handle", { path: "/" }],
+      ["__Host-account_access_token", { path: "/" }],
+      ["__Host-account_refresh_token", { path: "/" }],
+      ["__Host-account_identity_handle", { path: "/" }],
     ]);
     // The unreachable session check leaves nothing to revoke.
     expect(fetchService).toHaveBeenCalledOnce();
@@ -480,13 +483,13 @@ describe("secure-link request boundary", () => {
     expect(Object.fromEntries(values)).toEqual(
       scenario.journey === "register"
         ? {
-            account_access_token: "registered-access",
-            account_refresh_token: "registered-refresh",
-            account_identity_handle: "maya.chen",
+            "__Host-account_access_token": "registered-access",
+            "__Host-account_refresh_token": "registered-refresh",
+            "__Host-account_identity_handle": "maya.chen",
           }
         : scenario.journey === "email-update"
-          ? { account_access_token: "anonymous-access", account_identity_handle: "maya.chen" }
-          : { account_access_token: "anonymous-access" }
+          ? { "__Host-account_access_token": "anonymous-access", "__Host-account_identity_handle": "maya.chen" }
+          : { "__Host-account_access_token": "anonymous-access" }
     );
   });
 
@@ -525,8 +528,8 @@ describe("secure-link request boundary", () => {
       status: 303,
       location: "/ext/account/create?result=invalid",
     });
-    expect(values.has("account_identity_handle")).toBe(false);
-    expect(values.has("account_refresh_token")).toBe(false);
+    expect(values.has("__Host-account_identity_handle")).toBe(false);
+    expect(values.has("__Host-account_refresh_token")).toBe(false);
   });
 
   it("returns a retryable outage without echoing secrets or claiming completion", async () => {
@@ -551,7 +554,10 @@ describe("planned downtime at the request boundary", () => {
 
   it("shows a maintenance session without calling authentication once a downtime has started", async () => {
     published.downtime = started();
-    const { event } = request("/", { account_access_token: "access", account_refresh_token: "refresh" });
+    const { event } = request("/", {
+      "__Host-account_access_token": "access",
+      "__Host-account_refresh_token": "refresh",
+    });
 
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
@@ -568,9 +574,9 @@ describe("planned downtime at the request boundary", () => {
     await expect(
       authenticationActions.default(request("/?auth=login", {}, { email: "a@b.test", password: "p" }).event)
     ).rejects.toMatchObject(downtimeRefusal);
-    await expect(loadAccount(request("/account", { account_access_token: "access" }).event)).rejects.toMatchObject(
-      downtimeRefusal
-    );
+    await expect(
+      loadAccount(request("/account", { "__Host-account_access_token": "access" }).event)
+    ).rejects.toMatchObject(downtimeRefusal);
     await expect(loadShortCodeRoute("register", request(registrationLink).event)).rejects.toMatchObject(
       downtimeRefusal
     );
@@ -605,10 +611,12 @@ describe("planned downtime at the request boundary", () => {
     );
 
     await expect(
-      loadShell(request("/", { account_access_token: "access", account_refresh_token: "refresh" }).event)
+      loadShell(
+        request("/", { "__Host-account_access_token": "access", "__Host-account_refresh_token": "refresh" }).event
+      )
     ).resolves.toMatchObject({ session: { status: "downtime" }, authorization: "unavailable" });
-    await expect(loadAccount(request("/account", { account_access_token: "access" }).event)).rejects.toMatchObject(
-      downtimeRefusal
-    );
+    await expect(
+      loadAccount(request("/account", { "__Host-account_access_token": "access" }).event)
+    ).rejects.toMatchObject(downtimeRefusal);
   });
 });

@@ -53,7 +53,7 @@ describe("account route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     const request = event();
-    vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies, request.url));
+    vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
   });
 
   it("limits a retrieval failure to the recap and initializes usable actions", async () => {
@@ -72,7 +72,7 @@ describe("account route", () => {
 
   it("shows the account email and its pending change, and names the shell after that email", async () => {
     const request = event();
-    vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies, request.url));
+    vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
     authenticated.mockResolvedValue(signedIn);
     const expiresAt = new Date("2026-08-18T20:30:00Z");
     vi.mocked(credentialsGetSelf).mockResolvedValue({
@@ -95,7 +95,7 @@ describe("account route", () => {
         expiresAt: new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(expiresAt),
       },
     });
-    expect(request.cookies.set).toHaveBeenCalledWith("account_identity_handle", "creator", expect.anything());
+    expect(request.cookies.set).toHaveBeenCalledWith("__Host-account_identity_handle", "creator", expect.anything());
   });
 
   it("keeps the session recap and the forms when the email cannot be read", async () => {
