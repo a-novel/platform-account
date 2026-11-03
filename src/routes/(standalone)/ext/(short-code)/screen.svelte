@@ -15,7 +15,7 @@
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Field, FormActions, Link, PasswordInput, StatusState } from "@a-novel-kit/uikit";
+  import { Button, Card, Field, FormActions, Link, PasswordInput, StatusState } from "@a-novel-kit/uikit";
 
   let { controller }: ShortCodeScreenProps = $props();
 
@@ -106,60 +106,63 @@
         </noscript>
       {/if}
     {:else}
-      <form method="POST" {action} aria-busy={submitting} novalidate onsubmit={submit}>
-        <Field
-          controlId={newPasswordId}
-          label={t("authUi.shortCode.newPasswordLabel")}
-          hint={t("authUi.passwordHint")}
-          error={fieldError("newPassword")}
-          required
-        >
-          {#snippet children(control)}
-            <PasswordInput
-              {...control}
-              controller={controller.passwordVisibility.newPassword}
-              name="password"
-              autocomplete="new-password"
-              readonly={submitting}
-            />
-          {/snippet}
-        </Field>
-        <Field
-          controlId={confirmPasswordId}
-          label={t("authUi.shortCode.confirmPasswordLabel")}
-          error={fieldError("confirmPassword")}
-          required
-        >
-          {#snippet children(control)}
-            <PasswordInput
-              {...control}
-              controller={controller.passwordVisibility.confirmPassword}
-              name="confirmPassword"
-              autocomplete="new-password"
-              readonly={submitting}
-            />
-          {/snippet}
-        </Field>
+      <!-- The fields carry no border, so the form sits on a card to show their edges. -->
+      <Card surface="raised">
+        <form method="POST" {action} aria-busy={submitting} novalidate onsubmit={submit}>
+          <Field
+            controlId={newPasswordId}
+            label={t("authUi.shortCode.newPasswordLabel")}
+            hint={t("authUi.passwordHint")}
+            error={fieldError("newPassword")}
+            required
+          >
+            {#snippet children(control)}
+              <PasswordInput
+                {...control}
+                controller={controller.passwordVisibility.newPassword}
+                name="password"
+                autocomplete="new-password"
+                readonly={submitting}
+              />
+            {/snippet}
+          </Field>
+          <Field
+            controlId={confirmPasswordId}
+            label={t("authUi.shortCode.confirmPasswordLabel")}
+            error={fieldError("confirmPassword")}
+            required
+          >
+            {#snippet children(control)}
+              <PasswordInput
+                {...control}
+                controller={controller.passwordVisibility.confirmPassword}
+                name="confirmPassword"
+                autocomplete="new-password"
+                readonly={submitting}
+              />
+            {/snippet}
+          </Field>
 
-        <FormActions>
-          {#snippet feedback()}
-            {#if model.state.status === "service-error"}
-              <AuthenticationError feedback={model.state.feedback} />
-            {/if}
-          {/snippet}
-          <Button type="submit" disabled={submitting}>
-            {#if model.journey === "register"}
-              {submitting
-                ? t("authUi.shortCode.journeys.register.submitting")
-                : t("authUi.shortCode.journeys.register.submit")}
-            {:else}
-              {submitting
-                ? t("authUi.shortCode.journeys.passwordReset.submitting")
-                : t("authUi.shortCode.journeys.passwordReset.submit")}
-            {/if}
-          </Button>
-        </FormActions>
-      </form>
+          <FormActions>
+            {#snippet feedback()}
+              {#if model.state.status === "service-error"}
+                <AuthenticationError feedback={model.state.feedback} />
+              {/if}
+            {/snippet}
+            <Button type="submit" disabled={submitting}>
+              {#if model.journey === "register"}
+                {submitting
+                  ? t("authUi.shortCode.journeys.register.submitting")
+                  : t("authUi.shortCode.journeys.register.submit")}
+              {:else}
+                {submitting
+                  ? t("authUi.shortCode.journeys.passwordReset.submitting")
+                  : t("authUi.shortCode.journeys.passwordReset.submit")}
+              {/if}
+            </Button>
+          </FormActions>
+        </form>
+      </Card>
     {/if}
   </section>
 </main>
