@@ -41,6 +41,8 @@
   const currentPasswordId = `${componentId}-current-password`;
   const newPasswordId = `${componentId}-new-password`;
   const confirmPasswordId = `${componentId}-confirm-password`;
+  const currentEmailId = `${componentId}-current-email`;
+  const pendingEmailId = `${componentId}-pending-email`;
   const newEmailId = `${componentId}-new-email`;
 
   const passwordSubmitting = $derived(model.passwordState.status === "submitting");
@@ -150,22 +152,24 @@
             </header>
 
             {#if model.credentials.status === "ready"}
-              <dl class="details">
-                <div>
-                  <dt>{t("authUi.account.email.current")}</dt>
-                  <dd>{model.credentials.email}</dd>
-                </div>
-                {#if model.credentials.pendingEmail}
-                  {@const pending = model.credentials.pendingEmail}
-                  <div>
-                    <dt>{t("authUi.account.email.pending")}</dt>
-                    <dd>{pending.email}</dd>
-                    <dd class="pending-expiry">
-                      {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-                    </dd>
-                  </div>
-                {/if}
-              </dl>
+              {@const email = model.credentials.email}
+              <Field controlId={currentEmailId} label={t("authUi.account.email.current")}>
+                {#snippet children(control)}
+                  <Input {...control} type="email" value={email} readonly />
+                {/snippet}
+              </Field>
+              {#if model.credentials.pendingEmail}
+                {@const pending = model.credentials.pendingEmail}
+                <Field
+                  controlId={pendingEmailId}
+                  label={t("authUi.account.email.pending")}
+                  hint={t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+                >
+                  {#snippet children(control)}
+                    <Input {...control} type="email" value={pending.email} readonly />
+                  {/snippet}
+                </Field>
+              {/if}
             {:else}
               <p class="feedback-message">{t("authUi.account.email.unavailable")}</p>
             {/if}
@@ -390,11 +394,6 @@
   .monospace {
     font-size: var(--font-size-sm);
     font-family: var(--font-family-mono);
-  }
-
-  .details .pending-expiry {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
   }
 
   @media (max-width: 34.999rem) {

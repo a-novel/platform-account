@@ -52,9 +52,12 @@ test("login returns to the protected account, survives reload and logout protect
   await page.reload();
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
   await expect(page).toHaveTitle("Account settings | Agora");
-  const perRunValues = ["Account ID", "Current email", "Access expires", "Session expires"].map((label) =>
-    page.getByText(label, { exact: true }).locator("+ dd")
-  );
+  const perRunValues = [
+    page.getByLabel("Current email", { exact: true }),
+    ...["Account ID", "Access expires", "Session expires"].map((label) =>
+      page.getByText(label, { exact: true }).locator("+ dd")
+    ),
+  ];
   await screenshot(page, info, "authenticated-account", perRunValues);
 
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
@@ -143,7 +146,7 @@ test("account forms change the password and confirm an email update", async ({ p
   await page.getByLabel(/^New email address/).fill(email);
   await page.getByRole("button", { name: "Send link", exact: true }).click();
   await expect(page.getByText("Check your inbox", { exact: true })).toBeVisible();
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Awaiting confirmation", { exact: true })).toHaveValue(email);
 
   await page.goto(await emailLink(email, "/ext/email/validate"));
   await expect(page).toHaveURL("/ext/email/validate?result=success");
