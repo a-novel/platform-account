@@ -125,8 +125,9 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     await expect(canvas.getByRole("button", { name: t("authUi.account.password.submitting") })).toBeDisabled();
+    const passwordSection = within(canvas.getByRole("region", { name: t("authUi.account.password.title") }));
     await expect(
-      canvas.getByLabelText(t("authUi.account.password.currentLabel"), {
+      passwordSection.getByLabelText(t("authUi.account.password.currentLabel"), {
         exact: false,
         selector: 'input[name="currentPassword"]',
       })
@@ -254,7 +255,22 @@
   <StoryHarness
     initialModel={{
       ...ready,
-      emailState: validationFixture(validateEmailUpdate, { email: "not-an-email" }),
+      emailState: validationFixture(validateEmailUpdate, {
+        email: "not-an-email",
+        currentPassword: "current-password",
+      }),
+    }}
+  />
+</Story>
+
+<Story name="Email with an incorrect current password" exportName="EmailIncorrectCurrentPassword" asChild>
+  <StoryHarness
+    initialModel={{
+      ...ready,
+      emailState: {
+        status: "validation-error",
+        issues: [{ field: "currentPassword", feedback: "invalidCurrentPassword" }],
+      },
     }}
   />
 </Story>

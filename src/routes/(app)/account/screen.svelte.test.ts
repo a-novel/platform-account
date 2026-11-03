@@ -26,15 +26,19 @@ const readyAccount: AccountScreenModel = {
   logoutState: "ready",
 };
 
+/** The account page's password and email sections, which both ask for the current password. */
+const passwordSection = () => page.getByRole("region", { name: "Password" });
+const emailSection = () => page.getByRole("region", { name: "Email" });
+
 describe("account screen", () => {
   const currentPasswordRejections = [
-    ["en", "Current password", "Your current password is incorrect."],
-    ["fr", "Mot de passe actuel", "Votre mot de passe actuel est incorrect."],
+    ["en", "Password", "Current password", "Your current password is incorrect."],
+    ["fr", "Mot de passe", "Mot de passe actuel", "Votre mot de passe actuel est incorrect."],
   ] as const;
 
   it.each(currentPasswordRejections)(
     "associates the %s current-password rejection with its field only",
-    async (locale, label, message) => {
+    async (locale, section, label, message) => {
       render(
         AccountScreen,
         {
@@ -51,7 +55,7 @@ describe("account screen", () => {
         },
         withLocale(locale)
       );
-      const field = page.getByLabelText(label, { exact: false });
+      const field = page.getByRole("region", { name: section }).getByLabelText(label, { exact: false });
       await expect.element(field).toHaveAttribute("aria-invalid", "true");
       await expect.element(field).toHaveAccessibleDescription(message);
       expect(page.getByText(message).elements()).toHaveLength(1);
@@ -73,10 +77,15 @@ describe("account screen", () => {
 
     render(AccountScreen, { controller }, withLocale());
 
-    await page.getByLabelText(/Current password/).fill("old-password");
+    await passwordSection()
+      .getByLabelText(/Current password/)
+      .fill("old-password");
     await page.getByLabelText(/^New password/).fill("new-password");
     await page.getByLabelText(/Confirm new password/).fill("new-password");
     await page.getByLabelText(/New email address/).fill("creator@example.test");
+    await emailSection()
+      .getByLabelText(/Current password/)
+      .fill("current-password");
     const accountForms = [
       ["Change password", "/account?/password"],
       ["Send link", "/account?/email"],
@@ -93,7 +102,10 @@ describe("account screen", () => {
           confirmPassword: "new-password",
         });
       if (label === "Send link")
-        expect(Object.fromEntries(new FormData(form))).toEqual({ email: "creator@example.test" });
+        expect(Object.fromEntries(new FormData(form))).toEqual({
+          email: "creator@example.test",
+          currentPassword: "current-password",
+        });
       await expectFormActionLayout(form);
       const section = form.closest("section");
       if (!section) throw new Error("Account forms must belong to a section");
@@ -159,9 +171,12 @@ describe("account screen", () => {
     render(AccountScreen, { controller }, withLocale());
     const recap = page.getByRole("region", { name: "Your session" });
     await expect.element(recap).toBeVisible();
-    await expect.element(page.getByLabelText(/Current password/)).toBeEnabled();
+    await expect.element(passwordSection().getByLabelText(/Current password/)).toBeEnabled();
     await expect.element(page.getByLabelText(/New email address/)).toBeEnabled();
     await page.getByLabelText(/New email address/).fill("creator@example.test");
+    await emailSection()
+      .getByLabelText(/Current password/)
+      .fill("current-password");
     await page.getByRole("button", { name: "Send link" }).click();
     await expect.element(page.getByRole("button", { name: /Sending link/ })).toBeDisabled();
     await expect.element(page.getByRole("button", { name: "Change password" })).toBeEnabled();
@@ -220,9 +235,14 @@ describe("account screen", () => {
     for (const form of document.querySelectorAll("form")) await expectFormActionLayout(form);
   });
 
-  const passwordLabels = [/^Current password/, /^New password/, /^Confirm new password/];
+  const passwordFields = () => [
+    passwordSection().getByLabelText(/^Current password/),
+    page.getByLabelText(/^New password/),
+    page.getByLabelText(/^Confirm new password/),
+    emailSection().getByLabelText(/^Current password/),
+  ];
 
-  it.each([0, 1, 2])("reveals only password field %i from its own toggle", async (index) => {
+  it.each([0, 1, 2, 3])("reveals only password field %i from its own toggle", async (index) => {
     const actions = { password: "?/password", email: "?/email", logout: "?/logout" };
     render(
       AccountScreen,
@@ -231,8 +251,8 @@ describe("account screen", () => {
     );
     await page.getByRole("button", { name: "Show password" }).nth(index).click();
 
-    for (const [field, label] of passwordLabels.entries()) {
-      await expect.element(page.getByLabelText(label)).toHaveAttribute("type", field === index ? "text" : "password");
+    for (const [field, input] of passwordFields().entries()) {
+      await expect.element(input).toHaveAttribute("type", field === index ? "text" : "password");
     }
   });
 });

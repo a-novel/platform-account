@@ -62,7 +62,7 @@ describe("service-derived auth validation", () => {
     for (const schema of emailRequestSchemas) {
       const expected = schema.pick({ email: true }).safeParse({ email }).success;
       expect(validateEmailRequest(formData({ email })).success).toBe(expected);
-      expect(validateEmailUpdate(formData({ email })).success).toBe(expected);
+      expect(validateEmailUpdate(formData({ email, currentPassword: "current-password" })).success).toBe(expected);
     }
   });
 
@@ -123,7 +123,13 @@ describe("service-derived auth validation", () => {
         { field: "password", feedback: "password" },
       ],
     });
-    expect(validateEmailUpdate(input)).toEqual({ success: false, issues: [{ field: "newEmail", feedback: "email" }] });
+    expect(validateEmailUpdate(input)).toEqual({
+      success: false,
+      issues: [
+        { field: "currentPassword", feedback: "currentPassword" },
+        { field: "newEmail", feedback: "email" },
+      ],
+    });
     expect(validatePasswordChange(formData({ password: "valid-password" }))).toEqual({
       success: false,
       issues: [

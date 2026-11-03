@@ -5,7 +5,7 @@ import type {
   ShortCodeScreenModel,
   ShortCodeState,
 } from "#lib/application/auth/types.js";
-import { getAuthenticationContext } from "#lib/server/auth/context.js";
+import { emailLanguage, getAuthenticationContext } from "#lib/server/auth/context.js";
 import { refuseDuringDowntime } from "#lib/server/downtime.js";
 
 import type { ShortCodePageData } from "./short-code";
@@ -14,6 +14,7 @@ import { type ParsedShortCodeLink, parseShortCodeLink } from "./short-code-link.
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
 import {
   AuthenticationApi,
+  type Lang,
   type Token,
   credentialsCreate,
   credentialsResetPassword,
@@ -27,7 +28,7 @@ import { fail, redirect } from "@sveltejs/kit";
 export interface ShortCodeClient {
   register(accessToken: string, input: { email: string; password: string; shortCode: string }): Promise<Token>;
   resetPassword(accessToken: string, input: { password: string; shortCode: string; userID: string }): Promise<void>;
-  updateEmail(accessToken: string, input: { shortCode: string; userID: string }): Promise<void>;
+  updateEmail(accessToken: string, input: { shortCode: string; userID: string; lang: Lang }): Promise<void>;
 }
 
 /** ShortCodeCompletionContext is the visitor's session as a link completion uses it. */
@@ -35,6 +36,8 @@ export interface ShortCodeCompletionContext {
   accept(token: Token, identityEmail?: string): void;
   accessToken(): Promise<string>;
   client: ShortCodeClient;
+  /** The language of the notice the account's former address receives. */
+  lang: Lang;
   rememberIdentity(identityEmail: string): void;
 }
 
@@ -119,7 +122,7 @@ async function settle(
 
 /** Moves the account to the link's address, which then names the visitor in the shell. */
 async function confirmEmail(link: ReadyLink<"email-update">, accessToken: string, context: ShortCodeCompletionContext) {
-  await context.client.updateEmail(accessToken, { shortCode: link.shortCode, userID: link.userId });
+  await context.client.updateEmail(accessToken, { shortCode: link.shortCode, userID: link.userId, lang: context.lang });
   context.rememberIdentity(link.email);
 }
 
@@ -179,6 +182,7 @@ export async function submitShortCodeRoute(journey: ShortCodeJourney, event: Req
     accept: (token, identityEmail) => authentication.session.accept(token, identityEmail),
     accessToken: async () => await authentication.session.anonymousAccessToken(),
     client: createShortCodeClient(authentication.api),
+    lang: emailLanguage(event.locals.locale),
     rememberIdentity: (identityEmail) => authentication.session.rememberIdentity(identityEmail),
   });
 

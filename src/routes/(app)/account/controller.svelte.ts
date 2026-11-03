@@ -12,13 +12,13 @@ export interface AccountScreenControllerState {
 /** Pure account-management state and form transitions. */
 export interface AccountScreenController {
   readonly state: AccountScreenControllerState;
-  /** Shows or hides each password field's value. */
-  readonly passwordVisibility: Record<AccountPasswordField, PasswordInputController>;
+  /** Shows or hides each password field's value, the email form's current password included. */
+  readonly passwordVisibility: Record<AccountPasswordField | "emailCurrentPassword", PasswordInputController>;
   /** Reconciles a completed route load or action with the rendered account state. */
   synchronize(model: AccountScreenModel, actions: AccountFormActions): void;
   /** Validates password fields into state and reports whether native submission may continue. */
   submitPassword(form: FormData): boolean;
-  /** Validates the new email into state and reports whether native submission may continue. */
+  /** Validates the new email and the current password into state and reports whether native submission may continue. */
   submitEmail(form: FormData): boolean;
   /** Starts a logout submission. */
   submitLogout(): boolean;
@@ -52,6 +52,7 @@ export function createAccountScreenController({
       currentPassword: createPressedController(),
       newPassword: createPressedController(),
       confirmPassword: createPressedController(),
+      emailCurrentPassword: createPressedController(),
     },
     synchronize(nextModel, nextActions) {
       model = nextModel;

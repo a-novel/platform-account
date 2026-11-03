@@ -92,10 +92,8 @@ authUi:
         submit: Me connecter
         submitting: Connexion…
       register:
-        accountExists: Ce courriel est déjà associé à un compte. Vous pouvez vous connecter.
-        alreadyWaitlisted: Ce courriel figure déjà sur la liste d’invitation.
-        recordedDescription: Votre invitation sera envoyée à
-        recordedTitle: Vous êtes sur la liste d’invitation
+        recordedDescription: Si ce courriel n’est pas encore associé à un compte, votre invitation sera envoyée à
+        recordedTitle: Demande reçue
         submit: Rejoindre la liste
         submitting: Inscription à la liste…
       reset:

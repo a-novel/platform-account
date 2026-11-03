@@ -482,26 +482,6 @@
   />
 </Story>
 
-<Story name="Invitation account exists" asChild>
-  <StoryHarness
-    model={{ ...anonymous, authView: "register" }}
-    authenticationModel={{
-      journey: "register",
-      state: { status: "conflict", code: "account_exists" },
-    }}
-  />
-</Story>
-
-<Story name="Invitation already requested" asChild>
-  <StoryHarness
-    model={{ ...anonymous, authView: "register" }}
-    authenticationModel={{
-      journey: "register",
-      state: { status: "conflict", code: "already_waitlisted" },
-    }}
-  />
-</Story>
-
 <Story name="Password reset submitting" asChild>
   <StoryHarness
     model={{ ...anonymous, authView: "reset" }}

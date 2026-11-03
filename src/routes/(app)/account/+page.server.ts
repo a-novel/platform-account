@@ -114,12 +114,21 @@ async function requestEmailUpdate(event: RequestEvent) {
   try {
     const { authentication, session } = await requireAuthorization(event);
     await shortCodeCreateEmailUpdate(authentication.api, session.accessToken, {
-      email: input.value.email,
+      ...input.value,
       lang: emailLanguage(event.locals.locale),
     });
   } catch (error) {
     if (isRedirect(error) || isHttpError(error, 403)) throw error;
 
+    // The service checks the current password: a wrong one answers 403, a missing one 422.
+    if (isHttpStatusError(error, 403)) {
+      const issues = [{ field: "currentPassword", feedback: "invalidCurrentPassword" }] as const;
+      return fail(403, emailAction({ status: "validation-error", issues }));
+    }
+    if (isHttpStatusError(error, 422)) {
+      const issues = [{ field: "currentPassword", feedback: "currentPassword" }] as const;
+      return fail(400, emailAction({ status: "validation-error", issues }));
+    }
     return isHttpStatusError(error, 429)
       ? fail(429, emailAction({ status: "service-error", feedback: "tooManyAttempts" }))
       : fail(503, emailAction({ status: "service-error", feedback: "serviceUnavailable" }));

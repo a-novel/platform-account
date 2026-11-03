@@ -5,6 +5,7 @@ import {
   CredentialsUpdatePasswordRequestSchema,
   EmailSchema,
   PasswordSchema,
+  ShortCodeCreateEmailUpdateRequestSchema,
   ShortCodeCreateRegisterRequestSchema,
   TokenCreateRequestSchema,
   WaitlistJoinRequestSchema,
@@ -19,6 +20,9 @@ export type ValidationResult<Value, Field extends string> =
 const emailSchema = z.string().trim().toLowerCase().pipe(EmailSchema);
 const loginSchema = TokenCreateRequestSchema.extend({ email: emailSchema });
 const emailRequestSchema = ShortCodeCreateRegisterRequestSchema.pick({ email: true }).extend({ email: emailSchema });
+const emailUpdateSchema = ShortCodeCreateEmailUpdateRequestSchema.pick({ currentPassword: true, email: true }).extend({
+  email: emailSchema,
+});
 const invitationRequestSchema = WaitlistJoinRequestSchema.pick({ email: true }).extend({
   email: z.string().trim().pipe(WaitlistJoinRequestSchema.shape.email),
 });
@@ -84,8 +88,11 @@ export const validateEmailRequest = formValidator(emailRequestSchema, { email: "
 /** Preserves email casing for the service's case-sensitive membership checks. */
 export const validateInvitationRequest = formValidator(invitationRequestSchema, { email: "email" } as const);
 
-/** Returns email-update errors under the account screen's field name. */
-export const validateEmailUpdate = formValidator(emailRequestSchema, { email: "newEmail" } as const);
+/** Checks an email change, which the account's current password confirms, under the account screen's field names. */
+export const validateEmailUpdate = formValidator(emailUpdateSchema, {
+  currentPassword: "currentPassword",
+  email: "newEmail",
+} as const);
 
 /** Extends the service password-change request with confirmation, stripped from successful output. */
 export const validatePasswordChange = formValidator(passwordChangeSchema, {

@@ -59,7 +59,12 @@
     get state() {
       return { model, actions };
     },
-    passwordVisibility: { currentPassword: visibility, newPassword: visibility, confirmPassword: visibility },
+    passwordVisibility: {
+      currentPassword: visibility,
+      newPassword: visibility,
+      confirmPassword: visibility,
+      emailCurrentPassword: visibility,
+    },
     synchronize: () => {},
     submitPassword: () => false,
     submitEmail: () => false,

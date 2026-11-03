@@ -282,16 +282,6 @@ describe("createAuthenticationPanelController", () => {
     expect(controller.state).toEqual({ model: { journey, state: { status: "submitting" } }, action: "/retry" });
   });
 
-  it.each(["account_exists", "already_waitlisted"] as const)("allows correction after %s", (code) => {
-    const controller = createAuthenticationPanelController({
-      model: { journey: "register", state: { status: "conflict", code } },
-      action: "/?auth=register",
-    });
-    expect(controller.submit(validForm())).toBe(true);
-    expect(controller.submit(validForm())).toBe(false);
-    expect(controller.state.model).toEqual({ journey: "register", state: { status: "submitting" } });
-  });
-
   it("masks a shown password whenever it synchronizes", () => {
     const controller = createAuthenticationPanelController({ model: readyAuthenticationModel("login"), action: "/" });
     controller.passwordVisibility.toggle();
