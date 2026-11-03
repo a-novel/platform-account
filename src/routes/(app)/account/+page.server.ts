@@ -51,8 +51,10 @@ function emailAction(state: AccountScreenModel["emailState"]): AccountActionData
 }
 
 /** Loads the account recap and email. An authentication outage still renders the account forms. */
-export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "locals">) => {
+export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "locals" | "setHeaders">) => {
   const { locals } = event;
+  // The page shows the visitor's own account, which no cache may keep for whoever uses the browser next.
+  event.setHeaders({ "cache-control": "no-store" });
   const t = locals.i18n.getFixedT(locals.locale, "common");
   const dates = new Intl.DateTimeFormat(locals.locale, { dateStyle: "medium", timeStyle: "short" });
 

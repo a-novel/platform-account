@@ -70,6 +70,7 @@ function request(path: string, cookieValues: Record<string, string> = {}, fields
     getClientAddress: () => "192.0.2.1",
     url,
     locals: { locale: "fr", i18n: createI18n("fr") },
+    setHeaders: vi.fn(),
     request: new Request(url, fields ? { method: "POST", body: new URLSearchParams(fields) } : undefined),
   } as unknown as RequestEvent;
   return { event, cookies, values };

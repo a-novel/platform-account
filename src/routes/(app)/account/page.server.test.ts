@@ -46,6 +46,7 @@ function event(
     locals: { locale: "en", i18n: createI18n("en") },
     cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
     request,
+    setHeaders: vi.fn(),
   } as unknown as RequestEvent;
 }
 
@@ -54,6 +55,15 @@ describe("account route", () => {
     vi.clearAllMocks();
     const request = event();
     vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies, request.url));
+  });
+
+  it("keeps the account page out of every cache", async () => {
+    authenticated.mockRejectedValue(new AuthenticationUnavailableError());
+    const request = event();
+
+    await loadAccount(request);
+
+    expect(request.setHeaders).toHaveBeenCalledExactlyOnceWith({ "cache-control": "no-store" });
   });
 
   it("limits a retrieval failure to the recap and initializes usable actions", async () => {
