@@ -1,5 +1,3 @@
-import type { WaitlistJoinConflict } from "@a-novel/service-authentication-rest";
-
 /** Stable product feedback categories translated only at the rendering boundary. */
 export type AuthenticationFeedback =
   | "emailUpdated"
@@ -59,10 +57,7 @@ export interface EmailRequestPanelModel {
 /** Invitation requests acknowledge list membership without implying email delivery. */
 export interface InvitationRequestPanelModel {
   journey: "register";
-  state:
-    | Exclude<FormState<"email">, { status: "success" }>
-    | { status: "recorded"; email: string }
-    | ({ status: "conflict" } & WaitlistJoinConflict);
+  state: Exclude<FormState<"email">, { status: "success" }> | { status: "recorded"; email: string };
 }
 
 /** Every state rendered inside the shell authentication dialog. */
@@ -71,8 +66,8 @@ export type AuthenticationPanelModel = LoginPanelModel | EmailRequestPanelModel 
 /** The fields of the account password form. */
 export type AccountPasswordField = "currentPassword" | "newPassword" | "confirmPassword";
 
-/** The field of the account email form. */
-export type AccountEmailField = "newEmail";
+/** The fields of the account email form. */
+export type AccountEmailField = "currentPassword" | "newEmail";
 
 /** Claims and expiry data resolved by the server-side session boundary. */
 export interface AccountClaimsSummary {

@@ -10,6 +10,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpError } from "@a-novel-kit/nodelib-browser/http";
+import { Lang } from "@a-novel/service-authentication-rest";
 
 const userId = "140f24ee-1531-4a9d-ace8-20b38e1b21bc";
 
@@ -38,7 +39,7 @@ function createContext() {
   accessToken.mockResolvedValue("anonymous-access");
 
   return {
-    context: { accept, accessToken, client, rememberIdentity } satisfies ShortCodeCompletionContext,
+    context: { accept, accessToken, client, lang: Lang.Fr, rememberIdentity } satisfies ShortCodeCompletionContext,
     mocks: { accept, accessToken, rememberIdentity, ...client },
   };
 }
@@ -105,20 +106,20 @@ describe("completeShortCode", () => {
     expect(JSON.stringify(result.model)).not.toContain("replacement-password");
   });
 
-  it("confirms an email update without collecting a password", async () => {
-    const url = new URL(
-      "https://account.test/ext/email/validate?shortCode=code-123&target=" +
-        userId +
-        "&source=" +
-        encoded("new@example.com")
-    );
-
-    const result = await completeShortCode("email-update", url, new FormData(), setup.context);
+  const emailUpdateUrl = new URL(
+    "https://account.test/ext/email/validate?shortCode=code-123&target=" +
+      userId +
+      "&source=" +
+      encoded("new@example.com")
+  );
+  it("confirms an email update in the notice language without collecting a password", async () => {
+    const result = await completeShortCode("email-update", emailUpdateUrl, new FormData(), setup.context);
 
     expect(result.outcome).toBe("success");
     expect(setup.mocks.updateEmail).toHaveBeenCalledWith("anonymous-access", {
       shortCode: "code-123",
       userID: userId,
+      lang: Lang.Fr,
     });
     expect(setup.mocks.rememberIdentity).toHaveBeenCalledWith("new@example.com");
   });

@@ -120,14 +120,19 @@ describe("invitation requests at the request boundary", () => {
     });
   });
 
-  it.each(["account_exists", "already_waitlisted"])("returns the validated %s warning", async (code) => {
+  const olderServiceConflicts = [
+    ["account_exists", Response.json({ code: "account_exists" }, { status: 409 })],
+    ["already_waitlisted", Response.json({ code: "already_waitlisted" }, { status: 409 })],
+  ] as const;
+
+  // A service older than v2.24.0 answers 409 for a listed or registered address.
+  it.each(olderServiceConflicts)("confirms a 409 for %s like a new address", async (_, answer) => {
     const { event } = request("/?auth=register", {}, { email });
     fetchService
       .mockResolvedValueOnce(Response.json({ accessToken: "anonymous-access", refreshToken: "anonymous-refresh" }))
-      .mockResolvedValueOnce(Response.json({ code, detail: "private service detail" }, { status: 409 }));
+      .mockResolvedValueOnce(answer);
     await expect(authenticationActions.default(event)).resolves.toEqual({
-      status: 409,
-      data: { authentication: { journey: "register", state: { status: "conflict", code } } },
+      authentication: { journey: "register", state: { status: "recorded", email } },
     });
   });
 
@@ -442,7 +447,7 @@ const journeys = [
     journey: "email-update",
     path: `/ext/email/validate?shortCode=private-code&target=${userId}&source=${encodedEmail}`,
     endpoint: "/v2/credentials/email",
-    body: { shortCode: "private-code", userID: userId },
+    body: { shortCode: "private-code", userID: userId, lang: "fr" },
     response: credentials,
     continueHref: "/account",
     restartHref: "/account",

@@ -111,10 +111,8 @@ export default interface Resources {
             "submitting": "Logging in…"
           },
           "register": {
-            "accountExists": "This email is already registered. You can log in to your account.",
-            "alreadyWaitlisted": "This email is already on the invitation list.",
-            "recordedDescription": "Your invitation will be sent to",
-            "recordedTitle": "You’re on the invitation list",
+            "recordedDescription": "If this email isn’t registered yet, your invitation will be sent to",
+            "recordedTitle": "Request received",
             "submit": "Join the list",
             "submitting": "Joining the list…"
           },

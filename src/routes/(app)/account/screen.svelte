@@ -43,6 +43,7 @@
   const confirmPasswordId = `${componentId}-confirm-password`;
   const currentEmailId = `${componentId}-current-email`;
   const newEmailId = `${componentId}-new-email`;
+  const emailCurrentPasswordId = `${componentId}-email-current-password`;
 
   const passwordSubmitting = $derived(model.passwordState.status === "submitting");
   const emailSubmitting = $derived(model.emailState.status === "submitting");
@@ -188,6 +189,22 @@
                     autocomplete="email"
                     autocapitalize="none"
                     spellcheck="false"
+                    readonly={emailSubmitting}
+                  />
+                {/snippet}
+              </Field>
+              <Field
+                controlId={emailCurrentPasswordId}
+                label={t("authUi.account.password.currentLabel")}
+                error={translateFieldIssue(t, emailIssues, "currentPassword")}
+                required
+              >
+                {#snippet children(control)}
+                  <PasswordInput
+                    {...control}
+                    controller={controller.passwordVisibility.emailCurrentPassword}
+                    name="currentPassword"
+                    autocomplete="current-password"
                     readonly={emailSubmitting}
                   />
                 {/snippet}

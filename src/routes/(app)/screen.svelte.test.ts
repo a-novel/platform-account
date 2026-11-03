@@ -444,7 +444,7 @@ describe("account shell screen", () => {
       withLocale()
     );
 
-    const registrationDialog = page.getByRole("dialog", { name: "You’re on the invitation list" });
+    const registrationDialog = page.getByRole("dialog", { name: "Request received" });
     await expect.element(registrationDialog).toBeVisible();
     expect(registrationDialog.element().querySelectorAll("h2")).toHaveLength(1);
     await expect.element(registrationDialog.getByRole("link", { name: "Log in" })).not.toBeInTheDocument();

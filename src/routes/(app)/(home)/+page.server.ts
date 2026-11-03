@@ -14,11 +14,7 @@ import { readAuthView } from "../auth-dialog-state";
 import type { PageServerLoad } from "./$types";
 
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
-import {
-  WaitlistJoinConflictError,
-  shortCodeCreatePasswordReset,
-  waitlistJoin,
-} from "@a-novel/service-authentication-rest";
+import { shortCodeCreatePasswordReset, waitlistJoin } from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
 import { fail, redirect } from "@sveltejs/kit";
@@ -70,15 +66,9 @@ async function requestInvitation(event: RequestEvent, form: FormData) {
       lang: emailLanguage(event.locals.locale),
     });
   } catch (error) {
-    if (error instanceof WaitlistJoinConflictError) {
-      return fail(409, {
-        authentication: {
-          journey: "register",
-          state: { status: "conflict", code: error.code },
-        } satisfies AuthenticationPanelModel,
-      });
-    }
-    return failUnavailable("register", error);
+    // A service older than v2.24.0 answers 409 for a listed or registered address, which gets the same
+    // answer as a new one, so the confirmation reveals no membership.
+    if (!isHttpStatusError(error, 409)) return failUnavailable("register", error);
   }
 
   return {

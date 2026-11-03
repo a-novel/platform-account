@@ -142,13 +142,19 @@ test("account forms change the password and confirm an email update", async ({ p
   await page.goto("/?auth=login&returnTo=%2Faccount");
   await login(page, account);
 
-  await page.getByLabel(/^Current password/).fill(account.password);
+  // The password and email forms each ask for the current password.
+  const passwordSection = page.getByRole("region", { name: "Password" });
+  await passwordSection.getByLabel(/^Current password/).fill(account.password);
   await choosePassword(page, "Changed-password-42!");
   await page.getByRole("button", { name: "Change password", exact: true }).click();
   await expect(page.getByText("Your password was changed.", { exact: true })).toBeVisible();
 
   const email = `updated-${account.email}`;
   await page.getByLabel(/^New email address/).fill(email);
+  await page
+    .getByRole("region", { name: "Email" })
+    .getByLabel(/^Current password/)
+    .fill("Changed-password-42!");
   await page.getByRole("button", { name: "Send link", exact: true }).click();
   await expect(page.getByText("Check your inbox", { exact: true })).toBeVisible();
   await expect(page.getByRole("note")).toContainText(email);
@@ -314,7 +320,10 @@ test.describe("native forms without JavaScript", () => {
     await expect(page).toHaveTitle("Account settings | Agora");
     await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
 
-    await page.getByLabel(/^Current password/).fill(password);
+    await page
+      .getByRole("region", { name: "Password" })
+      .getByLabel(/^Current password/)
+      .fill(password);
     await choosePassword(page, "Updated-native-password-42!");
     await page.getByRole("button", { name: "Change password", exact: true }).click();
     await expect(page.getByText("Your password was changed.", { exact: true })).toBeVisible();

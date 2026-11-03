@@ -154,7 +154,7 @@ describe("account route", () => {
     const request = event(
       new Request("https://account.test/account?/email", {
         method: "POST",
-        body: new URLSearchParams({ email: "new@example.test" }),
+        body: new URLSearchParams({ email: "new@example.test", currentPassword: "current-password" }),
       })
     );
 
@@ -164,14 +164,45 @@ describe("account route", () => {
         state: { status: "pending-email" },
       },
     });
-    expect(shortCodeCreateEmailUpdate).toHaveBeenCalledOnce();
+    expect(shortCodeCreateEmailUpdate).toHaveBeenCalledExactlyOnceWith(expect.anything(), "fixture-access", {
+      currentPassword: "current-password",
+      email: "new@example.test",
+      lang: "en",
+    });
+  });
+
+  it.each([
+    [403, 403, "invalidCurrentPassword"],
+    [422, 400, "currentPassword"],
+  ] as const)("shows a %s on the email form's current password", async (serviceStatus, status, feedback) => {
+    authenticated.mockResolvedValue(signedIn);
+    vi.mocked(shortCodeCreateEmailUpdate).mockRejectedValue(new HttpError(serviceStatus, "private service detail"));
+    const request = event(
+      new Request("https://account.test/account?/email", {
+        method: "POST",
+        body: new URLSearchParams({ email: "new@example.test", currentPassword: "wrong-password" }),
+      })
+    );
+
+    const result = await accountActions.email(request);
+
+    expect(result).toMatchObject({
+      status,
+      data: {
+        accountAction: {
+          kind: "email",
+          state: { status: "validation-error", issues: [{ field: "currentPassword", feedback }] },
+        },
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("wrong-password");
   });
 
   it("rejects invalid email before calling the service and names the account control", async () => {
     const request = event(
       new Request("https://account.test/account?/email", {
         method: "POST",
-        body: new URLSearchParams({ email: "invalid-private-value" }),
+        body: new URLSearchParams({ email: "invalid-private-value", currentPassword: "current-password" }),
       })
     );
     const result = await accountActions.email(request);

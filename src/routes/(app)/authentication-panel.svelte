@@ -18,7 +18,7 @@
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
+  import { Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
 
   let { controller, forgotPassword }: AuthenticationPanelProps = $props();
 
@@ -86,13 +86,6 @@
       {#snippet feedback()}
         {#if model.state.status === "service-error"}
           <AuthenticationError feedback={model.state.feedback} />
-        {:else if model.state.status === "conflict"}
-          <Alert
-            tone="warning"
-            title={model.state.code === "account_exists"
-              ? t("authUi.authentication.journeys.register.accountExists")
-              : t("authUi.authentication.journeys.register.alreadyWaitlisted")}
-          />
         {/if}
       {/snippet}
       <Button type="submit" disabled={submitting}>

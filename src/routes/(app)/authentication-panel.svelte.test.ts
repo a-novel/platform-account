@@ -161,24 +161,4 @@ describe("authentication panel", () => {
       )
     ).toBe(true);
   });
-
-  const waitlistConflicts = [
-    ["en", "account_exists", "This email is already registered. You can log in to your account."],
-    ["en", "already_waitlisted", "This email is already on the invitation list."],
-    ["fr", "account_exists", "Ce courriel est déjà associé à un compte. Vous pouvez vous connecter."],
-    ["fr", "already_waitlisted", "Ce courriel figure déjà sur la liste d’invitation."],
-  ] as const;
-
-  it.each(waitlistConflicts)("renders %s %s as a correctable warning", async (locale, code, message) => {
-    const controller = authenticationController({ journey: "register", state: { status: "conflict", code } });
-    render(AuthenticationPanel, { controller }, withLocale(locale));
-    const alert = page.getByRole("status");
-    await expect.element(alert).toMatchTextContent(message);
-    const submit = page.getByRole("button", { name: locale === "fr" ? "Rejoindre la liste" : "Join the list" });
-    await expect.element(submit).toBeEnabled();
-    expect(alert.element().compareDocumentPosition(submit.element()) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
-    await page.getByRole("textbox").fill("another@example.test");
-    await submit.click();
-    expect(controller.state.model.state).toEqual({ status: "submitting" });
-  });
 });
