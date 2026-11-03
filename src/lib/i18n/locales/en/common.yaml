@@ -62,7 +62,7 @@ authUi:
         link: Open Privacy
         title: Locations are off
       loggedOut: That device is logged out
-      loggedOutDescription: Devices you logged out of, or whose session ended. Each one disappears 30 days after its last activity.
+      loggedOutDescription: Devices you logged out of, or whose session ended. Each one disappears about a month later.
       loggedOutOthers: Your other devices are logged out
       loggedOutTitle: Logged out
       logout: Log out

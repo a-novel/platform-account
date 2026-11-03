@@ -64,7 +64,7 @@ authUi:
         link: Ouvrir Confidentialité
         title: La localisation est désactivée
       loggedOut: Cet appareil est déconnecté
-      loggedOutDescription: Les appareils que vous avez déconnectés, ou dont la session a pris fin. Chacun disparaît 30 jours après sa dernière activité.
+      loggedOutDescription: Les appareils que vous avez déconnectés, ou dont la session a pris fin. Chacun disparaît environ un mois plus tard.
       loggedOutOthers: Vos autres appareils sont déconnectés
       loggedOutTitle: Déconnectés
       logout: Déconnecter
