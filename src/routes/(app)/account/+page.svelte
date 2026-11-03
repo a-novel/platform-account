@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { mergeAccountAction } from "#lib/application/auth/account-action.js";
   import { loginHref } from "#lib/application/auth/navigation.js";
+  import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
-  import ProtectedPage from "../(access)/screen.svelte";
+  import { mergeAccountAction } from "./account-action";
   import { createAccountScreenController } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
@@ -44,7 +44,7 @@
   <Screen {controller} />
 {/snippet}
 
-<ProtectedPage
+<AccessBoundary
   loginHref={loginHref(currentPath)}
   homeHref={resolve("")}
   retryHref={currentPath}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ProtectedPage from "./screen.svelte";
+  import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { DowntimeState, Link, StatusState } from "@a-novel-kit/uikit";
@@ -46,7 +46,7 @@
     </StatusState>
   </div>
 {:else if status === 403 || status === 503}
-  <ProtectedPage
+  <AccessBoundary
     controller={{ state: { status: status === 403 ? "forbidden" : "unavailable" } }}
     {loginHref}
     {homeHref}

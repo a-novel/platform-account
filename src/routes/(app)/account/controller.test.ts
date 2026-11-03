@@ -1,8 +1,8 @@
-import { createAccountModel } from "#lib/application/auth/account-action.js";
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
 import type { AccountScreenModel } from "#lib/application/auth/types.js";
 
+import { createAccountModel } from "./account-action";
 import { createAccountScreenController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";

@@ -1,4 +1,4 @@
-import { parseShortCodeLink } from "./short-code-link";
+import { parseShortCodeLink } from "./short-code-link.server";
 
 import { describe, expect, it } from "vitest";
 

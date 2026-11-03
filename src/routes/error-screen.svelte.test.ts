@@ -1,7 +1,7 @@
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
-import Failure from "./failure.svelte";
+import ErrorPage from "./error-screen.svelte";
 
 import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
@@ -18,7 +18,7 @@ describe("error page presentation", () => {
   ] as const;
 
   it.each(failureTitles)("localizes HTTP %s without showing internal error details", async (status, title) => {
-    render(Failure, { ...links, status }, withLocale("fr"));
+    render(ErrorPage, { ...links, status }, withLocale("fr"));
     await expect.element(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
   });
 
@@ -26,7 +26,7 @@ describe("error page presentation", () => {
     "explains a refused authorization request in %s and links home only",
     async (locale) => {
       const { t } = createI18n(locale);
-      render(Failure, { ...links, status: 400, authorizationRequest: true }, withLocale(locale));
+      render(ErrorPage, { ...links, status: 400, authorizationRequest: true }, withLocale(locale));
 
       await expect
         .element(page.getByRole("heading", { name: t("access.authorizationRequest.title"), level: 1 }))

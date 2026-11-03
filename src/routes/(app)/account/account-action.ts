@@ -1,4 +1,4 @@
-import type { AccountClaimsState, AccountCredentialsState, AccountScreenModel } from "./types";
+import type { AccountClaimsState, AccountCredentialsState, AccountScreenModel } from "#lib/application/auth/types.js";
 
 /** AccountActionData is the result an account form action returns to the page. */
 export type AccountActionData =

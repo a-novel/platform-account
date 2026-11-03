@@ -16,7 +16,7 @@
   import { getPlatformDowntime, hasPlatformDowntime } from "#lib/ui/downtime.svelte.js";
   import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
-  import AuthenticationPanel from "./(authentication)/screen.svelte";
+  import AuthenticationPanel from "./authentication-panel.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import agoraBanner from "@a-novel-kit/ui-images/files/banner/80h/agora-banner.png";

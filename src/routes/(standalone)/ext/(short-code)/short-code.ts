@@ -1,4 +1,4 @@
-import type { ShortCodeScreenModel } from "./types";
+import type { ShortCodeScreenModel } from "#lib/application/auth/types.js";
 
 /** ShortCodePageData is the screen state and the destinations an email-link page loads. */
 export interface ShortCodePageData {

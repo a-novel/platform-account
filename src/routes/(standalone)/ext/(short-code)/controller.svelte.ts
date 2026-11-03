@@ -1,6 +1,7 @@
 import { validateNewPassword } from "#lib/application/auth/forms.js";
-import type { ShortCodeActionData, ShortCodePageData } from "#lib/application/auth/short-code-route.js";
 import type { ShortCodePasswordField, ShortCodeScreenModel } from "#lib/application/auth/types.js";
+
+import type { ShortCodeActionData, ShortCodePageData } from "./short-code";
 
 import { type PasswordInputController, createPressedController } from "@a-novel-kit/uikit";
 

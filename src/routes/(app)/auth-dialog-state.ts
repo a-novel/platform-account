@@ -1,4 +1,4 @@
-import type { AuthDialogView } from "./types";
+import type { AuthDialogView } from "#lib/application/shell/types.js";
 
 const authParameter = "auth";
 

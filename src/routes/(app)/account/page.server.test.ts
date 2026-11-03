@@ -1,9 +1,13 @@
 import { createI18n } from "#lib/i18n/instance.js";
+import { stubAuthenticationContext } from "#lib/server/auth/context.fixture.js";
+import { getAuthenticationContext } from "#lib/server/auth/context.js";
+import {
+  type AuthenticatedSession,
+  AuthenticationSession,
+  AuthenticationUnavailableError,
+} from "#lib/server/auth/session.js";
 
-import { accountActions, loadAccount } from "./account-route";
-import { getAuthenticationContext } from "./context";
-import { stubAuthenticationContext } from "./context.fixture";
-import { type AuthenticatedSession, AuthenticationSession, AuthenticationUnavailableError } from "./session";
+import { actions as accountActions, load as loadAccount } from "./+page.server";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,7 +20,7 @@ import {
 
 import type { RequestEvent } from "@sveltejs/kit";
 
-vi.mock("./context", { spy: true });
+vi.mock("#lib/server/auth/context.js", { spy: true });
 vi.mock("@a-novel/service-authentication-rest", { spy: true });
 
 const authenticated = vi.spyOn(AuthenticationSession.prototype, "authenticated");

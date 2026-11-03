@@ -5,7 +5,7 @@ import {
   type ShortCodeCompletionContext,
   completeShortCode,
   readShortCodeModel,
-} from "./short-code";
+} from "./short-code.server";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

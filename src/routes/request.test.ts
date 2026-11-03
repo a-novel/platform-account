@@ -1,10 +1,10 @@
 import { createI18n } from "#lib/i18n/instance.js";
+import { logoutAuthentication } from "#lib/server/auth/logout.js";
 
-import { accountActions, loadAccount } from "./account-route";
-import { authenticationActions } from "./authentication-route";
-import { logoutAuthentication } from "./logout";
-import { loadShell } from "./shell-layout";
-import { loadShortCodeRoute, submitShortCodeRoute } from "./short-code-route";
+import { actions as authenticationActions } from "./(app)/(home)/+page.server";
+import { load as loadShell } from "./(app)/+layout.server";
+import { actions as accountActions, load as loadAccount } from "./(app)/account/+page.server";
+import { loadShortCodeRoute, submitShortCodeRoute } from "./(standalone)/ext/(short-code)/short-code.server";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

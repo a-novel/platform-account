@@ -1,21 +1,22 @@
 <script lang="ts">
-  import { readAuthenticationActionModel } from "#lib/application/auth/action-data.js";
   import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
-  import { normalizeAuthUrl, readAuthView, withAuthView } from "#lib/application/shell/auth-dialog-state.js";
-  import { readNavigationOpen, withNavigationOpen } from "#lib/application/shell/navigation-state.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
-  import { readRailCollapsed, writeRailCollapsed } from "#lib/client/shell/rail-preference.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { authenticationTitleContext } from "#lib/ui/PageTitle.svelte";
   import { afterNavigate, goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
+  import { readAuthenticationActionModel } from "./action-data";
+  import { normalizeAuthUrl, readAuthView, withAuthView } from "./auth-dialog-state";
   import {
     type AuthenticationPanelControllerState,
     createAuthenticationPanelController,
-  } from "./(authentication)/controller.svelte";
-  import { createShellController, readyAuthenticationModel } from "./controller.svelte";
+    createShellController,
+    readyAuthenticationModel,
+  } from "./controller.svelte";
+  import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
+  import { readRailCollapsed, writeRailCollapsed } from "./rail-preference";
   import Screen from "./screen.svelte";
 
   import { onMount, setContext, untrack } from "svelte";
