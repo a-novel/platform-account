@@ -1,84 +1,55 @@
-import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type { AccountFormActions, AccountPasswordField, AccountScreenModel } from "#lib/application/auth/types.js";
+import type { AccountSummaryState } from "#lib/application/auth/types.js";
 
-import { type PasswordInputController, createPressedController } from "@a-novel-kit/uikit";
+/** The account tabs, each a page under the account layout. */
+export type AccountTab = "information" | "devices" | "privacy";
 
-/** State rendered by the account-management component. */
-export interface AccountScreenControllerState {
-  model: AccountScreenModel;
-  actions: AccountFormActions;
+/** State rendered by the account layout: the header and the tab bar. */
+export interface AccountLayoutControllerState {
+  summary: AccountSummaryState;
+  logoutState: "ready" | "submitting";
+  /** Where the header's logout posts. */
+  logoutAction: string;
+  /** Each tab's page, by tab. */
+  tabs: Record<AccountTab, string>;
+  /** The tab showing, or null on a page the tab bar does not list. */
+  currentTab: AccountTab | null;
 }
 
-/** Pure account-management state and form transitions. */
-export interface AccountScreenController {
-  readonly state: AccountScreenControllerState;
-  /** Shows or hides each password field's value, the email form's current password included. */
-  readonly passwordVisibility: Record<AccountPasswordField | "emailCurrentPassword", PasswordInputController>;
-  /** Reconciles a completed route load or action with the rendered account state. */
-  synchronize(model: AccountScreenModel, actions: AccountFormActions): void;
-  /** Validates password fields into state and reports whether native submission may continue. */
-  submitPassword(form: FormData): boolean;
-  /** Validates the new email and the current password into state and reports whether native submission may continue. */
-  submitEmail(form: FormData): boolean;
-  /** Starts a logout submission. */
+/** Pure state and transitions of the account layout. */
+export interface AccountLayoutController {
+  readonly state: AccountLayoutControllerState;
+  /** Reconciles a completed load or navigation with the rendered layout. */
+  synchronize(summary: AccountSummaryState, currentTab: AccountTab | null): void;
+  /** Starts a logout and reports whether native submission may continue. */
   submitLogout(): boolean;
 }
 
-/** Configuration for the default account-management controller. */
-export interface AccountScreenControllerOptions extends AccountScreenControllerState {
-  /** Allows the browser to submit forms after the controller accepts their transition. */
-  allowNativeSubmission?: boolean;
-}
+/** Configuration for the default account layout controller. */
+export type AccountLayoutControllerOptions = Omit<AccountLayoutControllerState, "logoutState">;
 
-/** Creates a reactive controller for the account-management screen. */
-export function createAccountScreenController({
-  model: initialModel,
-  actions: initialActions,
-  allowNativeSubmission = true,
-}: AccountScreenControllerOptions): AccountScreenController {
-  let model = $state(initialModel);
-  let actions = $state(initialActions);
-
-  function update(patch: Partial<AccountScreenModel>): boolean {
-    model = { ...model, ...patch };
-    return allowNativeSubmission;
-  }
+/** Creates a reactive controller for the account layout. */
+export function createAccountLayoutController({
+  summary: initialSummary,
+  logoutAction,
+  tabs,
+  currentTab: initialTab,
+}: AccountLayoutControllerOptions): AccountLayoutController {
+  let summary = $state(initialSummary);
+  let currentTab = $state(initialTab);
+  let logoutState = $state<"ready" | "submitting">("ready");
 
   return {
     get state() {
-      return { model, actions };
+      return { summary, logoutState, logoutAction, tabs, currentTab };
     },
-    passwordVisibility: {
-      currentPassword: createPressedController(),
-      newPassword: createPressedController(),
-      confirmPassword: createPressedController(),
-      emailCurrentPassword: createPressedController(),
-    },
-    synchronize(nextModel, nextActions) {
-      model = nextModel;
-      actions = nextActions;
-    },
-    submitPassword(form) {
-      if (model.passwordState.status === "submitting") return false;
-      const result = validatePasswordChange(form);
-      if (!result.success) {
-        update({ passwordState: { status: "validation-error", issues: result.issues } });
-        return false;
-      }
-      return update({ passwordState: { status: "submitting" } });
-    },
-    submitEmail(form) {
-      if (model.emailState.status === "submitting") return false;
-      const result = validateEmailUpdate(form);
-      if (!result.success) {
-        update({ emailState: { status: "validation-error", issues: result.issues } });
-        return false;
-      }
-      return update({ emailState: { status: "submitting" } });
+    synchronize(nextSummary, nextTab) {
+      summary = nextSummary;
+      currentTab = nextTab;
     },
     submitLogout() {
-      if (model.logoutState === "submitting") return false;
-      return update({ logoutState: "submitting" });
+      if (logoutState === "submitting") return false;
+      logoutState = "submitting";
+      return true;
     },
   };
 }

@@ -46,7 +46,6 @@ function controller(
     homeHref: "/",
     accountHref: "/account",
     logoutAction: "/auth/logout",
-    privacyHref: null,
     apps: { studio: "https://studio.example.test" },
     authentication,
     resolveAuthentication: (view) => ({ model: readyAuthenticationModel(view), action: "/auth" }),
@@ -138,16 +137,9 @@ describe("account shell screen", () => {
     await expect.element(page.getByRole("navigation", { name: "Agora apps" })).not.toBeInTheDocument();
   });
 
-  it("lists Privacy only while the platform collects browser telemetry", async () => {
-    const view = await render(ShellStory, { model: model() }, withLocale());
+  it("lists no Privacy destination: privacy is one of the account's tabs", async () => {
+    render(ShellStory, { model: model() }, withLocale());
     await expect.element(page.getByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
-    await view.unmount();
-
-    render(ShellStory, { model: model({ activeNavigation: "privacy" }), collectsTelemetry: true }, withLocale("fr"));
-    const privacy = page.getByRole("complementary").getByRole("link", { name: "Confidentialité" });
-    await expect.element(privacy).toHaveAttribute("href", "#privacy");
-    await expect.element(privacy).toHaveAttribute("aria-current", "page");
-    await expect.element(page.getByRole("link", { name: "Accueil" })).not.toHaveAttribute("aria-current");
   });
 
   it("links the account name to the account page and keeps logout in reach", async () => {

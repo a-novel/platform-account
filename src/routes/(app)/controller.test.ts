@@ -14,7 +14,6 @@ const links = {
   homeHref: "/",
   accountHref: "/account",
   logoutAction: "/logout",
-  privacyHref: "/privacy",
   apps: { studio: "https://studio.example.test" },
 };
 

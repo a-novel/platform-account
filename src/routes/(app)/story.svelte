@@ -10,8 +10,6 @@
     authenticationModel?: AuthenticationPanelModel;
     /** Whether the password field shows its text. */
     passwordShown?: boolean;
-    /** Whether the platform collects browser telemetry, which adds the Privacy link. */
-    collectsTelemetry?: boolean;
     /** Whether the server could read where the apps live, which the app list needs. */
     apps?: boolean;
     /** A planned downtime, which the shell announces and, once started, locks the sign-in dialog for. */
@@ -31,7 +29,6 @@
     model,
     authenticationModel,
     passwordShown = false,
-    collectsTelemetry,
     apps = true,
     downtime,
     started = true,
@@ -45,7 +42,6 @@
         homeHref: "#home",
         accountHref: "#account",
         logoutAction: "#logout",
-        privacyHref: collectsTelemetry ? "#privacy" : null,
         apps: apps ? { studio: "#studio" } : null,
         platformDowntime: downtime && {
           downtime: { components: ["service-authentication.database"], ...downtime },

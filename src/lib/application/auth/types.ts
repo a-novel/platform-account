@@ -69,45 +69,98 @@ export type AccountPasswordField = "currentPassword" | "newPassword" | "confirmP
 /** The fields of the account email form. */
 export type AccountEmailField = "currentPassword" | "newEmail";
 
-/** Claims and expiry data resolved by the server-side session boundary. */
-export interface AccountClaimsSummary {
-  userId: string;
+/** What the account pages' header states about the visitor. */
+export interface AccountSummary {
   roles: readonly string[];
-  accessExpiresAt: string;
-  refreshExpiresAt: string;
+  /** The current email, absent while Authentication cannot report it. A pending change stays out. */
+  email?: string;
+  /** When the visitor must log in again, formatted: the refresh token's expiry. */
+  loggedInUntil?: string;
 }
 
-/** Session recap availability, independent of account form state. */
-export type AccountClaimsState =
-  | ({ status: "ready" } & AccountClaimsSummary)
-  | { status: "loading" }
-  | { status: "error"; feedback: AuthenticationFeedback };
+/** The header's state, independent of the tabs below it. */
+export type AccountSummaryState =
+  ({ status: "ready" } & AccountSummary) | { status: "error"; feedback: AuthenticationFeedback };
 
-/** The account's email and the change awaiting confirmation, as Authentication reports them. */
+/** The account's email, its change awaiting confirmation and its location consent, as Authentication reports them. */
 export interface AccountCredentialsSummary {
   email: string;
   pendingEmail?: { email: string; expiresAt: string };
+  /** Whether the account records the IP address and approximate location of its devices. */
+  locationConsent: boolean;
 }
 
-/** Email availability, independent of the session recap and the account forms. */
+/** Credentials availability, independent of the account forms. */
 export type AccountCredentialsState = ({ status: "ready" } & AccountCredentialsSummary) | { status: "unavailable" };
 
-/** Account recap and independently controlled actions. */
-export interface AccountScreenModel {
-  claims: AccountClaimsState;
+/** The account detail a dialog edits. */
+export type AccountEditor = "email" | "password";
+
+/** The "My information" tab: the account's email and password, and their editing dialogs. */
+export interface AccountInformationModel {
   credentials: AccountCredentialsState;
+  /** The open editing dialog, which the URL owns. */
+  editor: AccountEditor | null;
   passwordState: FormState<AccountPasswordField>;
   /** A sent link carries no address: the pending email comes from `credentials` once the page reloads. */
   emailState: Exclude<FormState<AccountEmailField>, { status: "success" }> | { status: "pending-email" };
-  logoutState: "ready" | "submitting";
 }
 
-/** POST destinations supplied by the SvelteKit account route. */
-export interface AccountFormActions {
+/** POST destinations of the "My information" tab. */
+export interface AccountInformationActions {
   password: string;
   email: string;
+}
+
+/** What a device's User-Agent tells: its browser and system when recognized, and its form factor. */
+export interface DeviceName {
+  browser?: string;
+  system?: string;
+  form: "desktop" | "phone" | "tablet";
+}
+
+/** A device the account logged in on: one session, as the devices tab lists it. */
+export interface AccountDevice extends DeviceName {
+  /** The session the device holds, which logging it out or removing it names. */
+  id: string;
+  /** Marks the device showing the page. */
+  current: boolean;
+  /** Set once the device was logged out or its session ended. */
+  loggedOut: boolean;
+  /** When the device's latest access token was issued, formatted for the reader. */
+  lastActiveAt: string;
+  /** The approximate place, formatted for the reader, when the account records locations. */
+  place?: string;
+  ipAddress?: string;
+}
+
+/** A logout waiting for the reader's confirmation: one device, or every device but this one. */
+export type AccountDeviceConfirmation = { kind: "device"; id: string } | { kind: "others" };
+
+/** The devices tab: the account's devices and the outcome of the latest change. */
+export interface AccountDevicesModel {
+  devices: { status: "ready"; devices: AccountDevice[] } | { status: "unavailable" };
+  /** Whether the account records locations, or null when Authentication cannot tell. */
+  locationConsent: boolean | null;
+  /** The logout the open confirmation dialog asks about, which the URL owns. */
+  confirmation: AccountDeviceConfirmation | null;
+  action:
+    | { status: "ready" | "submitting" | "logged-out" | "logged-out-others" | "removed" }
+    | { status: "service-error"; feedback: AuthenticationFeedback };
+}
+
+/** POST destinations of the devices tab. */
+export interface AccountDevicesActions {
+  logoutDevice: string;
+  logoutOtherDevices: string;
+  removeDevice: string;
+  /** Logs this device out, through the shell's logout. */
   logout: string;
 }
+
+/** The account's location consent on the privacy tab, with the outcome of the latest change. */
+export type PrivacyAccountState =
+  { status: "ready"; locationConsent: boolean; feedback?: AuthenticationFeedback } | { status: "unavailable" };
 
 /** The journeys an email link completes. */
 export type ShortCodeJourney = "register" | "email-update" | "password-reset";

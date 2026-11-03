@@ -1,439 +1,212 @@
 <script module lang="ts">
-  import type { AccountScreenController } from "./controller.svelte";
+  import type { AccountLayoutController } from "./controller.svelte";
 
-  /** Props for the pure protected account-management screen. */
-  export interface AccountScreenProps {
-    controller: AccountScreenController;
+  import type { Snippet } from "svelte";
+
+  /** Props for the account layout: the header, the tab bar and the tab showing. */
+  export interface AccountLayoutScreenProps {
+    controller: AccountLayoutController;
+    children: Snippet;
   }
 </script>
 
 <script lang="ts">
-  import type { AccountPasswordField } from "#lib/application/auth/types.js";
-  import { translateAuthenticationFeedback, translateFieldIssue } from "#lib/i18n/auth-feedback.js";
-  import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
-  import { submitThrough } from "#lib/ui/form-submission.js";
+  import { translateAuthenticationFeedback } from "#lib/i18n/auth-feedback.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import {
-    Alert,
-    Badge,
-    Button,
-    Card,
-    Container,
-    Field,
-    FormActions,
-    Input,
-    PageHeader,
-    PasswordInput,
-    Stack,
-  } from "@a-novel-kit/uikit";
+  import { Alert, Badge, Button, NavList } from "@a-novel-kit/uikit";
+  import { Role } from "@a-novel/service-authentication-rest";
 
-  import { Hourglass, ShieldCheck } from "@lucide/svelte";
+  import { LogOut } from "@lucide/svelte";
 
-  let { controller }: AccountScreenProps = $props();
+  let { controller, children }: AccountLayoutScreenProps = $props();
 
-  const model = $derived(controller.state.model);
-  const actions = $derived(controller.state.actions);
-
+  const layout = $derived(controller.state);
+  const summary = $derived(layout.summary);
   const componentId = $props.id();
   const { t } = getI18nContext();
 
-  const currentPasswordId = `${componentId}-current-password`;
-  const newPasswordId = `${componentId}-new-password`;
-  const confirmPasswordId = `${componentId}-confirm-password`;
-  const currentEmailId = `${componentId}-current-email`;
-  const newEmailId = `${componentId}-new-email`;
-  const emailCurrentPasswordId = `${componentId}-email-current-password`;
+  const tabs = $derived([
+    {
+      href: layout.tabs.information,
+      label: t("authUi.account.tabs.information"),
+      current: layout.currentTab === "information",
+    },
+    { href: layout.tabs.devices, label: t("authUi.account.tabs.devices"), current: layout.currentTab === "devices" },
+    { href: layout.tabs.privacy, label: t("authUi.account.tabs.privacy"), current: layout.currentTab === "privacy" },
+  ]);
 
-  const passwordSubmitting = $derived(model.passwordState.status === "submitting");
-  const emailSubmitting = $derived(model.emailState.status === "submitting");
-  const loggingOut = $derived(model.logoutState === "submitting");
-  const passwordIssues = $derived(model.passwordState.status === "validation-error" ? model.passwordState.issues : []);
-  const emailIssues = $derived(model.emailState.status === "validation-error" ? model.emailState.issues : []);
-
-  const passwordError = (field: AccountPasswordField) => translateFieldIssue(t, passwordIssues, field);
-  const submitPassword = (event: SubmitEvent) => submitThrough(event, (form) => controller.submitPassword(form));
-  const submitEmail = (event: SubmitEvent) => submitThrough(event, (form) => controller.submitEmail(form));
+  // The picture shows initials until the account can upload one: two from a dotted or dashed handle.
+  const initials = $derived.by(() => {
+    const handle = (summary.status === "ready" && summary.email?.split("@")[0]) || "";
+    const words = handle.split(/[._-]+/).filter(Boolean);
+    return words
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase())
+      .join("");
+  });
 
   function submitLogout(event: SubmitEvent) {
     if (!controller.submitLogout()) event.preventDefault();
   }
 </script>
 
-<div class="account-screen">
-  <Container size="sm" gutter={false}>
-    <Stack gap="4">
-      <PageHeader title={t("authUi.account.title")} description={t("authUi.account.description")} />
+<div class="account-layout">
+  <header class="account-header" aria-labelledby={`${componentId}-title`}>
+    <span class="picture" aria-hidden="true">{initials}</span>
 
-      <Stack gap="4">
-        <Card surface="raised">
-          <section id="account-password" class="card-section" aria-labelledby={`${componentId}-password-title`}>
-            <header class="section-heading">
-              <h2 id={`${componentId}-password-title`}>{t("authUi.account.password.title")}</h2>
-            </header>
+    <div class="identity">
+      <h1 id={`${componentId}-title`}>
+        {summary.status === "ready" && summary.email ? summary.email : t("authUi.account.title")}
+      </h1>
 
-            <form
-              method="POST"
-              action={actions.password}
-              aria-busy={passwordSubmitting}
-              novalidate
-              onsubmit={submitPassword}
-            >
-              <Field
-                controlId={currentPasswordId}
-                label={t("authUi.account.password.currentLabel")}
-                error={passwordError("currentPassword")}
-                required
-              >
-                {#snippet children(control)}
-                  <PasswordInput
-                    {...control}
-                    controller={controller.passwordVisibility.currentPassword}
-                    name="currentPassword"
-                    autocomplete="current-password"
-                    readonly={passwordSubmitting}
-                  />
-                {/snippet}
-              </Field>
-              <Field
-                controlId={newPasswordId}
-                label={t("authUi.account.password.newLabel")}
-                hint={t("authUi.passwordHint")}
-                error={passwordError("newPassword")}
-                required
-              >
-                {#snippet children(control)}
-                  <PasswordInput
-                    {...control}
-                    controller={controller.passwordVisibility.newPassword}
-                    name="password"
-                    autocomplete="new-password"
-                    readonly={passwordSubmitting}
-                  />
-                {/snippet}
-              </Field>
-              <Field
-                controlId={confirmPasswordId}
-                label={t("authUi.account.password.confirmLabel")}
-                error={passwordError("confirmPassword")}
-                required
-              >
-                {#snippet children(control)}
-                  <PasswordInput
-                    {...control}
-                    controller={controller.passwordVisibility.confirmPassword}
-                    name="confirmPassword"
-                    autocomplete="new-password"
-                    readonly={passwordSubmitting}
-                  />
-                {/snippet}
-              </Field>
-              <FormActions>
-                {#snippet feedback()}
-                  {#if model.passwordState.status === "service-error"}
-                    <AuthenticationError feedback={model.passwordState.feedback} />
-                  {:else if model.passwordState.status === "success"}
-                    <Alert tone="success" title={translateAuthenticationFeedback(t, model.passwordState.feedback)} />
-                  {/if}
-                {/snippet}
-                <Button type="submit" disabled={passwordSubmitting}>
-                  {passwordSubmitting ? t("authUi.account.password.submitting") : t("authUi.account.password.submit")}
-                </Button>
-              </FormActions>
-            </form>
-          </section>
-        </Card>
-
-        <Card surface="raised">
-          <section id="account-email" class="card-section" aria-labelledby={`${componentId}-email-title`}>
-            <header class="section-heading">
-              <h2 id={`${componentId}-email-title`}>{t("authUi.account.email.title")}</h2>
-              <p>{t("authUi.account.email.description")}</p>
-            </header>
-
-            {#if model.credentials.status === "ready"}
-              {@const email = model.credentials.email}
-              <Field controlId={currentEmailId} label={t("authUi.account.email.current")}>
-                {#snippet children(control)}
-                  <Input {...control} type="email" value={email} readonly />
-                {/snippet}
-              </Field>
-              {#if model.credentials.pendingEmail}
-                {@const pending = model.credentials.pendingEmail}
-                <!-- Stored state rather than feedback, so a note: the form's status already announces a new link. -->
-                <Alert tone="warning" role="note" title={t("authUi.account.email.pending")}>
-                  {#snippet icon()}
-                    <Hourglass size="var(--icon-size-sm)" />
-                  {/snippet}
-                  <span class="pending-email">{pending.email}</span>
-                  {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-                </Alert>
+      {#if summary.status === "error"}
+        <Alert tone="error" title={t("authUi.account.loadErrorTitle")}>
+          {translateAuthenticationFeedback(t, summary.feedback)}
+        </Alert>
+      {:else}
+        <!-- Each role keeps one color, so a privileged account reads as such at a glance. -->
+        <ul class="roles" aria-label={t("authUi.account.roles.label")}>
+          {#each summary.roles as role (role)}
+            <li>
+              {#if role === Role.SuperAdmin}
+                <Badge tone="danger">{t("authUi.account.roles.superAdmin")}</Badge>
+              {:else if role === Role.Admin}
+                <Badge tone="warning">{t("authUi.account.roles.admin")}</Badge>
+              {:else if role === Role.User}
+                <Badge tone="brand">{t("authUi.account.roles.user")}</Badge>
+              {:else}
+                <Badge tone="neutral">{role}</Badge>
               {/if}
-            {:else}
-              <Alert tone="error" title={t("authUi.account.email.unavailable")} />
-            {/if}
+            </li>
+          {/each}
+        </ul>
+        {#if summary.loggedInUntil}
+          <p class="session">
+            <span class="label">{t("authUi.account.loggedInUntil")}</span>
+            {summary.loggedInUntil}
+          </p>
+        {/if}
+      {/if}
+    </div>
 
-            <form method="POST" action={actions.email} aria-busy={emailSubmitting} novalidate onsubmit={submitEmail}>
-              <Field
-                controlId={newEmailId}
-                label={t("authUi.account.email.label")}
-                hint={t("authUi.account.email.hint")}
-                error={translateFieldIssue(t, emailIssues, "newEmail")}
-                required
-              >
-                {#snippet children(control)}
-                  <Input
-                    {...control}
-                    name="email"
-                    type="email"
-                    autocomplete="email"
-                    autocapitalize="none"
-                    spellcheck="false"
-                    readonly={emailSubmitting}
-                  />
-                {/snippet}
-              </Field>
-              <Field
-                controlId={emailCurrentPasswordId}
-                label={t("authUi.account.password.currentLabel")}
-                error={translateFieldIssue(t, emailIssues, "currentPassword")}
-                required
-              >
-                {#snippet children(control)}
-                  <PasswordInput
-                    {...control}
-                    controller={controller.passwordVisibility.emailCurrentPassword}
-                    name="currentPassword"
-                    autocomplete="current-password"
-                    readonly={emailSubmitting}
-                  />
-                {/snippet}
-              </Field>
-              <FormActions>
-                {#snippet feedback()}
-                  {#if model.emailState.status === "service-error"}
-                    <AuthenticationError feedback={model.emailState.feedback} />
-                  {:else if model.emailState.status === "pending-email"}
-                    <Alert tone="success" title={t("authUi.account.email.pendingTitle")}>
-                      {t("authUi.account.email.pendingDescription")}
-                    </Alert>
-                  {/if}
-                {/snippet}
-                <Button type="submit" disabled={emailSubmitting}>
-                  {#if emailSubmitting}
-                    {t("authUi.account.email.submitting")}
-                  {:else if model.emailState.status === "pending-email"}
-                    {t("authUi.account.email.resend")}
-                  {:else}
-                    {t("authUi.account.email.submit")}
-                  {/if}
-                </Button>
-              </FormActions>
-            </form>
-          </section>
-        </Card>
+    <!-- Logging out is the one action here, and the header keeps it quiet: it is not what people come for. -->
+    <form class="logout" method="POST" action={layout.logoutAction} onsubmit={submitLogout}>
+      <Button type="submit" variant="text" tone="neutral" size="sm" disabled={layout.logoutState === "submitting"}>
+        <LogOut size="var(--icon-size-sm)" aria-hidden="true" />
+        {layout.logoutState === "submitting"
+          ? t("authUi.account.logout.submitting")
+          : t("authUi.account.logout.submit")}
+      </Button>
+    </form>
+  </header>
 
-        <section id="account-claims" class="session-summary" aria-labelledby={`${componentId}-claims-title`}>
-          <div class="section-heading">
-            <ShieldCheck size="var(--icon-size-md)" aria-hidden="true" />
-            <h2 id={`${componentId}-claims-title`}>{t("authUi.account.claims.title")}</h2>
-          </div>
+  <nav class="tabs" aria-label={t("authUi.account.tabs.label")}>
+    <NavList orientation="horizontal" items={tabs} />
+  </nav>
 
-          {#if model.claims.status === "loading"}
-            <Alert tone="loading" title={t("authUi.account.loadingTitle")} />
-          {:else if model.claims.status === "error"}
-            <Alert tone="error" title={t("authUi.account.loadErrorTitle")}>
-              {translateAuthenticationFeedback(t, model.claims.feedback)}
-            </Alert>
-          {:else}
-            <dl class="details">
-              <div class="session-identity">
-                <dt>{t("authUi.account.claims.userId")}</dt>
-                <dd class="monospace">{model.claims.userId}</dd>
-              </div>
-              <div class="session-identity">
-                <dt>{t("authUi.account.claims.roles")}</dt>
-                <dd>
-                  <div class="roles">
-                    {#each model.claims.roles as role (role)}
-                      <Badge tone="brand">{role}</Badge>
-                    {:else}
-                      <span>{t("authUi.account.claims.noRoles")}</span>
-                    {/each}
-                  </div>
-                </dd>
-              </div>
-              <div class="session-expiry">
-                <dt>{t("authUi.account.claims.accessExpiresAt")}</dt>
-                <dd>{model.claims.accessExpiresAt}</dd>
-              </div>
-              <div class="session-expiry">
-                <dt>{t("authUi.account.claims.refreshExpiresAt")}</dt>
-                <dd>{model.claims.refreshExpiresAt}</dd>
-              </div>
-            </dl>
-          {/if}
-
-          <form
-            id="account-session"
-            method="POST"
-            action={actions.logout}
-            aria-busy={loggingOut}
-            onsubmit={submitLogout}
-          >
-            <FormActions>
-              {#snippet feedback()}
-                <p id={`${componentId}-logout-description`} class="feedback-message">
-                  {t("authUi.account.logout.description")}
-                </p>
-              {/snippet}
-              <Button
-                type="submit"
-                variant="outline"
-                tone="neutral"
-                aria-describedby={`${componentId}-logout-description`}
-                disabled={loggingOut}
-              >
-                {loggingOut ? t("authUi.account.logout.submitting") : t("authUi.account.logout.submit")}
-              </Button>
-            </FormActions>
-          </form>
-        </section>
-      </Stack>
-    </Stack>
-  </Container>
+  <div class="tab">
+    {@render children()}
+  </div>
 </div>
 
 <style>
-  .account-screen {
+  .account-layout {
+    display: grid;
+    gap: var(--space-6);
+    container-type: inline-size;
+    margin-inline: auto;
     padding-inline: var(--layout-gutter);
     padding-block: var(--space-6) var(--space-12);
+    max-inline-size: 48rem;
   }
 
-  .session-summary,
-  .card-section,
-  form {
+  .account-header {
     display: grid;
-    gap: var(--space-4);
-    min-inline-size: 0;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
   }
 
-  .card-section,
-  .session-summary,
-  #account-session {
-    scroll-margin-block-start: var(--space-5);
-  }
-
-  .session-summary,
-  #account-session {
-    padding-block-start: var(--space-4);
-  }
-
-  .section-heading {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-  }
-
-  .section-heading > :global(svg) {
-    flex: none;
-    align-self: center;
+  /* The picture fills its own column, where an uploaded picture will take its place. */
+  .picture {
+    display: grid;
+    place-items: center;
+    border: var(--border-width-thin) solid var(--color-border-default);
+    border-radius: var(--radius-round);
+    background: var(--color-surface-selected);
+    inline-size: 6rem;
+    block-size: 6rem;
     color: var(--color-text-accent);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-2xl);
+    font-family: var(--font-family-mono);
   }
 
-  header.section-heading {
+  .identity {
     display: grid;
     gap: var(--space-2);
+    min-inline-size: 0;
   }
 
-  h2,
-  .section-heading p,
-  .feedback-message {
+  h1,
+  p,
+  ul {
     margin: 0;
   }
 
-  h2 {
-    min-inline-size: 0;
+  h1 {
     color: var(--color-text-primary);
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-2xl);
+    line-height: var(--line-height-tight);
     font-family: var(--font-family-display);
     overflow-wrap: anywhere;
-  }
-
-  .section-heading p,
-  .feedback-message {
-    color: var(--color-text-secondary);
-    line-height: var(--line-height-normal);
-  }
-
-  .details {
-    display: grid;
-    gap: var(--space-4);
-    margin: 0;
-  }
-
-  @media (min-width: 35rem) {
-    .details {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  .details > div {
-    display: grid;
-    align-content: start;
-    gap: var(--space-1);
-    min-inline-size: 0;
-  }
-
-  .session-identity {
-    grid-column: 1 / -1;
-  }
-
-  .details dt {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-  }
-
-  .details dd {
-    margin: 0;
-    line-height: var(--line-height-normal);
-    overflow-wrap: anywhere;
-  }
-
-  .pending-email {
-    display: block;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
   }
 
   .roles {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1);
+    padding: 0;
+    list-style: none;
   }
 
-  .monospace {
+  .session {
+    color: var(--color-text-primary);
     font-size: var(--font-size-sm);
-    font-family: var(--font-family-mono);
+    line-height: var(--line-height-normal);
   }
 
-  @media (max-width: 34.999rem) {
-    .account-screen {
-      padding-inline: var(--space-2);
-      padding-block-start: var(--space-3);
+  .session .label {
+    color: var(--color-text-muted);
+  }
+
+  .tabs {
+    border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
+    overflow-x: auto;
+  }
+
+  /* On a phone the picture shrinks, and logging out moves under the details. */
+  @container (max-width: 34rem) {
+    .account-header {
+      grid-template-columns: auto minmax(0, 1fr);
     }
 
-    .details {
-      gap: var(--space-3);
+    .picture {
+      inline-size: 4rem;
+      block-size: 4rem;
+      font-size: var(--font-size-xl);
     }
 
-    .details > .session-expiry {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: var(--space-1) var(--space-3);
-      font-size: var(--font-size-sm);
+    /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */
+    .logout {
+      display: grid;
+      grid-column: 1 / -1;
+      margin-block-start: var(--space-2);
+    }
+
+    .logout :global(button) {
+      justify-content: center;
     }
   }
 </style>

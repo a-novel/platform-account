@@ -3,13 +3,13 @@ import type { AuthDialogView } from "#lib/application/shell/types.js";
 const authParameter = "auth";
 
 /** Reads a parameter that appears exactly once. A duplicate counts as absent. */
-function singleValue(parameters: URLSearchParams, name: string): string | undefined {
+export function singleValue(parameters: URLSearchParams, name: string): string | undefined {
   const values = parameters.getAll(name);
   return values.length === 1 ? values[0] : undefined;
 }
 
 /** Returns a copy of the URL with one value for the parameter, or without it for null. */
-function withParameter(url: URL, name: string, value: string | null): URL {
+export function withParameter(url: URL, name: string, value: string | null): URL {
   const next = new URL(url);
   next.searchParams.delete(name);
   if (value) next.searchParams.set(name, value);

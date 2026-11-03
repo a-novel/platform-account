@@ -260,11 +260,7 @@
 </Story>
 
 <Story name="Collapsed authenticated" asChild>
-  <StoryHarness model={{ ...authenticated, rail: "collapsed" }} collectsTelemetry />
-</Story>
-
-<Story name="Privacy link" asChild>
-  <StoryHarness model={{ ...authenticated, activeNavigation: "privacy" }} collectsTelemetry />
+  <StoryHarness model={{ ...authenticated, rail: "collapsed" }} />
 </Story>
 
 <Story name="Authenticated" asChild play={verifyAuthenticatedActions}>

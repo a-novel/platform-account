@@ -24,7 +24,6 @@ access:
     description: Votre session est conservée. Veuillez recharger cette page dans quelques minutes.
     title: Accès temporairement indisponible
 authFlow:
-  expiryUnavailable: Non renseignée
   feedback:
     emailUpdated: Votre courriel a été mis à jour.
     invalidCredentials: Votre courriel ou votre mot de passe est incorrect.
@@ -49,42 +48,91 @@ authFlow:
     passwordMismatch: Les mots de passe ne correspondent pas.
 authUi:
   account:
-    claims:
-      accessExpiresAt: Expiration de l’accès
-      noRoles: Aucun rôle attribué
-      refreshExpiresAt: Expiration de la session
-      roles: Rôles
-      title: Votre session
-      userId: Identifiant du compte
-    description: Vos informations personnelles et vos paramètres de sécurité.
+    closeEditor: Fermer la fenêtre
+    devices:
+      activeNow: Actif maintenant
+      confirm:
+        cancel: Annuler
+        deviceTitle: Déconnecter {{device}} ?
+        othersBody: Tous vos appareils seront déconnectés, sauf celui-ci.
+        othersTitle: Déconnecter tous mes appareils ?
+      current: Cet appareil
+      description: Les appareils connectés à votre compte Agora.
+      lastActive: Dernière activité le {{date}}
+      locationTip:
+        body: Activez « Enregistrer d’où mes appareils se connectent » dans Confidentialité pour voir l’adresse IP et le lieu approximatif de chaque appareil.
+        link: Ouvrir Confidentialité
+        title: La localisation est désactivée
+      loggedOut: Cet appareil est déconnecté
+      loggedOutDescription: Les appareils que vous avez déconnectés, ou dont la session a pris fin. Chacun disparaît 30 jours après sa dernière activité.
+      loggedOutOthers: Vos autres appareils sont déconnectés
+      loggedOutTitle: Déconnectés
+      logout: Déconnecter
+      logoutLabel: Déconnecter {{device}}
+      logoutOthers: Déconnecter tous mes appareils
+      lossDelay: Un appareil déconnecté peut garder l’accès jusqu’à 15 minutes.
+      name: "{{browser}} sur {{system}}"
+      nameUnknownBrowser: Navigateur sur {{system}}
+      remove: Retirer
+      removed: Appareil retiré
+      removeLabel: Retirer {{device}}
+      title: Appareils
+      unavailable: Vos appareils ne peuvent pas être affichés pour le moment.
+      unknown: Appareil inconnu
     email:
-      current: Courriel actuel
-      description: Un lien de confirmation sera envoyé à votre nouveau courriel.
+      change: Modifier
+      changeLabel: Modifier mon courriel
+      description: Nous enverrons un lien de confirmation à votre nouveau courriel.
+      dialogTitle: Modifiez votre courriel
       hint: Votre courriel actuel reste actif jusqu’à confirmation.
       label: Nouveau courriel
       pending: En attente de confirmation
       pendingDescription: Si aucun autre compte n’utilise la nouvelle adresse, vous y recevrez un lien de confirmation.
       pendingExpiry: Le lien expire le {{date}}
-      pendingTitle: Consultez votre messagerie
-      resend: M’envoyer un autre lien
       submit: M’envoyer le lien
       submitting: Envoi du lien…
+      success:
+        expiry: Le lien expire le {{date}}.
+        keep: Jusqu’à confirmation, continuez à vous connecter avec {{email}}.
+        sent: Si aucun autre compte n’utilise {{email}}, un lien de confirmation devrait y arriver sous peu.
+        title: Consultez votre messagerie
       title: Courriel
       unavailable: Votre courriel actuel ne peut pas être affiché pour le moment.
-    loadErrorTitle: Détails de la session indisponibles
-    loadingTitle: Chargement de la session
+    gotIt: J’ai compris
+    loadErrorTitle: Détails du compte indisponibles
+    loggedInUntil: Connecté jusqu’au
     logout:
-      description: Vous serez déconnecté de votre compte Agora sur cet appareil.
       submit: Me déconnecter
       submitting: Déconnexion…
     password:
+      change: Modifier
+      changeLabel: Modifier mon mot de passe
       confirmLabel: Confirmez votre nouveau mot de passe
       currentLabel: Mot de passe actuel
+      dialogTitle: Modifiez votre mot de passe
+      hint: Choisissez un mot de passe long et facile à retenir.
       newLabel: Nouveau mot de passe
       submit: Changer mon mot de passe
       submitting: Modification du mot de passe…
+      success:
+        description: Utilisez votre nouveau mot de passe lors de votre prochaine connexion.
+        devices: Vos autres appareils restent connectés.
+        review: Voir mes appareils
+        title: Mot de passe modifié
       title: Mot de passe
-    title: Gérez votre compte
+    roles:
+      admin: Administrateur
+      label: Rôles
+      superAdmin: Super administrateur
+      user: Utilisateur
+    signIn:
+      title: Courriel et mot de passe
+    tabs:
+      devices: Appareils
+      information: Mes informations
+      label: Sections du compte
+      privacy: Confidentialité
+    title: Votre compte
   authentication:
     emailLabel: Courriel
     journeys:
@@ -140,6 +188,7 @@ pageTitles:
   brand: Agora
   confirmEmail: Confirmer mon courriel
   createAccount: Créer mon compte
+  devices: Appareils
   emailUpdated: Courriel mis à jour
   incompleteLink: Lien incomplet
   invalidLink: Lien invalide
@@ -148,7 +197,15 @@ pageTitles:
   resetPassword: Réinitialiser mon mot de passe
   withState: "{{title}}: {{status}}"
 privacy:
+  account:
+    locationDescription: Affiche l’adresse IP et la localisation approximative de chaque appareil connecté à votre compte, sur la page de votre compte.
+    locationTitle: Enregistrer d’où mes appareils se connectent
+    save: Enregistrer
+    title: Votre compte
+    unavailable: Les paramètres de votre compte ne peuvent pas être affichés pour le moment.
   description: Choisissez ce que nous collectons sur cet appareil.
+  device:
+    title: Cet appareil
   noTelemetry: Nous ne collectons ni métriques ni journaux sur cet appareil.
   title: Confidentialité
 shell:
@@ -180,7 +237,6 @@ shell:
   logout: Me déconnecter
   navigation: Navigation d’Agora
   openNavigation: Ouvrir la navigation
-  privacy: Confidentialité
   register: M’inscrire
   sessionDowntime: Compte indisponible pendant la maintenance.
   sessionLoading: Chargement du compte

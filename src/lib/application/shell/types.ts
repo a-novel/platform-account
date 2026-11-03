@@ -18,7 +18,7 @@ export interface ShellApps {
 
 /** Serializable state consumed by the pure application shell. */
 export interface ShellViewModel {
-  activeNavigation: "home" | "privacy" | null;
+  activeNavigation: "home" | null;
   rail: "expanded" | "collapsed";
   drawerOpen: boolean;
   authView: AuthDialogView | null;

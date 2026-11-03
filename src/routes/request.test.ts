@@ -180,7 +180,8 @@ describe("account session at the request boundary", () => {
   });
 
   it.each([
-    ["/privacy", "privacy"],
+    ["/account/devices", "home"],
+    ["/privacy", null],
     ["/authorize", null],
   ] as const)("marks %s with the %s rail destination", async (path, activeNavigation) => {
     await expect(loadShell(request(path).event)).resolves.toMatchObject({ activeNavigation });
