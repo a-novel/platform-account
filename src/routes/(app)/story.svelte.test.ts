@@ -20,7 +20,7 @@ const shell: ShellViewModel = {
 
 describe("fixed visual review controllers", () => {
   it("keeps the login journey open and ready after dismissal, navigation, and submission", async () => {
-    render(ShellStory, { initialModel: shell }, withLocale());
+    render(ShellStory, { model: shell }, withLocale());
     await page.getByRole("link", { name: "Close dialog" }).click();
     await userEvent.keyboard("{Escape}");
     await page.getByRole("dialog").getByRole("link", { name: "Register" }).click();
@@ -34,7 +34,7 @@ describe("fixed visual review controllers", () => {
 
   it("keeps the open menu and the session after dismissal and logout", async () => {
     const session = { status: "authenticated", displayName: "Maya Chen" } as const;
-    render(ShellStory, { initialModel: { ...shell, authView: null, drawerOpen: true, session } }, withLocale());
+    render(ShellStory, { model: { ...shell, authView: null, drawerOpen: true, session } }, withLocale());
     const menu = page.getByRole("dialog", { name: "Agora" });
 
     await menu.getByRole("link", { name: "Close navigation" }).click();

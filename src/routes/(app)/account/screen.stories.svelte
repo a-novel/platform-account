@@ -178,8 +178,12 @@
   <StoryHarness initialModel={{ ...ready, credentials: { status: "unavailable" } }} />
 </Story>
 
-<Story name="Collecting metrics" asChild>
-  <StoryHarness initialModel={ready} />
+<Story name="No roles" asChild>
+  <StoryHarness initialModel={{ ...ready, claims: { ...ready.claims, roles: [] } }} />
+</Story>
+
+<Story name="Passwords shown" asChild>
+  <StoryHarness initialModel={ready} passwordsShown />
 </Story>
 
 <Story name="Loading" asChild>

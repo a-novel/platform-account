@@ -5,6 +5,8 @@
   export interface AccountScreenStoryProps {
     /** Initial controller state rendered by the story. */
     initialModel: AccountScreenModel;
+    /** Whether the password fields show their text. */
+    passwordsShown?: boolean;
   }
 </script>
 
@@ -15,7 +17,7 @@
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import type { PasswordInputController } from "@a-novel-kit/uikit";
 
-  let { initialModel }: AccountScreenStoryProps = $props();
+  let { initialModel, passwordsShown = false }: AccountScreenStoryProps = $props();
   const i18n = getI18nContext();
 
   function localizeDates(model: AccountScreenModel): AccountScreenModel {
@@ -46,12 +48,18 @@
     logout: "/storybook/account/logout",
   };
   const model = $derived(localizeDates(structuredClone(initialModel)));
-  const masked: PasswordInputController = { state: { pressed: false }, setPressed: () => {}, toggle: () => {} };
+  const visibility: PasswordInputController = {
+    get state() {
+      return { pressed: passwordsShown };
+    },
+    setPressed: () => {},
+    toggle: () => {},
+  };
   const controller: AccountScreenController = {
     get state() {
       return { model, actions };
     },
-    passwordVisibility: { currentPassword: masked, newPassword: masked, confirmPassword: masked },
+    passwordVisibility: { currentPassword: visibility, newPassword: visibility, confirmPassword: visibility },
     synchronize: () => {},
     submitPassword: () => false,
     submitEmail: () => false,

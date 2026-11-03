@@ -2,7 +2,9 @@
   import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
-  import { authenticationTitleContext } from "#lib/ui/PageTitle.svelte";
+  import { setAuthenticationTitle } from "#lib/ui/PageTitle.svelte";
+  import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
+  import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
   import { afterNavigate, goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -19,7 +21,7 @@
   import { readRailCollapsed, writeRailCollapsed } from "./rail-preference";
   import Screen from "./screen.svelte";
 
-  import { onMount, setContext, untrack } from "svelte";
+  import { onMount, untrack } from "svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { AuthorizationProvider } from "@a-novel-kit/uikit";
@@ -48,7 +50,9 @@
     homeHref: resolve(""),
     accountHref: resolve("account"),
     logoutAction: resolve("auth/logout"),
-    privacyHref: resolve("privacy"),
+    // Only a platform that collects browser telemetry asks for consent, so only it offers to change the answer.
+    privacyHref: hasTelemetryPreference() ? resolve("privacy") : null,
+    platformDowntime: getPlatformDowntime(),
     // The app list comes from the runtime config, which a navigation never changes.
     apps: untrack(() => data.apps),
     authentication,
@@ -59,7 +63,7 @@
     getUrl: () => new URL(currentHref),
   });
 
-  setContext(authenticationTitleContext, () =>
+  setAuthenticationTitle(() =>
     !page.error && controller.state.model.authView
       ? authenticationPageTitle(t, controller.authentication.state.model)
       : undefined

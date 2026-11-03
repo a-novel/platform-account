@@ -4,6 +4,8 @@
   /** Fixed-state Storybook harness around the pure secure-link screen. */
   export interface ShortCodeScreenStoryProps {
     initialModel: ShortCodeScreenModel;
+    /** Whether the password fields show their text. */
+    passwordsShown?: boolean;
   }
 </script>
 
@@ -13,14 +15,20 @@
 
   import type { PasswordInputController } from "@a-novel-kit/uikit";
 
-  let { initialModel }: ShortCodeScreenStoryProps = $props();
+  let { initialModel, passwordsShown = false }: ShortCodeScreenStoryProps = $props();
 
-  const masked: PasswordInputController = { state: { pressed: false }, setPressed: () => {}, toggle: () => {} };
+  const visibility: PasswordInputController = {
+    get state() {
+      return { pressed: passwordsShown };
+    },
+    setPressed: () => {},
+    toggle: () => {},
+  };
   const controller: ShortCodeScreenController = {
     get state() {
       return { model: initialModel, action: "#complete", restartHref: "#restart", continueHref: "#continue" };
     },
-    passwordVisibility: { newPassword: masked, confirmPassword: masked },
+    passwordVisibility: { newPassword: visibility, confirmPassword: visibility },
     synchronize: () => {},
     submit: () => false,
   };

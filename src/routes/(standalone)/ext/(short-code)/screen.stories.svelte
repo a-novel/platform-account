@@ -153,6 +153,10 @@
   <StoryHarness initialModel={{ journey: "password-reset", state: { status: "ready" } }} />
 </Story>
 
+<Story name="Passwords shown" asChild>
+  <StoryHarness initialModel={{ journey: "password-reset", state: { status: "ready" } }} passwordsShown />
+</Story>
+
 <Story name="Missing link details" asChild>
   <StoryHarness initialModel={{ journey: "register", state: { status: "missing" } }} />
 </Story>

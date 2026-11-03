@@ -6,65 +6,74 @@
 
   /** Fixed-state Storybook harness around the pure shell. */
   export interface ShellStoryProps {
-    initialModel: ShellViewModel;
-    initialAuthenticationModel?: AuthenticationPanelModel;
+    model: ShellViewModel;
+    authenticationModel?: AuthenticationPanelModel;
+    /** Whether the password field shows its text. */
+    passwordShown?: boolean;
     /** Whether the platform collects browser telemetry, which adds the Privacy link. */
     collectsTelemetry?: boolean;
-    /** A started planned downtime, which the shell announces and locks the sign-in dialog for. */
+    /** Whether the server could read where the apps live, which the app list needs. */
+    apps?: boolean;
+    /** A planned downtime, which the shell announces and, once started, locks the sign-in dialog for. */
     downtime?: { start: Date; end: Date };
+    /** Whether that downtime has started. */
+    started?: boolean;
     /** Page content, such as filler to scroll past sticky elements. */
     children?: Snippet;
   }
 </script>
 
 <script lang="ts">
-  import { setPlatformDowntime } from "#lib/ui/downtime.svelte.js";
-  import { setTelemetryPreference } from "#lib/ui/telemetry-preference.js";
-
   import { type ShellController, readyAuthenticationModel } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
-  import { untrack } from "svelte";
-
-  let { initialModel, initialAuthenticationModel, collectsTelemetry, downtime, children }: ShellStoryProps = $props();
-
-  if (untrack(() => collectsTelemetry))
-    setTelemetryPreference({ pending: false, choice: "accepted", choose: () => {} });
-
-  const startedDowntime = untrack(() => downtime);
-  if (startedDowntime) {
-    setPlatformDowntime({
-      downtime: { components: ["service-authentication.database"], ...startedDowntime },
-      started: true,
-      timeZone: "UTC",
-    });
-  }
+  let {
+    model,
+    authenticationModel,
+    passwordShown = false,
+    collectsTelemetry,
+    apps = true,
+    downtime,
+    started = true,
+    children,
+  }: ShellStoryProps = $props();
 
   const controller: ShellController = {
     get state() {
       return {
-        model: initialModel,
+        model,
         homeHref: "#home",
         accountHref: "#account",
         logoutAction: "#logout",
-        privacyHref: "#privacy",
-        apps: { studio: "#studio" },
+        privacyHref: collectsTelemetry ? "#privacy" : null,
+        apps: apps ? { studio: "#studio" } : null,
+        platformDowntime: downtime && {
+          downtime: { components: ["service-authentication.database"], ...downtime },
+          started,
+          timeZone: "UTC",
+        },
       };
     },
     authentication: {
       get state() {
         return {
-          model: initialAuthenticationModel ?? readyAuthenticationModel(initialModel.authView ?? "login"),
+          model: authenticationModel ?? readyAuthenticationModel(model.authView ?? "login"),
           action: "#auth",
         };
       },
-      passwordVisibility: { state: { pressed: false }, setPressed: () => {}, toggle: () => {} },
+      passwordVisibility: {
+        get state() {
+          return { pressed: passwordShown };
+        },
+        setPressed: () => {},
+        toggle: () => {},
+      },
       synchronize: () => {},
       submit: () => false,
     },
     authenticationDialog: {
       get state() {
-        return { open: initialModel.authView !== null };
+        return { open: model.authView !== null };
       },
       open: () => {},
       close: () => {},
@@ -72,7 +81,7 @@
     },
     navigationDialog: {
       get state() {
-        return { open: initialModel.drawerOpen };
+        return { open: model.drawerOpen };
       },
       open: () => {},
       close: () => {},
