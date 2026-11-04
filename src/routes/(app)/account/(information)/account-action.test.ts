@@ -2,7 +2,11 @@ import { createInformationModel, mergeAccountAction } from "./account-action";
 
 import { describe, expect, it } from "vitest";
 
-const ready = createInformationModel({ status: "ready", email: "creator@example.com", locationConsent: false }, null);
+const ready = createInformationModel(
+  { status: "ready", email: "creator@example.com", locationConsent: false },
+  { status: "ready" },
+  null
+);
 
 describe("mergeAccountAction", () => {
   it("overlays only the password action state", () => {
@@ -42,7 +46,7 @@ describe("mergeAccountAction", () => {
   });
 
   it("preserves action feedback when the credentials are unavailable", () => {
-    const unavailable = createInformationModel({ status: "unavailable" }, null);
+    const unavailable = createInformationModel({ status: "unavailable" }, { status: "unavailable" }, null);
     expect(
       mergeAccountAction(unavailable, {
         accountAction: {

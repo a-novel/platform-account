@@ -17,12 +17,15 @@
   const actions = {
     password: "?edit=password&/password",
     email: "?edit=email&/email",
+    username: "?edit=username&/username",
+    picture: "?edit=picture&/picture",
+    removePicture: "?edit=picture&/removePicture",
   };
 
   /** The URL with the editor open or closed, built on the address bar so the shell's own state stays. */
   const editorUrl = (editor: AccountEditor | null) => dialogUrl(addressBar(page.url), editorParameter, editor);
 
-  const model = () => mergeAccountAction(createInformationModel(data.credentials, null), form);
+  const model = () => mergeAccountAction(createInformationModel(data.credentials, data.profile, null), form);
 
   const controller = createAccountInformationController({
     model: untrack(() => ({ ...model(), editor: readEditor(new URL(page.url.href).searchParams) })),
@@ -51,6 +54,7 @@
   });
 
   onMount(() => {
+    controller.enableScripts();
     window.addEventListener("popstate", synchronizeEditor);
     return () => window.removeEventListener("popstate", synchronizeEditor);
   });

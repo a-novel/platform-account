@@ -94,6 +94,25 @@ describe("request hook", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
+  it("lets a signed-in visitor's picture keep its shared cache policy", async () => {
+    const picture = {
+      ...event("/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=1", undefined, "/profile/picture/[id]"),
+      cookies: { get: (name: string) => (name === "__Host-account_access_token" ? "access" : undefined) },
+    } as RequestEvent;
+    const cached = { "cache-control": "public, max-age=31536000, immutable" };
+
+    const shared = await handle({
+      event: picture,
+      resolve: vi.fn().mockResolvedValue(new Response("", { headers: cached })),
+    });
+    expect(shared.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+
+    // A refreshed or new session puts the visitor's tokens in the response, which only they may keep.
+    const withCookie = new Response("", { headers: { ...cached, "set-cookie": "__Host-account_access_token=new" } });
+    const refreshed = await handle({ event: picture, resolve: vi.fn().mockResolvedValue(withCookie) });
+    expect(refreshed.headers.get("cache-control")).toBe("private, no-store");
+  });
+
   it.each([200, 303, 400])("refuses framing of every response with status %s", async (status) => {
     const response = await handle({
       event: event("/authorize?client_id=studio"),

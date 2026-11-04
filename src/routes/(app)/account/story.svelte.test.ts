@@ -1,6 +1,7 @@
 import type { AccountDevicesModel, AccountSummaryState } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
+import { createInformationModel } from "./(information)/account-action";
 import AccountStory from "./story.svelte";
 
 import { describe, expect, it } from "vitest";
@@ -15,12 +16,7 @@ const credentials = { status: "ready", email: "maya.chen@example.test", location
 
 describe("fixed visual review controllers", () => {
   it("keeps an editor open and its form usable after dismissal and submission", async () => {
-    const information = {
-      credentials,
-      editor: "email",
-      passwordState: { status: "ready" },
-      emailState: { status: "ready" },
-    } as const;
+    const information = createInformationModel(credentials, { status: "ready" }, "email");
     await render(AccountStory, { summary, tab: "information", information }, withLocale());
 
     const dialog = page.getByRole("dialog", { name: "Change your email" });

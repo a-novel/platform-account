@@ -6,6 +6,8 @@ describe("readEditor", () => {
   it.each([
     ["edit=email", "email"],
     ["edit=password", "password"],
+    ["edit=username", "username"],
+    ["edit=picture", "picture"],
     ["", null],
     ["edit=", null],
     ["edit=name", null],

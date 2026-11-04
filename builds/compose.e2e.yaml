@@ -27,6 +27,11 @@ services:
     environment: *postgres-environment
     healthcheck: *postgres-healthcheck
 
+  postgres-profile:
+    image: ghcr.io/a-novel/service-profile/database:v1.0.0@sha256:5f8b6a6002d3a1bde29ff8df74842dc584df6c73484f26a3da23b155605b2d42
+    environment: *postgres-environment
+    healthcheck: *postgres-healthcheck
+
   mailserver:
     image: ghcr.io/axllent/mailpit:v1.33.0
     ports:
@@ -149,3 +154,38 @@ services:
       OAUTH_CLIENTS: >-
         {"client": {"redirectURI": "http://127.0.0.1:4181/auth/callback?tenant=e2e",
         "caller": "system:serviceaccount:client:web"}}
+
+  # Stores each user's username and picture. Its image migrates the database before it serves.
+  profile:
+    image: ghcr.io/a-novel/service-profile/standalone-rest:v1.0.0@sha256:5a01ada0c0d29ce10a9782d1f05c50e1feaac2ed3db60a21407e25a3126e241a
+    ports:
+      - "127.0.0.1:14104:8080"
+    # Podman ignores the image's own check, so the journeys' wait needs this one.
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8080/v1/ping"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      postgres-profile:
+        condition: service_healthy
+      service-json-keys:
+        condition: service_healthy
+      service-token-issuer:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres-profile
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_TLS_ENABLED: "false"
+      SERVICE_JSON_KEYS_HOST: service-json-keys
+      SERVICE_JSON_KEYS_PORT: 8080
+      # As in production: the visitor's address comes from the platform, not from the connection.
+      REST_CLIENT_IP_HEADER: X-Client-IP
+      # Every journey comes from one address, and each page load reads the profile.
+      REST_RATE_LIMITS_ENABLED: "false"
+      SERVICE_TOKEN_ISSUER: *service-token-issuer
+      SERVICE_TOKEN_AUDIENCE: profile
+      SERVICE_TOKEN_CALLERS: system:serviceaccount:account:web

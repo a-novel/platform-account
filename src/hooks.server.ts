@@ -25,11 +25,18 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Pages refuse framing in their CSP, set in vite.config.ts; this header covers every response.
   response.headers.set("x-frame-options", "DENY");
   // A response rendered with a session is the visitor's alone, so no cache may keep it (RFC 9111 §5.2.2.5).
-  if (hasSession(event.cookies)) response.headers.set("cache-control", "private, no-store");
+  if (hasSession(event.cookies) && !isSharedPicture(event, response)) {
+    response.headers.set("cache-control", "private, no-store");
+  }
 
   traceResponse(event, response);
   return isEmailLinkPage(event) ? secureShortCodeResponse(response) : response;
 };
+
+// A profile picture is the same for every visitor, unless its response carries the visitor's new tokens.
+function isSharedPicture({ route }: RequestEvent, response: Response): boolean {
+  return route.id === "/profile/picture/[id]" && !response.headers.has("set-cookie");
+}
 
 // SvelteKit routes on the decoded path, so an encoded `/%65xt/…` still renders an email-link page: the
 // matched route decides, and the raw path covers the requests no route matched.

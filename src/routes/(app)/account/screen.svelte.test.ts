@@ -1,4 +1,5 @@
 import type { AccountSummaryState } from "#lib/application/auth/types.js";
+import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
@@ -28,6 +29,7 @@ function controller(state: AccountSummaryState = summary, currentTab: AccountTab
   return createAccountLayoutController({
     summary: state,
     logoutAction: "/auth/logout",
+    pictureEditorHref: "/account?edit=picture",
     tabs: { information: "/account", devices: "/account/devices", privacy: "/account/privacy" },
     currentTab,
   });
@@ -54,6 +56,28 @@ describe("account layout screen", () => {
     await expect.element(page.getByRole("list", { name: "Roles" }).getByRole("listitem")).toMatchTextContent("User");
     await expect.element(page.getByText(/^Logged in until\s+Nov 10, 2026, 6:40 PM$/)).toBeVisible();
     await expect.element(page.getByText("Tab content")).toBeVisible();
+  });
+
+  it("opens the picture's editor from the header's picture, which shows the uploaded one", async () => {
+    const withProfile = { ...summary, profile: { username: "Maya", picture: portraitPicture } };
+    await render(Screen, { controller: controller(withProfile), children }, withLocale());
+
+    const picture = page.getByRole("link", { name: "Change picture" });
+    await expect.element(picture).toHaveAttribute("href", "/account?edit=picture");
+    expect(picture.element().querySelector("img")?.getAttribute("src")).toBe(portraitPicture);
+    expect(picture.element().querySelector("svg")).not.toBeNull();
+    const bounds = picture.element().getBoundingClientRect();
+    expect([bounds.width, bounds.height]).toEqual([96, 96]);
+    await expect.element(page.getByRole("heading", { level: 1, name: "Maya" })).toBeVisible();
+  });
+
+  it("names the account by its email and shows its initials until a profile is set", async () => {
+    await render(Screen, { controller: controller({ ...summary, profile: {} }), children }, withLocale("fr"));
+
+    const picture = page.getByRole("link", { name: "Modifier ma photo" });
+    await expect.element(picture).toMatchTextContent("MC");
+    expect(picture.element().querySelector("img")).toBeNull();
+    await expect.element(page.getByRole("heading", { level: 1, name: "maya.chen@example.test" })).toBeVisible();
   });
 
   it("lists the tabs in one row and marks the current one", async () => {

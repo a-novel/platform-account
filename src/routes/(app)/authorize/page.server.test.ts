@@ -9,6 +9,8 @@ const env = vi.hoisted(() => ({
   DOWNTIME_URL: undefined,
   HEALTHCHECK_TIMEOUT_MS: undefined,
   JSON_KEYS_SERVICE_URL: "https://json-keys.test",
+  PROFILE_SERVICE_TOKEN_PATH: undefined,
+  PROFILE_SERVICE_URL: "https://profile.test",
   SERVICE_TOKEN_PATH: undefined,
   STUDIO_URL: "https://studio.test",
 }));

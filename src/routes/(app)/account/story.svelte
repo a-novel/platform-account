@@ -17,10 +17,13 @@
     privacy?: PrivacyAccountState;
     /** Whether the password fields show their text. */
     passwordsShown?: boolean;
+    /** Whether the page runs its scripts, which framing a picture needs. Defaults to true. */
+    scripted?: boolean;
   }
 </script>
 
 <script lang="ts">
+  import type { AccountEditor } from "#lib/application/auth/types.js";
   import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
   import type { AccountInformationController } from "./(information)/controller.svelte";
@@ -47,6 +50,7 @@
 
   const tab = $derived(props.tab);
   const passwordsShown = $derived(props.passwordsShown ?? false);
+  const scripted = $derived(props.scripted ?? true);
   const privacy = $derived(props.privacy);
   const summary = $derived.by(() => {
     const value = structuredClone(props.summary);
@@ -81,6 +85,7 @@
         summary,
         logoutState: "ready" as const,
         logoutAction: "/storybook/logout",
+        pictureEditorHref: "?edit=picture",
         tabs: { information: "#information", devices: "#devices", privacy: "#privacy" },
         currentTab: tab,
       };
@@ -89,7 +94,7 @@
     submitLogout: () => false,
   };
 
-  const editor = (name: "email" | "password"): OpenController => ({
+  const editor = (name: AccountEditor): OpenController => ({
     get state() {
       return { open: information?.editor === name };
     },
@@ -106,9 +111,13 @@
             actions: {
               password: "/storybook/account/password",
               email: "/storybook/account/email",
+              username: "/storybook/account/username",
+              picture: "/storybook/account/picture",
+              removePicture: "/storybook/account/remove-picture",
             },
             devicesHref: "#devices",
             logoutOthersHref: "#devices?confirm=others",
+            scripted,
           },
           passwordVisibility: {
             currentPassword: visibility,
@@ -116,11 +125,33 @@
             confirmPassword: visibility,
             emailCurrentPassword: visibility,
           },
-          editors: { email: editor("email"), password: editor("password") },
+          editors: {
+            email: editor("email"),
+            password: editor("password"),
+            username: editor("username"),
+            picture: editor("picture"),
+          },
+          pictureZoom: {
+            state: {
+              value:
+                information.picture.status === "cropping" || information.picture.status === "saving"
+                  ? information.picture.crop.zoom
+                  : 1,
+            },
+            setValue: noop,
+          },
           editorHref: (name) => (name ? `?edit=${name}` : "?"),
           synchronize: noop,
+          enableScripts: noop,
           submitPassword: () => false,
           submitEmail: () => false,
+          editUsername: noop,
+          submitUsername: () => false,
+          choosePicture: async () => {},
+          panPicture: noop,
+          zoomPicture: noop,
+          savePicture: async () => null,
+          submitPictureRemoval: () => false,
         }
       : null
   );

@@ -27,14 +27,18 @@ export const GET: RequestHandler = async ({ fetch }) => {
           url: new URL("v2/healthcheck", `${config.jsonKeysServiceUrl}/`),
         };
       },
+      profile: () => {
+        const config = getRuntimeConfig();
+
+        return {
+          timeoutMs: config.healthcheckTimeoutMs,
+          url: new URL("v1/healthcheck", `${config.profileServiceUrl}/`),
+        };
+      },
     },
-    // Probes prove the platform's identity to Authentication like any call, but are made for no
+    // Probes prove the platform's identity to each service like any call, but are made for no
     // visitor. JSON keys' API is public, so its probe carries no token.
-    fetch: async (input, init) => {
-      const { authenticationServiceUrl, serviceTokenPath } = getRuntimeConfig();
-      const identity = String(input).startsWith(`${authenticationServiceUrl}/`) ? { serviceTokenPath } : {};
-      return await serviceFetch(identity, fetch)(input, init);
-    },
+    fetch: async (input, init) => await serviceFetch(probeIdentity(String(input)), fetch)(input, init),
   });
 
   return json(health, {
@@ -44,3 +48,11 @@ export const GET: RequestHandler = async ({ fetch }) => {
     status: health.status === "up" ? 200 : 503,
   });
 };
+
+/** Picks the service token of the service a probe calls. */
+function probeIdentity(url: string) {
+  const config = getRuntimeConfig();
+  if (url.startsWith(`${config.authenticationServiceUrl}/`)) return { serviceTokenPath: config.serviceTokenPath };
+  if (url.startsWith(`${config.profileServiceUrl}/`)) return { serviceTokenPath: config.profileServiceTokenPath };
+  return {};
+}
