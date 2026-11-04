@@ -80,7 +80,6 @@ authUi:
       unavailable: Vos appareils ne peuvent pas être affichés pour le moment.
       unknown: Appareil inconnu
     email:
-      change: Modifier
       changeLabel: Modifier mon courriel
       description: Nous enverrons un lien de confirmation à votre nouveau courriel.
       dialogTitle: Modifiez votre courriel
@@ -105,7 +104,6 @@ authUi:
       submit: Me déconnecter
       submitting: Déconnexion…
     password:
-      change: Modifier
       changeLabel: Modifier mon mot de passe
       confirmLabel: Confirmez votre nouveau mot de passe
       currentLabel: Mot de passe actuel

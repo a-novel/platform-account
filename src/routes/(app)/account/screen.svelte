@@ -185,6 +185,11 @@
     color: var(--color-text-muted);
   }
 
+  /* The top corner, away from the details, so it reads as apart from the account. */
+  .logout {
+    align-self: start;
+  }
+
   .tabs {
     border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
     overflow-x: auto;

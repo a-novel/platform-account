@@ -15,9 +15,9 @@
   import PasswordDialog from "./password-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Button, Card } from "@a-novel-kit/uikit";
+  import { Alert, Card, IconButton } from "@a-novel-kit/uikit";
 
-  import { Hourglass } from "@lucide/svelte";
+  import { Hourglass, Pencil } from "@lucide/svelte";
 
   let { controller }: AccountInformationScreenProps = $props();
 
@@ -40,15 +40,16 @@
             {#if credentials.status === "ready"}
               <span class="value">{credentials.email}</span>
             {/if}
-            <Button
-              variant="text"
+            <IconButton
+              label={t("authUi.account.email.changeLabel")}
+              variant="ghost"
+              tone="neutral"
               size="sm"
               href={controller.editorHref("email")}
-              aria-label={t("authUi.account.email.changeLabel")}
               onclick={openEditor("email")}
             >
-              {t("authUi.account.email.change")}
-            </Button>
+              <Pencil size="var(--icon-size-sm)" aria-hidden="true" />
+            </IconButton>
           </div>
           {#if credentials.status === "unavailable"}
             <Alert tone="error" title={t("authUi.account.email.unavailable")} />
@@ -69,15 +70,16 @@
         <dd>
           <div class="row">
             <span class="secondary" aria-hidden="true">••••••••</span>
-            <Button
-              variant="text"
+            <IconButton
+              label={t("authUi.account.password.changeLabel")}
+              variant="ghost"
+              tone="neutral"
               size="sm"
               href={controller.editorHref("password")}
-              aria-label={t("authUi.account.password.changeLabel")}
               onclick={openEditor("password")}
             >
-              {t("authUi.account.password.change")}
-            </Button>
+              <Pencil size="var(--icon-size-sm)" aria-hidden="true" />
+            </IconButton>
           </div>
         </dd>
       </div>
@@ -129,7 +131,7 @@
   .row {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-3);
     min-inline-size: 0;
   }

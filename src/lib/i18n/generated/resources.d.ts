@@ -96,7 +96,6 @@ export default interface Resources {
           "unknown": "Unknown device"
         },
         "email": {
-          "change": "Change",
           "changeLabel": "Change email",
           "description": "We’ll send a confirmation link to your new email.",
           "dialogTitle": "Change your email",
@@ -124,7 +123,6 @@ export default interface Resources {
           "submitting": "Logging out…"
         },
         "password": {
-          "change": "Change",
           "changeLabel": "Change password",
           "confirmLabel": "Confirm new password",
           "currentLabel": "Current password",

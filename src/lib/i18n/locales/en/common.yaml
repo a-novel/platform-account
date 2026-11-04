@@ -78,7 +78,6 @@ authUi:
       unavailable: Your devices can’t be shown right now.
       unknown: Unknown device
     email:
-      change: Change
       changeLabel: Change email
       description: We’ll send a confirmation link to your new email.
       dialogTitle: Change your email
@@ -103,7 +102,6 @@ authUi:
       submit: Log out
       submitting: Logging out…
     password:
-      change: Change
       changeLabel: Change password
       confirmLabel: Confirm new password
       currentLabel: Current password
