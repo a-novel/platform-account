@@ -1,7 +1,9 @@
 import type { AccountCredentialsState, AccountSummaryState } from "#lib/application/auth/types.js";
+import type { ProfileState } from "#lib/application/profile/types.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import type { AuthenticationEvent } from "#lib/server/auth/context.js";
 import { readTokenExpiry } from "#lib/server/auth/session.js";
+import { type ProfileEvent, getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 
 import { type AuthenticationApi, credentialsGetSelf } from "@a-novel/service-authentication-rest";
 
@@ -28,13 +30,29 @@ async function loadCredentials(
   }
 }
 
-/** Loads the header and the credentials every account tab reads. An authentication outage still renders the tabs. */
+/** Reads the account's public profile. A failure hides only it. */
+async function loadProfile(event: ProfileEvent, accessToken: string): Promise<ProfileState> {
+  try {
+    return { status: "ready", ...summarizeProfile(await getProfileContext(event).self(accessToken)) };
+  } catch {
+    // The trace records the failed call.
+    return { status: "unavailable" };
+  }
+}
+
+/**
+ * Loads the header, the credentials and the public profile every account tab reads. An authentication
+ * outage still renders the tabs.
+ */
 export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "locals">) => {
   const dates = new Intl.DateTimeFormat(event.locals.locale, { dateStyle: "medium", timeStyle: "short" });
 
   try {
     const { authentication, session } = await requireAuthorization(event);
-    const credentials = await loadCredentials(authentication.api, session.accessToken, dates);
+    const [credentials, profile] = await Promise.all([
+      loadCredentials(authentication.api, session.accessToken, dates),
+      loadProfile(event, session.accessToken),
+    ]);
     // The shell names the visitor from a cookie, which an email change on another device leaves stale.
     if (credentials.status === "ready") authentication.session.rememberIdentity(credentials.email);
 
@@ -45,15 +63,17 @@ export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "loca
       roles: session.claims.roles ?? [],
       email: credentials.status === "ready" ? credentials.email : undefined,
       loggedInUntil: refreshExpiry ? dates.format(refreshExpiry) : undefined,
+      profile: profile.status === "ready" ? { username: profile.username, picture: profile.picture } : undefined,
     };
 
-    return { authorization: "allowed" as const, summary, credentials };
+    return { authorization: "allowed" as const, summary, credentials, profile };
   } catch (error) {
     // Redirects, refusals and planned downtimes render their own pages. Any other failure keeps the tabs.
     if (isRedirect(error) || isHttpError(error, 403) || (isHttpError(error, 503) && error.body.downtime)) throw error;
 
     const summary: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
     const credentials: AccountCredentialsState = { status: "unavailable" };
-    return { authorization: "unavailable" as const, summary, credentials };
+    const profile: ProfileState = { status: "unavailable" };
+    return { authorization: "unavailable" as const, summary, credentials, profile };
   }
 };

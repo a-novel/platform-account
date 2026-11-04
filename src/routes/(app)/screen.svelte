@@ -175,7 +175,7 @@
         href={controller.state.accountHref}
       >
         <span class="account-action-icon" aria-hidden="true">
-          <Avatar label={name} initials={authenticatedSession.initials} size="sm" />
+          <Avatar label={name} initials={authenticatedSession.initials} src={authenticatedSession.picture} size="sm" />
         </span>
         {#if compact}
           <VisuallyHidden>{name}</VisuallyHidden>

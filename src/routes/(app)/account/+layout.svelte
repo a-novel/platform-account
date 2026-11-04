@@ -25,6 +25,7 @@
   const controller = createAccountLayoutController({
     summary: untrack(() => data.summary),
     logoutAction: resolve("/auth/logout"),
+    pictureEditorHref: `${resolve("/(app)/account/(information)")}?edit=picture`,
     tabs: {
       information: resolve("/(app)/account/(information)"),
       devices: resolve("/(app)/account/devices"),

@@ -118,6 +118,34 @@ authUi:
         review: Voir mes appareils
         title: Mot de passe modifié
       title: Mot de passe
+    picture:
+      changeLabel: Modifier ma photo
+      choose: Choisir une image
+      chooseAnother: Choisir une autre image
+      current: Votre photo actuelle
+      description: Choisissez une image, puis déplacez-la et zoomez pour cadrer votre photo.
+      dialogTitle: Modifiez votre photo
+      frameInstructions: Faites glisser l’image ou utilisez les flèches pour la déplacer. Zoomez avec le curseur, les touches + et -, la molette ou en pinçant.
+      frameLabel: Cadre de la photo
+      none: Aucune photo
+      opening: Ouverture de l’image…
+      refusals:
+        dimensions: Agora accepte les photos de 1 à 512 pixels de côté. Essayez de recadrer l’image.
+        format: Agora n’a pas pu lire cette photo. Essayez une autre image.
+        ratio: Agora n’accepte que les photos carrées. Essayez de recadrer l’image.
+        tooLarge: Cette photo dépasse 256 Kio. Essayez de zoomer, ou choisissez une image plus simple.
+        unreadable: Ce fichier ne peut pas être ouvert comme une image. Choisissez-en un autre.
+      remove: Retirer ma photo
+      removing: Retrait de la photo…
+      save: Enregistrer ma photo
+      saving: Enregistrement de la photo…
+      scriptRequired: Le cadrage d’une photo nécessite JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.
+      title: Photo
+      zoom: Zoom
+    profile:
+      description: Tout le monde sur Agora peut voir votre nom d’utilisateur et votre photo.
+      title: Profil public
+      unavailable: Votre profil public ne peut pas être affiché pour le moment.
     roles:
       admin: Administrateur
       label: Rôles
@@ -131,6 +159,22 @@ authUi:
       label: Sections du compte
       privacy: Confidentialité
     title: Votre compte
+    username:
+      changeLabel: Modifier mon nom d’utilisateur
+      counter: "{{glyphs}} / {{limit}}"
+      dialogTitle: Choisissez votre nom d’utilisateur
+      hint: Laissez-le vide pour retirer votre nom d’utilisateur.
+      issues:
+        characters: Retirez les retours à la ligne, les tabulations, les espaces spéciaux et les marques de direction du texte.
+        invisible: Utilisez au moins un caractère visible.
+        length: Utilisez au maximum {{limit}} caractères.
+        refused: Ce nom d’utilisateur ne peut pas être utilisé. Choisissez-en un autre.
+        size: Retirez quelques caractères invisibles ou accents empilés.
+      label: Nom d’utilisateur
+      none: Non défini
+      submit: Enregistrer mon nom d’utilisateur
+      submitting: Enregistrement du nom d’utilisateur…
+      title: Nom d’utilisateur
   authentication:
     emailLabel: Courriel
     journeys:

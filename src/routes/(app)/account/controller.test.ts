@@ -12,6 +12,7 @@ describe("createAccountLayoutController", () => {
     const controller = createAccountLayoutController({
       summary,
       logoutAction: "/auth/logout",
+      pictureEditorHref: "/account?edit=picture",
       tabs,
       currentTab: "information",
     });
@@ -19,6 +20,7 @@ describe("createAccountLayoutController", () => {
       summary,
       logoutState: "ready",
       logoutAction: "/auth/logout",
+      pictureEditorHref: "/account?edit=picture",
       tabs,
       currentTab: "information",
     });
@@ -35,6 +37,7 @@ describe("createAccountLayoutController", () => {
     const controller = createAccountLayoutController({
       summary,
       logoutAction: "/auth/logout",
+      pictureEditorHref: "/account?edit=picture",
       tabs,
       currentTab: "information",
     });

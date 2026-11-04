@@ -1,4 +1,5 @@
 import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
+import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import type { ShellViewModel } from "#lib/application/shell/types.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
@@ -198,6 +199,21 @@ describe("account shell screen", () => {
     const drawerName = navigation.getByText(displayName).element();
     expect(drawerName.scrollWidth).toBeGreaterThan(drawerName.clientWidth);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  });
+
+  it("shows the account's picture in its account link, and its initials without one", async () => {
+    await page.viewport(1280, 844);
+    await render(Screen, { controller: controller({ session: { ...maya, picture: portraitPicture } }) }, withLocale());
+
+    const account = page.getByRole("complementary").getByRole("link", { name: "Maya Chen" });
+    await expect.element(account).toBeVisible();
+    const picture = account.element().querySelector("img");
+    expect(picture?.getAttribute("src")).toBe(portraitPicture);
+    await expect.poll(() => picture?.naturalWidth).toBe(256);
+    expect(account.element().textContent).not.toContain("MC");
+
+    await render(Screen, { controller: controller({ session: maya }) }, withLocale());
+    await expect.element(page.getByRole("complementary").getByText("MC").last()).toBeVisible();
   });
 
   it.each(["anonymous", "authenticated"] as const)(

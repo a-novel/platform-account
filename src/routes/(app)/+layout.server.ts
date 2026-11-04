@@ -1,10 +1,12 @@
+import type { ProfileSummary } from "#lib/application/profile/types.js";
 import type { ShellApps, ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
 import { type AuthenticationEvent, getAuthenticationContext } from "#lib/server/auth/context.js";
 import type { ResolvedSession } from "#lib/server/auth/session.js";
 import { readPlatformDowntime } from "#lib/server/downtime.js";
+import { getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 import { getRuntimeConfig } from "#lib/server/runtime-config.server.js";
 
-import { accountDisplayFromHandle } from "./account-display";
+import { type AccountDisplay, accountDisplayFromHandle } from "./account-display";
 
 import { isDowntimeStarted } from "@a-novel-kit/nodelib-server";
 import type { AuthorizationStatus } from "@a-novel-kit/uikit/authorization";
@@ -66,10 +68,30 @@ async function readShellSession(event: ShellEvent): Promise<ShellSession> {
   if (resolved.status === "downtime") return { status: "downtime" };
   if (resolved.status === "unavailable") return { status: "error" };
   if (resolved.status === "none" || !resolved.claims.userID) return { status: "anonymous" };
-  if (resolved.identityHandle) return { status: "authenticated", ...accountDisplayFromHandle(resolved.identityHandle) };
 
+  const { username, picture } = await readProfile(event, resolved.accessToken);
+  const display = resolved.identityHandle
+    ? accountDisplayFromHandle(resolved.identityHandle, username)
+    : fallbackDisplay(event, username);
+  return { status: "authenticated", ...display, picture };
+}
+
+/** Names an account whose email handle the shell has not kept: by its username, else generically. */
+function fallbackDisplay(event: ShellEvent, username?: string): AccountDisplay {
   const t = event.locals.i18n.getFixedT(event.locals.locale, "common");
-  return { status: "authenticated", displayName: t("shell.accountFallback"), initials: "A" };
+  return { displayName: username ?? t("shell.accountFallback"), initials: "A" };
+}
+
+/**
+ * Reads the visitor's username and picture address. Without the profile service, the shell names the
+ * account by its email handle and shows initials.
+ */
+async function readProfile(event: ShellEvent, accessToken: string): Promise<ProfileSummary> {
+  try {
+    return summarizeProfile(await getProfileContext(event).self(accessToken));
+  } catch {
+    return {};
+  }
 }
 
 /** Reads the visitor's session, treating a server that cannot reach Authentication as an outage. */

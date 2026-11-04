@@ -9,6 +9,8 @@ export interface AccountLayoutControllerState {
   logoutState: "ready" | "submitting";
   /** Where the header's logout posts. */
   logoutAction: string;
+  /** The information tab with the picture's editor open, which the header's picture opens. */
+  pictureEditorHref: string;
   /** Each tab's page, by tab. */
   tabs: Record<AccountTab, string>;
   /** The tab showing, or null on a page the tab bar does not list. */
@@ -31,6 +33,7 @@ export type AccountLayoutControllerOptions = Omit<AccountLayoutControllerState, 
 export function createAccountLayoutController({
   summary: initialSummary,
   logoutAction,
+  pictureEditorHref,
   tabs,
   currentTab: initialTab,
 }: AccountLayoutControllerOptions): AccountLayoutController {
@@ -40,7 +43,7 @@ export function createAccountLayoutController({
 
   return {
     get state() {
-      return { summary, logoutState, logoutAction, tabs, currentTab };
+      return { summary, logoutState, logoutAction, pictureEditorHref, tabs, currentTab };
     },
     synchronize(nextSummary, nextTab) {
       summary = nextSummary;

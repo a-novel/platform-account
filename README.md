@@ -35,7 +35,8 @@ Where Agora users manage their account and complete the links Agora emails them.
 ## What it does
 
 The account platform is the browser application where users of every Agora app manage their
-account: the password, the email address and its pending change, and the privacy settings. It also
+account: the public profile's username and picture, the password, the email address and its
+pending change, and the privacy settings. It also
 serves the pages behind the authentication service's email links, which create an account, reset a
 password and confirm a new email. Its header lists the other Agora apps.
 
@@ -44,8 +45,9 @@ with an OAuth 2.0 authorization request ([RFC 6749](https://www.rfc-editor.org/r
 with PKCE). The platform logs the visitor in if needed, then sends them back to the app with a
 one-time code, which the app's server exchanges with the authentication service.
 
-Its SvelteKit server renders the pages and is the only caller of the authentication service.
-Session tokens stay in server-set cookies and never reach browser code.
+Its SvelteKit server renders the pages and is the only caller of the authentication and profile
+services. Session tokens stay in server-set cookies and never reach browser code. The server also
+serves each profile picture at `/profile/picture/<id>`.
 
 The platform ships as one container image. The
 [published Storybook](https://a-novel.github.io/platform-account/) shows every screen state.
@@ -53,17 +55,19 @@ The platform ships as one container image. The
 ## Deploying
 
 Run a tag from the [latest release](https://github.com/a-novel/platform-account/releases/latest) and
-point it at the authentication service and at Studio. The image runs as a non-root user on port
+point it at the authentication and profile services and at Studio. The image runs as a non-root user on port
 `3000`, and its container healthcheck calls `/ping`.
 
 ```bash
 PLATFORM_ACCOUNT_VERSION="vX.Y.Z"
 AUTHENTICATION_SERVICE_URL="https://authentication.example.com"
 JSON_KEYS_SERVICE_URL="https://json-keys.example.com"
+PROFILE_SERVICE_URL="https://profile.example.com"
 STUDIO_URL="https://studio.example.com"
 podman run --detach --name platform-account --publish 3000:3000 \
   --env AUTHENTICATION_SERVICE_URL="$AUTHENTICATION_SERVICE_URL" \
   --env JSON_KEYS_SERVICE_URL="$JSON_KEYS_SERVICE_URL" \
+  --env PROFILE_SERVICE_URL="$PROFILE_SERVICE_URL" \
   --env STUDIO_URL="$STUDIO_URL" \
   ghcr.io/a-novel/platform-account:"$PLATFORM_ACCOUNT_VERSION"
 ```
@@ -77,8 +81,10 @@ platform's public URL.
 | -------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `AUTHENTICATION_SERVICE_URL`     | Yes            | Base HTTP or HTTPS URL for the authentication service.                                                                              |
 | `JSON_KEYS_SERVICE_URL`          | Yes            | Base HTTP or HTTPS URL for the JSON keys service's REST API, whose public keys verify access tokens.                                |
+| `PROFILE_SERVICE_URL`            | Yes            | Base HTTP or HTTPS URL for the profile service, which stores each user's username and picture.                                      |
 | `STUDIO_URL`                     | Yes            | Public URL of Studio, which the app list opens.                                                                                     |
-| `SERVICE_TOKEN_PATH`             | Kubernetes     | File of the projected service token that proves the platform's identity. The platform reads it on every call.                       |
+| `SERVICE_TOKEN_PATH`             | Kubernetes     | File of the projected service token that proves the platform's identity to Authentication. The platform reads it on every call.     |
+| `PROFILE_SERVICE_TOKEN_PATH`     | Kubernetes     | File of the projected service token that proves the platform's identity to the profile service.                                     |
 | `ADDRESS_HEADER`, `XFF_DEPTH`    | Behind a proxy | Where the visitor's IP is read, for rate limiting. The cluster's load balancer appends it, then its own: `X-Forwarded-For` and `2`. |
 | `HEALTHCHECK_TIMEOUT_MS`         | No             | Downstream timeout from 100 to 10,000 ms. The default is 2,000.                                                                     |
 | `DOWNTIME_URL`                   | No             | Planned downtime document. The default is the one infra publishes.                                                                  |
@@ -101,16 +107,18 @@ platform's public URL.
 
 Installing the platform's packages needs your
 [GitHub Packages token](https://a-novel-kit.github.io/stack/dependencies/node#configure). Start the
-authentication service, then the platform:
+authentication and profile services, then the platform:
 
 ```bash
 a-novel run start service-authentication/rest
+a-novel run start service-profile/rest
 eval "$(a-novel run env service-authentication)"
+eval "$(a-novel run env service-profile)"
 pnpm install
 pnpm dev
 ```
 
-The committed `.env.local` reads the service port from that environment, and points the app list at
+The committed `.env.local` reads the services' ports from that environment, and points the app list at
 Studio's development server. `pnpm storybook` serves the screen catalog at `http://localhost:6006`.
 
 ## Contributing

@@ -10,8 +10,11 @@ import { actions as privacyActions } from "./(app)/account/privacy/+page.server"
 import { loadShortCodeRoute, submitShortCodeRoute } from "./(standalone)/ext/(short-code)/short-code.server";
 
 import { Buffer } from "node:buffer";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { Role } from "@a-novel/service-authentication-rest";
 
@@ -22,6 +25,8 @@ const env = vi.hoisted(() => ({
   DOWNTIME_URL: undefined,
   HEALTHCHECK_TIMEOUT_MS: undefined,
   JSON_KEYS_SERVICE_URL: "https://json-keys.test",
+  PROFILE_SERVICE_TOKEN_PATH: undefined as string | undefined,
+  PROFILE_SERVICE_URL: "https://profile.test",
   SERVICE_TOKEN_PATH: undefined,
   STUDIO_URL: "https://studio.test",
 }));
@@ -37,6 +42,8 @@ vi.mock("@a-novel-kit/nodelib-server", async (importOriginal) => ({
 }));
 
 const fetchService = vi.fn<typeof fetch>();
+// The profile service answers apart, so each test counts the calls to Authentication alone.
+const fetchProfile = vi.fn<typeof fetch>();
 
 /** The last authentication call as the service receives it, after the platform's fetch wrapper. */
 function sentRequest() {
@@ -108,7 +115,12 @@ function devicesEvent(event: RequestEvent, layout: ReturnType<typeof loadAccount
 beforeEach(() => {
   env.AUTHENTICATION_SERVICE_URL = "https://authentication.test";
   fetchService.mockReset().mockRejectedValue(new Error("Unexpected authentication request"));
-  vi.stubGlobal("fetch", fetchService);
+  // An account holds no profile before its first write.
+  fetchProfile.mockReset().mockImplementation(async () => new Response(null, { status: 404 }));
+  vi.stubGlobal("fetch", ((input, init) =>
+    String(input).startsWith("https://profile.test/")
+      ? fetchProfile(input, init)
+      : fetchService(input, init)) satisfies typeof fetch);
 });
 
 afterEach(() => {
@@ -286,6 +298,53 @@ describe("account session at the request boundary", () => {
     ]);
   });
 
+  it("reads the profile once for the shell and the account layout, as the platform, with the visitor's token, and names the account by its username", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "profile-token-"));
+    env.PROFILE_SERVICE_TOKEN_PATH = join(directory, "token");
+    onTestFinished(async () => {
+      env.PROFILE_SERVICE_TOKEN_PATH = undefined;
+      await rm(directory, { recursive: true });
+    });
+    await writeFile(env.PROFILE_SERVICE_TOKEN_PATH, "profile-service-token");
+    const { event } = request("/account", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
+    const answers: Record<string, unknown> = { "/v2/session": identity, "/v2/credentials/self": credentials };
+    fetchService.mockImplementation(async (url) => Response.json(answers[new URL(String(url)).pathname]));
+    const profile = {
+      id: "019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21",
+      username: "Maya",
+      pictureVersion: "2026-11-04T08:15:30.123456Z",
+    };
+    fetchProfile.mockImplementation(async () => Response.json(profile));
+    const picture = `/profile/picture/${profile.id}?v=2026-11-04T08%3A15%3A30.123456Z`;
+
+    const [shell, account] = await Promise.all([loadShell(event), loadAccount(event)]);
+
+    expect(shell.session).toEqual({ status: "authenticated", displayName: "Maya", initials: "MC", picture });
+    expect(account.profile).toEqual({ status: "ready", username: "Maya", picture });
+    expect(account.summary).toMatchObject({ profile: { username: "Maya", picture } });
+    expect(fetchProfile).toHaveBeenCalledOnce();
+    const [url, init] = fetchProfile.mock.calls[0] ?? [];
+    expect(url).toBe("https://profile.test/v1/profile/self");
+    expect(Object.fromEntries(new Headers(init?.headers))).toEqual({
+      "content-type": "application/json",
+      authorization: "Bearer private-access",
+      "x-client-ip": "192.0.2.1",
+      "x-service-authorization": "profile-service-token",
+    });
+  });
+
+  it("keeps the session and shows initials while the profile service is unreachable", async () => {
+    const { event } = request("/account", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
+    const answers: Record<string, unknown> = { "/v2/session": identity, "/v2/credentials/self": credentials };
+    fetchService.mockImplementation(async (url) => Response.json(answers[new URL(String(url)).pathname]));
+    fetchProfile.mockRejectedValue(new Error("connection refused"));
+
+    const [shell, account] = await Promise.all([loadShell(event), loadAccount(event)]);
+
+    expect(shell.session).toEqual({ status: "authenticated", displayName: "Maya Chen", initials: "MC" });
+    expect(account).toMatchObject({ authorization: "allowed", profile: { status: "unavailable" } });
+  });
+
   it("uses a localized account label when the identity cookie contains a full email", async () => {
     const { event } = request("/", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen@example.com" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
@@ -450,8 +509,10 @@ describe("account session at the request boundary", () => {
         roles: [Role.User],
         email: credentials.email,
         loggedInUntil: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeStyle: "short" }).format(sessionEnd),
+        profile: {},
       },
       credentials: { status: "ready", email: credentials.email, locationConsent: true },
+      profile: { status: "ready" },
     });
     expect(sentRequest()).toEqual({
       url: "https://authentication.test/v2/credentials/self",
@@ -618,6 +679,8 @@ describe("account session at the request boundary", () => {
     ["logoutOtherDevices", "/account/devices", devicesActions.logoutOtherDevices],
     ["removeDevice", "/account/devices", devicesActions.removeDevice],
     ["locationConsent", "/account/privacy", privacyActions.locationConsent],
+    ["username", "/account", informationActions.username],
+    ["removePicture", "/account", informationActions.removePicture],
   ] as const;
 
   it.each(accountChanges)("redirects an anonymous %s change before any mutation", async (name, path, action) => {
@@ -637,6 +700,7 @@ describe("account session at the request boundary", () => {
       location: `/?auth=login&returnTo=${encodeURIComponent(path)}`,
     });
     expect(fetchService).not.toHaveBeenCalled();
+    expect(fetchProfile).not.toHaveBeenCalled();
   });
 });
 

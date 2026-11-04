@@ -139,6 +139,37 @@ export default interface Resources {
           },
           "title": "Password"
         },
+        "picture": {
+          "changeLabel": "Change picture",
+          "choose": "Choose an image",
+          "chooseAnother": "Choose another image",
+          "current": "Your current picture",
+          "description": "Choose an image, then move and zoom it to frame your picture.",
+          "dialogTitle": "Change your picture",
+          "frameInstructions": "Drag the image or use the arrow keys to move it. Zoom with the slider, the + and - keys, the mouse wheel or a pinch.",
+          "frameLabel": "Picture frame",
+          "none": "No picture",
+          "opening": "Opening the image…",
+          "refusals": {
+            "dimensions": "Agora accepts pictures from 1 to 512 pixels wide. Try framing the image again.",
+            "format": "Agora couldn’t read this picture. Try another image.",
+            "ratio": "Agora accepts only square pictures. Try framing the image again.",
+            "tooLarge": "This picture is over 256 KiB. Try zooming in, or choose a simpler image.",
+            "unreadable": "This file can’t be opened as an image. Choose another one."
+          },
+          "remove": "Remove picture",
+          "removing": "Removing picture…",
+          "save": "Save picture",
+          "saving": "Saving picture…",
+          "scriptRequired": "Framing a picture needs JavaScript. Turn it on in your browser, then reload this page.",
+          "title": "Picture",
+          "zoom": "Zoom"
+        },
+        "profile": {
+          "description": "Anyone on Agora can see your username and picture.",
+          "title": "Public profile",
+          "unavailable": "Your public profile can’t be shown right now."
+        },
         "roles": {
           "admin": "Admin",
           "label": "Roles",
@@ -154,7 +185,25 @@ export default interface Resources {
           "label": "Account sections",
           "privacy": "Privacy"
         },
-        "title": "Your account"
+        "title": "Your account",
+        "username": {
+          "changeLabel": "Change username",
+          "counter": "{{glyphs}} / {{limit}}",
+          "dialogTitle": "Choose your username",
+          "hint": "Leave it empty to remove your username.",
+          "issues": {
+            "characters": "Remove line breaks, tabs, special spaces and text direction marks.",
+            "invisible": "Use at least one visible character.",
+            "length": "Use {{limit}} characters or fewer.",
+            "refused": "This username can’t be used. Choose another one.",
+            "size": "Remove some invisible characters or stacked accents."
+          },
+          "label": "Username",
+          "none": "Not set",
+          "submit": "Save username",
+          "submitting": "Saving username…",
+          "title": "Username"
+        }
       },
       "authentication": {
         "emailLabel": "Email address",

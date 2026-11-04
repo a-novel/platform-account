@@ -13,15 +13,18 @@
   import { followInPlace } from "../../link-transition";
   import EmailDialog from "./email-dialog.svelte";
   import PasswordDialog from "./password-dialog.svelte";
+  import PictureDialog from "./picture-dialog.svelte";
+  import UsernameDialog from "./username-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Card, IconButton } from "@a-novel-kit/uikit";
+  import { Alert, Avatar, Card, IconButton } from "@a-novel-kit/uikit";
 
   import { Hourglass, Pencil } from "@lucide/svelte";
 
   let { controller }: AccountInformationScreenProps = $props();
 
   const credentials = $derived(controller.state.model.credentials);
+  const profile = $derived(controller.state.model.profile);
   const componentId = $props.id();
   const { t } = getI18nContext();
 
@@ -29,68 +32,123 @@
     followInPlace(event, controller.editors[editor].open);
 </script>
 
-<Card surface="raised">
-  <section class="information" aria-labelledby={`${componentId}-title`}>
-    <h2 id={`${componentId}-title`}>{t("authUi.account.signIn.title")}</h2>
-    <dl>
-      <div>
-        <dt>{t("authUi.account.email.title")}</dt>
-        <dd>
-          <div class="row">
-            {#if credentials.status === "ready"}
-              <span class="value">{credentials.email}</span>
-            {/if}
-            <IconButton
-              label={t("authUi.account.email.changeLabel")}
-              variant="ghost"
-              tone="neutral"
-              size="sm"
-              href={controller.editorHref("email")}
-              onclick={openEditor("email")}
-            >
-              <Pencil size="var(--icon-size-sm)" aria-hidden="true" />
-            </IconButton>
-          </div>
-          {#if credentials.status === "unavailable"}
-            <Alert tone="error" title={t("authUi.account.email.unavailable")} />
-          {:else if credentials.pendingEmail}
-            {@const pending = credentials.pendingEmail}
-            <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
-              {#snippet icon()}
-                <Hourglass size="var(--icon-size-sm)" />
-              {/snippet}
-              <span class="pending-email">{pending.email}</span>
-              {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-            </Alert>
-          {/if}
-        </dd>
-      </div>
-      <div>
-        <dt>{t("authUi.account.password.title")}</dt>
-        <dd>
-          <div class="row">
-            <span class="secondary" aria-hidden="true">••••••••</span>
-            <IconButton
-              label={t("authUi.account.password.changeLabel")}
-              variant="ghost"
-              tone="neutral"
-              size="sm"
-              href={controller.editorHref("password")}
-              onclick={openEditor("password")}
-            >
-              <Pencil size="var(--icon-size-sm)" aria-hidden="true" />
-            </IconButton>
-          </div>
-        </dd>
-      </div>
-    </dl>
-  </section>
-</Card>
+{#snippet changeButton(editor: AccountEditor, label: string)}
+  <IconButton
+    {label}
+    variant="ghost"
+    tone="neutral"
+    size="sm"
+    href={controller.editorHref(editor)}
+    onclick={openEditor(editor)}
+  >
+    <Pencil size="var(--icon-size-sm)" aria-hidden="true" />
+  </IconButton>
+{/snippet}
 
+<div class="cards">
+  <Card surface="raised">
+    <section class="information" aria-labelledby={`${componentId}-profile-title`}>
+      <div class="heading">
+        <h2 id={`${componentId}-profile-title`}>{t("authUi.account.profile.title")}</h2>
+        <p class="secondary">{t("authUi.account.profile.description")}</p>
+      </div>
+      {#if profile.status === "unavailable"}
+        <Alert tone="error" title={t("authUi.account.profile.unavailable")} />
+      {/if}
+      <dl>
+        <div>
+          <dt>{t("authUi.account.username.title")}</dt>
+          <dd>
+            <div class="row">
+              {#if profile.status === "ready" && profile.username}
+                <bdi class="value">{profile.username}</bdi>
+              {:else if profile.status === "ready"}
+                <span class="secondary">{t("authUi.account.username.none")}</span>
+              {/if}
+              {@render changeButton("username", t("authUi.account.username.changeLabel"))}
+            </div>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("authUi.account.picture.title")}</dt>
+          <dd>
+            <div class="row">
+              {#if profile.status === "ready" && profile.picture}
+                <Avatar src={profile.picture} label={t("authUi.account.picture.current")} size="lg" />
+              {:else if profile.status === "ready"}
+                <span class="secondary">{t("authUi.account.picture.none")}</span>
+              {/if}
+              {@render changeButton("picture", t("authUi.account.picture.changeLabel"))}
+            </div>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  </Card>
+
+  <Card surface="raised">
+    <section class="information" aria-labelledby={`${componentId}-title`}>
+      <h2 id={`${componentId}-title`}>{t("authUi.account.signIn.title")}</h2>
+      <dl>
+        <div>
+          <dt>{t("authUi.account.email.title")}</dt>
+          <dd>
+            <div class="row">
+              {#if credentials.status === "ready"}
+                <span class="value">{credentials.email}</span>
+              {/if}
+              {@render changeButton("email", t("authUi.account.email.changeLabel"))}
+            </div>
+            {#if credentials.status === "unavailable"}
+              <Alert tone="error" title={t("authUi.account.email.unavailable")} />
+            {:else if credentials.pendingEmail}
+              {@const pending = credentials.pendingEmail}
+              <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
+                {#snippet icon()}
+                  <Hourglass size="var(--icon-size-sm)" />
+                {/snippet}
+                <span class="pending-email">{pending.email}</span>
+                {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+              </Alert>
+            {/if}
+          </dd>
+        </div>
+        <div>
+          <dt>{t("authUi.account.password.title")}</dt>
+          <dd>
+            <div class="row">
+              <span class="secondary" aria-hidden="true">••••••••</span>
+              {@render changeButton("password", t("authUi.account.password.changeLabel"))}
+            </div>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  </Card>
+</div>
+
+<UsernameDialog {controller} />
+<PictureDialog {controller} />
 <EmailDialog {controller} />
 <PasswordDialog {controller} />
 
 <style>
+  .cards {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .heading {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .heading p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+  }
+
   .information,
   dl,
   dd,

@@ -7,8 +7,11 @@
     AccountInformationModel,
     AccountSummaryState,
   } from "#lib/application/auth/types.js";
+  import { landscapeSource, portraitPicture } from "#lib/application/profile/picture.fixture.js";
+  import type { ProfileState } from "#lib/application/profile/types.js";
   import { createStorybookTranslator } from "#lib/i18n/storybook.js";
 
+  import { createInformationModel } from "./(information)/account-action";
   import StoryHarness from "./story.svelte";
 
   import { reviewStoryGlobals } from "@a-novel-kit/uikit-storybook";
@@ -26,12 +29,21 @@
 
   const credentials = { status: "ready", email: summary.email, locationConsent: false } as const;
 
-  const information = {
-    credentials,
-    editor: null,
-    passwordState: { status: "ready" },
-    emailState: { status: "ready" },
-  } satisfies AccountInformationModel;
+  const noProfile = { status: "ready" } satisfies ProfileState;
+  const fullProfile = { status: "ready", username: "Maya Chen", picture: portraitPicture } satisfies ProfileState;
+  const information: AccountInformationModel = createInformationModel(credentials, noProfile, null);
+
+  /** The tab with one profile dialog open, as the URL opens it. */
+  function profileEditor(
+    editor: "username" | "picture",
+    patch: Partial<AccountInformationModel> = {},
+    profile: ProfileState = fullProfile
+  ): AccountInformationModel {
+    return { ...createInformationModel(credentials, profile, editor), ...patch };
+  }
+
+  /** The landscape framed around its sun, a little closer than the whole height. */
+  const framed = { status: "cropping", source: landscapeSource, crop: { zoom: 1.4, x: 719, y: 59 } } as const;
 
   const pendingCredentials = {
     ...credentials,
@@ -103,6 +115,24 @@
     const tabs = within(canvas.getByRole("navigation", { name: t("authUi.account.tabs.label") }));
     const current = tabs.getByRole("link", { name: t("authUi.account.tabs.information") });
     await expect(current).toHaveAttribute("aria-current", "page");
+  }
+
+  async function verifyProfile({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("heading", { level: 1, name: "Maya Chen" })).toBeVisible();
+    const pictureLinks = canvas.getAllByRole("link", { name: t("authUi.account.picture.changeLabel") });
+    for (const link of pictureLinks) await expect(link).toHaveAttribute("href", "?edit=picture");
+    const profile = within(canvas.getByRole("region", { name: t("authUi.account.profile.title") }));
+    await expect(profile.getByText("Maya Chen")).toBeVisible();
+    await expect(profile.getByRole("img", { name: t("authUi.account.picture.current") })).toBeVisible();
+  }
+
+  async function verifyCounterAtLimit({ globals }: PlayContext) {
+    const dialog = within(document.body).getByRole("dialog");
+    const t = createStorybookTranslator(globals);
+    const field = within(dialog).getByLabelText(t("authUi.account.username.label"));
+    await expect(field).toHaveAccessibleDescription(new RegExp("32 / 32"));
   }
 </script>
 
@@ -208,6 +238,223 @@
       passwordState: { status: "success", feedback: "passwordChanged" },
     }}
   />
+</Story>
+
+<Story name="Public profile: username only" asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { username: "Maya Chen" } }}
+    tab="information"
+    information={createInformationModel(credentials, { status: "ready", username: "Maya Chen" }, null)}
+  />
+</Story>
+
+<Story name="Public profile: picture only" asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { picture: portraitPicture } }}
+    tab="information"
+    information={createInformationModel(credentials, { status: "ready", picture: portraitPicture }, null)}
+  />
+</Story>
+
+<Story name="Public profile: username and picture" asChild play={verifyProfile}>
+  <StoryHarness
+    summary={{ ...summary, profile: { username: "Maya Chen", picture: portraitPicture } }}
+    tab="information"
+    information={createInformationModel(credentials, fullProfile, null)}
+  />
+</Story>
+
+<Story name="Public profile: username and picture, mobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { username: "Maya Chen", picture: portraitPicture } }}
+    tab="information"
+    information={createInformationModel(credentials, fullProfile, null)}
+  />
+</Story>
+
+<Story name="Public profile: long username" asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { username: "Alexandrine de la Bibliothèque" } }}
+    tab="information"
+    information={createInformationModel(
+      credentials,
+      { status: "ready", username: "Alexandrine de la Bibliothèque" },
+      null
+    )}
+  />
+</Story>
+
+<Story name="Public profile: unavailable" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={createInformationModel(credentials, { status: "unavailable" }, null)}
+  />
+</Story>
+
+<Story name="Username editor" asChild>
+  <StoryHarness {summary} tab="information" information={profileEditor("username")} />
+</Story>
+
+<Story name="Username editor: empty" asChild>
+  <StoryHarness {summary} tab="information" information={profileEditor("username", {}, noProfile)} />
+</Story>
+
+<Story name="Username editor: at the limit" asChild play={verifyCounterAtLimit}>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", {
+      username: { draft: "Maya Chen 👩🏽‍💻 storyteller of seas!", state: { status: "ready" } },
+    })}
+  />
+</Story>
+
+<Story name="Username editor: too long" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", {
+      username: {
+        draft: "Maya Chen 👩🏽‍💻 tells tales of the sea",
+        state: { status: "validation-error", issue: "length" },
+      },
+    })}
+  />
+</Story>
+
+<Story name="Username editor: refused characters" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", {
+      username: { draft: "Maya\tChen", state: { status: "validation-error", issue: "characters" } },
+    })}
+  />
+</Story>
+
+<Story name="Username editor: refused by the service" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", {
+      username: { draft: "Maya Chen", state: { status: "validation-error", issue: "refused" } },
+    })}
+  />
+</Story>
+
+<Story name="Username editor: saving" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", { username: { draft: "Maya Chen", state: { status: "submitting" } } })}
+  />
+</Story>
+
+<Story name="Username editor: service unavailable" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("username", {
+      username: { draft: "Maya Chen", state: { status: "service-error", feedback: "serviceUnavailable" } },
+    })}
+  />
+</Story>
+
+<Story name="Picture editor: no picture yet" asChild>
+  <StoryHarness {summary} tab="information" information={profileEditor("picture", {}, noProfile)} />
+</Story>
+
+<Story name="Picture editor: with a picture" asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { picture: portraitPicture } }}
+    tab="information"
+    information={profileEditor("picture")}
+  />
+</Story>
+
+<Story name="Picture editor: opening" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "opening" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: framing" asChild>
+  <StoryHarness {summary} tab="information" information={profileEditor("picture", { picture: framed }, noProfile)} />
+</Story>
+
+<Story name="Picture editor: framing, mobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness {summary} tab="information" information={profileEditor("picture", { picture: framed })} />
+</Story>
+
+<Story name="Picture editor: saving" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { ...framed, status: "saving" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: unreadable file" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "choosing", refusal: "unreadable" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: refused format" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "choosing", refusal: "format" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: refused ratio" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "choosing", refusal: "ratio" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: refused dimensions" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "choosing", refusal: "dimensions" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: too large" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "choosing", refusal: "tooLarge" } }, noProfile)}
+  />
+</Story>
+
+<Story name="Picture editor: removing" asChild>
+  <StoryHarness
+    summary={{ ...summary, profile: { picture: portraitPicture } }}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "removing" } })}
+  />
+</Story>
+
+<Story name="Picture editor: service unavailable" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={profileEditor("picture", { picture: { status: "service-error", feedback: "serviceUnavailable" } })}
+  />
+</Story>
+
+<Story name="Picture editor: without JavaScript" asChild>
+  <StoryHarness {summary} tab="information" scripted={false} information={profileEditor("picture")} />
 </Story>
 
 <Story name="Devices: locations off" asChild>

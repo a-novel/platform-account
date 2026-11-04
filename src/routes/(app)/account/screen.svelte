@@ -14,10 +14,10 @@
   import { translateAuthenticationFeedback } from "#lib/i18n/auth-feedback.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Badge, Button, NavList } from "@a-novel-kit/uikit";
+  import { Alert, Badge, Button, NavList, VisuallyHidden } from "@a-novel-kit/uikit";
   import { Role } from "@a-novel/service-authentication-rest";
 
-  import { LogOut } from "@lucide/svelte";
+  import { Camera, LogOut } from "@lucide/svelte";
 
   let { controller, children }: AccountLayoutScreenProps = $props();
 
@@ -36,7 +36,8 @@
     { href: layout.tabs.privacy, label: t("authUi.account.tabs.privacy"), current: layout.currentTab === "privacy" },
   ]);
 
-  // The picture shows initials until the account can upload one: two from a dotted or dashed handle.
+  const profile = $derived(summary.status === "ready" ? summary.profile : undefined);
+  // An account without a picture shows initials: two from a dotted or dashed handle.
   const initials = $derived.by(() => {
     const handle = (summary.status === "ready" && summary.email?.split("@")[0]) || "";
     const words = handle.split(/[._-]+/).filter(Boolean);
@@ -53,11 +54,25 @@
 
 <div class="account-layout">
   <header class="account-header" aria-labelledby={`${componentId}-title`}>
-    <span class="picture" aria-hidden="true">{initials}</span>
+    <!-- The link reads as its action. The initials stay unread: the heading beside them names the account. -->
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
+    <a class="picture" href={layout.pictureEditorHref}>
+      <VisuallyHidden>{t("authUi.account.picture.changeLabel")}</VisuallyHidden>
+      {#if profile?.picture}
+        <img src={profile.picture} alt="" />
+      {:else}
+        <span aria-hidden="true">{initials}</span>
+      {/if}
+      <span class="badge" aria-hidden="true"><Camera size="var(--icon-size-sm)" /></span>
+    </a>
 
     <div class="identity">
       <h1 id={`${componentId}-title`}>
-        {summary.status === "ready" && summary.email ? summary.email : t("authUi.account.title")}
+        {#if profile?.username}
+          <bdi>{profile.username}</bdi>
+        {:else}
+          {summary.status === "ready" && summary.email ? summary.email : t("authUi.account.title")}
+        {/if}
       </h1>
 
       {#if summary.status === "error"}
@@ -132,10 +147,12 @@
     gap: var(--space-4) var(--space-6);
   }
 
-  /* The picture fills its own column, where an uploaded picture will take its place. */
+  /* The picture fills its own column; the camera badge tells that it opens the picture's editor. */
   .picture {
     display: grid;
+    position: relative;
     place-items: center;
+    box-sizing: border-box;
     border: var(--border-width-thin) solid var(--color-border-default);
     border-radius: var(--radius-round);
     background: var(--color-surface-selected);
@@ -145,6 +162,37 @@
     font-weight: var(--font-weight-bold);
     font-size: var(--font-size-2xl);
     font-family: var(--font-family-mono);
+    text-decoration: none;
+  }
+
+  .picture:hover .badge {
+    background: var(--color-surface-hover);
+  }
+
+  .picture:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus-ring);
+  }
+
+  .picture img {
+    border-radius: var(--radius-round);
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .badge {
+    display: grid;
+    position: absolute;
+    place-items: center;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    border: var(--border-width-thin) solid var(--color-border-default);
+    border-radius: var(--radius-round);
+    background: var(--color-surface-raised);
+    inline-size: var(--control-height-sm);
+    block-size: var(--control-height-sm);
+    color: var(--color-text-primary);
   }
 
   .identity {

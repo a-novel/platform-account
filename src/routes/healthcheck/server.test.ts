@@ -18,6 +18,7 @@ const config: RuntimeConfig = {
   healthcheckTimeoutMs: 500,
   studioUrl: "https://studio.example.test",
   jsonKeysServiceUrl: "http://json-keys:8080",
+  profileServiceUrl: "http://profile:8080",
 };
 
 const authenticationDependencies = {
@@ -26,6 +27,7 @@ const authenticationDependencies = {
   "client:smtp": { status: "up" as const },
 };
 const jsonKeysDependencies = { "client:postgres": { status: "up" as const } };
+const profileDependencies = { "api:jsonKeys": { status: "up" as const }, "client:postgres": { status: "up" as const } };
 
 function response(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -36,8 +38,11 @@ function response(body: unknown, status = 200): Response {
 
 /** Answers each service's probe with the dependency map it reports. */
 function answer(authentication: unknown): typeof globalThis.fetch {
-  return async (input) =>
-    response(String(input).startsWith(config.jsonKeysServiceUrl) ? jsonKeysDependencies : authentication);
+  return async (input) => {
+    if (String(input).startsWith(config.jsonKeysServiceUrl)) return response(jsonKeysDependencies);
+    if (String(input).startsWith(config.profileServiceUrl)) return response(profileDependencies);
+    return response(authentication);
+  };
 }
 
 /** Probes the platform through its route, and returns the status and the health report. */
@@ -60,6 +65,7 @@ describe("GET /healthcheck", () => {
         services: {
           authentication: { dependencies: authenticationDependencies, status: "up" },
           jsonKeys: { dependencies: jsonKeysDependencies, status: "up" },
+          profile: { dependencies: profileDependencies, status: "up" },
         },
         status: "up",
       },
@@ -67,6 +73,7 @@ describe("GET /healthcheck", () => {
     expect(fetchImplementation.mock.calls.map(([url]) => url)).toEqual([
       new URL("http://authentication:8080/api/v2/healthcheck"),
       new URL("http://json-keys:8080/v2/healthcheck"),
+      new URL("http://profile:8080/v1/healthcheck"),
     ]);
     for (const [, init] of fetchImplementation.mock.calls) {
       expect(new Headers(init?.headers).get("accept")).toBe("application/json");
@@ -74,10 +81,13 @@ describe("GET /healthcheck", () => {
     }
   });
 
-  it("proves the platform's identity to Authentication alone", async () => {
-    const serviceTokenPath = join(await mkdtemp(join(tmpdir(), "healthcheck-")), "token");
+  it("proves the platform's identity to each service with its own token, and to JSON keys with none", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "healthcheck-"));
+    const serviceTokenPath = join(directory, "token");
+    const profileServiceTokenPath = join(directory, "profile-token");
     await writeFile(serviceTokenPath, "service-token");
-    readConfig.mockReturnValue({ ...config, serviceTokenPath });
+    await writeFile(profileServiceTokenPath, "profile-service-token");
+    readConfig.mockReturnValue({ ...config, serviceTokenPath, profileServiceTokenPath });
     const fetchImplementation = vi.fn<typeof globalThis.fetch>(answer(authenticationDependencies));
 
     await probe(fetchImplementation);
@@ -89,6 +99,7 @@ describe("GET /healthcheck", () => {
     expect(Object.fromEntries(tokens)).toEqual({
       "http://authentication:8080/api/v2/healthcheck": "service-token",
       "http://json-keys:8080/v2/healthcheck": null,
+      "http://profile:8080/v1/healthcheck": "profile-service-token",
     });
   });
 
@@ -104,6 +115,7 @@ describe("GET /healthcheck", () => {
         services: {
           authentication: { dependencies, status: "up" },
           jsonKeys: { dependencies: jsonKeysDependencies, status: "up" },
+          profile: { dependencies: profileDependencies, status: "up" },
         },
         status: "down",
       },
@@ -118,7 +130,7 @@ describe("GET /healthcheck", () => {
     await expect(probe(fetchImplementation)).resolves.toEqual({
       status: 503,
       health: {
-        services: { authentication: { status: "down" }, jsonKeys: { status: "down" } },
+        services: { authentication: { status: "down" }, jsonKeys: { status: "down" }, profile: { status: "down" } },
         status: "down",
       },
     });
@@ -133,7 +145,7 @@ describe("GET /healthcheck", () => {
     await expect(probe(fetchImplementation)).resolves.toEqual({
       status: 503,
       health: {
-        services: { authentication: { status: "down" }, jsonKeys: { status: "down" } },
+        services: { authentication: { status: "down" }, jsonKeys: { status: "down" }, profile: { status: "down" } },
         status: "down",
       },
     });

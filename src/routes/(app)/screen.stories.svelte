@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { validationFixture } from "#lib/application/auth/forms.fixture.js";
   import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
+  import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
   import type { ShellViewModel } from "#lib/application/shell/types.js";
   import { createStorybookTranslator } from "#lib/i18n/storybook.js";
 
@@ -27,6 +28,11 @@
       displayName: "Maya Chen",
       initials: "MC",
     },
+  };
+  const withPicture: ShellViewModel = {
+    ...anonymous,
+    // A profile with a username and a picture: the username names the account, the handle keeps the initials.
+    session: { status: "authenticated", displayName: "Moonlit Maya 🌊", initials: "MC", picture: portraitPicture },
   };
   const loadingAccount: ShellViewModel = {
     ...anonymous,
@@ -275,6 +281,18 @@
   play={verifyAuthenticatedMobileLayout}
 >
   <StoryHarness model={withOpenMobileNavigation(authenticated)} />
+</Story>
+
+<Story name="Authenticated with a picture" asChild>
+  <StoryHarness model={withPicture} />
+</Story>
+
+<Story name="Collapsed with a picture" asChild>
+  <StoryHarness model={{ ...withPicture, rail: "collapsed" }} />
+</Story>
+
+<Story name="Authenticated with a picture, mobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness model={withOpenMobileNavigation(withPicture)} />
 </Story>
 
 <Story name="Loading account" asChild>

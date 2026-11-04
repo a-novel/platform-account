@@ -9,7 +9,13 @@ export type ShellSession =
   | { status: "loading" }
   | { status: "error" }
   | { status: "downtime" }
-  | { status: "authenticated"; displayName: string; initials?: string };
+  | {
+      status: "authenticated";
+      displayName: string;
+      initials?: string;
+      /** The address of the account's picture, which replaces the initials. */
+      picture?: string;
+    };
 
 /** The address of each Agora app the shell's app list opens. */
 export interface ShellApps {

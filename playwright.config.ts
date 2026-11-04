@@ -1,5 +1,5 @@
 import { downtimeUrl, downtimes } from "./tests/e2e/downtime";
-import { serviceTokenPath } from "./tests/e2e/service-token";
+import { profileServiceTokenPath, serviceTokenPath } from "./tests/e2e/service-token";
 
 import { SvelteKitPlaywright } from "@a-novel-kit/nodelib-config/playwright";
 
@@ -13,6 +13,8 @@ function platformServer(state: string, port: number) {
       AUTHENTICATION_SERVICE_URL: "http://127.0.0.1:14100",
       DOWNTIME_URL: downtimeUrl(state),
       JSON_KEYS_SERVICE_URL: "http://127.0.0.1:14103",
+      PROFILE_SERVICE_TOKEN_PATH: profileServiceTokenPath,
+      PROFILE_SERVICE_URL: "http://127.0.0.1:14104",
       SERVICE_TOKEN_PATH: serviceTokenPath,
       STUDIO_URL: "https://studio.example.test",
     },

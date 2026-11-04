@@ -1,4 +1,5 @@
 import type { AccountCredentialsState, AccountInformationModel } from "#lib/application/auth/types.js";
+import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
@@ -19,12 +20,18 @@ const pendingCredentials: AccountCredentialsState = {
   ...credentials,
   pendingEmail: { email: "maya.writes@example.test", expiresAt: "Nov 4, 2026, 6:40 PM" },
 };
-const ready = createInformationModel(credentials, null);
+const ready = createInformationModel(credentials, { status: "ready" }, null);
 
 function controller(patch: Partial<AccountInformationModel> = {}) {
   return createAccountInformationController({
     model: { ...ready, ...patch },
-    actions: { password: "?edit=password&/password", email: "?edit=email&/email" },
+    actions: {
+      password: "?edit=password&/password",
+      email: "?edit=email&/email",
+      username: "?edit=username&/username",
+      picture: "?edit=picture&/picture",
+      removePicture: "?edit=picture&/removePicture",
+    },
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
     allowNativeSubmission: false,
@@ -68,6 +75,45 @@ describe("my information screen", () => {
       .element(page.getByRole("alert"))
       .toMatchTextContent("Votre courriel actuel ne peut pas être affiché pour le moment.");
     await expect.element(page.getByRole("link", { name: "Modifier mon courriel" })).toBeVisible();
+  });
+});
+
+describe("public profile card", () => {
+  it("states that the profile is public, above the sign-in details, and opens each editor in place", async () => {
+    const information = controller();
+    await render(Screen, { controller: information }, withLocale());
+
+    const card = page.getByRole("region", { name: "Public profile" });
+    await expect
+      .element(card)
+      .toMatchTextContent(
+        /Anyone on Agora can see your username and picture\.\s+Username\s+Not set\s+Picture\s+No picture/
+      );
+    const signIn = page.getByRole("region", { name: "Email and password" }).element();
+    expect(card.element().compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await expect.element(card.getByRole("link", { name: "Change picture" })).toHaveAttribute("href", "?edit=picture");
+    await card.getByRole("link", { name: "Change username" }).click();
+    await expect.element(page.getByRole("dialog", { name: "Choose your username" })).toBeVisible();
+    expect(information.state.model.editor).toBe("username");
+  });
+
+  it("shows the username and the picture once set", async () => {
+    const profile = { status: "ready", username: "Maya", picture: portraitPicture } as const;
+    await render(Screen, { controller: controller({ profile }) }, withLocale("fr"));
+
+    const card = page.getByRole("region", { name: "Profil public" });
+    await expect.element(card.getByText("Maya", { exact: true })).toBeVisible();
+    await expect
+      .element(card.getByRole("img", { name: "Votre photo actuelle" }))
+      .toHaveAttribute("src", portraitPicture);
+  });
+
+  it("shows a profile it cannot read in an error box, and still offers to change it", async () => {
+    await render(Screen, { controller: controller({ profile: { status: "unavailable" } }) }, withLocale());
+
+    await expect.element(page.getByRole("alert")).toMatchTextContent("Your public profile can’t be shown right now.");
+    await expect.element(page.getByRole("link", { name: "Change username" })).toBeVisible();
   });
 });
 

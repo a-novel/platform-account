@@ -1,3 +1,5 @@
+import type { PictureEditor, ProfileState, ProfileSummary, UsernameEditor } from "../profile/types";
+
 /** Stable product feedback categories translated only at the rendering boundary. */
 export type AuthenticationFeedback =
   | "emailUpdated"
@@ -76,6 +78,8 @@ export interface AccountSummary {
   email?: string;
   /** When the visitor must log in again, formatted: the refresh token's expiry. */
   loggedInUntil?: string;
+  /** The public profile, absent while the profile service cannot report it. */
+  profile?: ProfileSummary;
 }
 
 /** The header's state, independent of the tabs below it. */
@@ -94,22 +98,28 @@ export interface AccountCredentialsSummary {
 export type AccountCredentialsState = ({ status: "ready" } & AccountCredentialsSummary) | { status: "unavailable" };
 
 /** The account detail a dialog edits. */
-export type AccountEditor = "email" | "password";
+export type AccountEditor = "email" | "password" | "username" | "picture";
 
-/** The "My information" tab: the account's email and password, and their editing dialogs. */
+/** The "My information" tab: the public profile, the account's email and password, and their editing dialogs. */
 export interface AccountInformationModel {
+  profile: ProfileState;
   credentials: AccountCredentialsState;
   /** The open editing dialog, which the URL owns. */
   editor: AccountEditor | null;
   passwordState: FormState<AccountPasswordField>;
   /** A sent link carries no address: the pending email comes from `credentials` once the page reloads. */
   emailState: Exclude<FormState<AccountEmailField>, { status: "success" }> | { status: "pending-email" };
+  username: UsernameEditor;
+  picture: PictureEditor;
 }
 
 /** POST destinations of the "My information" tab. */
 export interface AccountInformationActions {
   password: string;
   email: string;
+  username: string;
+  picture: string;
+  removePicture: string;
 }
 
 /** What a device's User-Agent tells: its browser and system when recognized, and its form factor. */

@@ -6,6 +6,7 @@ import {
   AuthenticationSession,
   AuthenticationUnavailableError,
 } from "#lib/server/auth/session.js";
+import { getProfileContext } from "#lib/server/profile/context.js";
 
 import { load as loadAccount } from "./+layout.server";
 
@@ -13,15 +14,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpError } from "@a-novel-kit/nodelib-browser/http";
 import { AuthenticationApi, Role, credentialsGetSelf } from "@a-novel/service-authentication-rest";
+import { type Profile, ProfileApi } from "@a-novel/service-profile-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
 
 vi.mock("#lib/server/auth/context.js", { spy: true });
+vi.mock("#lib/server/profile/context.js", { spy: true });
 vi.mock("@a-novel/service-authentication-rest", { spy: true });
 
 const authenticated = vi.spyOn(AuthenticationSession.prototype, "authenticated");
 const dates = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
 const sessionEnd = new Date("2026-11-10T18:40:00Z");
+/** The visitor's own profile, as the profile service reads it for the request. */
+const readProfile = vi.fn<(accessToken: string) => Promise<Profile | null>>();
 
 /** A refresh token as Authentication signs it. The platform reads only its expiry. */
 function refreshToken(expiry: Date): string {
@@ -49,11 +54,15 @@ function event(path = "/account"): RequestEvent {
     request: new Request(url),
   } as unknown as RequestEvent;
   vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
+  vi.mocked(getProfileContext).mockReturnValue({ api: new ProfileApi("https://profile.test"), self: readProfile });
   return request;
 }
 
 describe("account layout", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    readProfile.mockResolvedValue(null);
+  });
 
   it("sends a logged-out visitor to the login, then back to the tab", async () => {
     authenticated.mockResolvedValue(null);
@@ -86,6 +95,7 @@ describe("account layout", () => {
         roles: [Role.Admin, Role.User],
         email: "creator@example.test",
         loggedInUntil: dates.format(sessionEnd),
+        profile: {},
       },
       credentials: {
         status: "ready",
@@ -93,6 +103,7 @@ describe("account layout", () => {
         pendingEmail: { email: "new@example.test", expiresAt: dates.format(expiresAt) },
         locationConsent: true,
       },
+      profile: { status: "ready" },
     });
     expect(credentialsGetSelf).toHaveBeenCalledExactlyOnceWith(expect.any(AuthenticationApi), "fixture-access");
     // The shell names the visitor after the current email from now on.
@@ -115,7 +126,7 @@ describe("account layout", () => {
 
     const { summary } = await loadAccount(event());
 
-    expect(summary).toEqual({ status: "ready", roles: [], email: "creator@example.test" });
+    expect(summary).toEqual({ status: "ready", roles: [], email: "creator@example.test", profile: {} });
   });
 
   it("keeps the header and the tabs when the credentials cannot be read", async () => {
@@ -125,10 +136,48 @@ describe("account layout", () => {
 
     await expect(loadAccount(request)).resolves.toEqual({
       authorization: "allowed",
-      summary: { status: "ready", roles: [Role.Admin, Role.User], loggedInUntil: dates.format(sessionEnd) },
+      summary: {
+        status: "ready",
+        roles: [Role.Admin, Role.User],
+        loggedInUntil: dates.format(sessionEnd),
+        profile: {},
+      },
       credentials: { status: "unavailable" },
+      profile: { status: "ready" },
     });
     expect(request.cookies.set).not.toHaveBeenCalled();
+  });
+
+  it("shows the public profile in the header and the tab, its picture under a versioned address", async () => {
+    authenticated.mockResolvedValue(signedIn());
+    vi.mocked(credentialsGetSelf).mockRejectedValue(new HttpError(500, "private service detail"));
+    readProfile.mockResolvedValue({
+      id: "019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21",
+      username: "Maya",
+      pictureVersion: "2026-11-04T08:15:30.123456Z",
+    });
+    const picture = "/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=2026-11-04T08%3A15%3A30.123456Z";
+
+    const data = await loadAccount(event());
+
+    expect(data.profile).toEqual({ status: "ready", username: "Maya", picture });
+    expect(data.summary).toMatchObject({ profile: { username: "Maya", picture } });
+    expect(readProfile).toHaveBeenCalledExactlyOnceWith("fixture-access");
+  });
+
+  it("keeps the header and the credentials when the profile cannot be read", async () => {
+    authenticated.mockResolvedValue(signedIn());
+    vi.mocked(credentialsGetSelf).mockRejectedValue(new HttpError(500, "private service detail"));
+    readProfile.mockRejectedValue(new HttpError(503, "private service detail"));
+
+    const data = await loadAccount(event());
+
+    expect(data.profile).toEqual({ status: "unavailable" });
+    expect(data.summary).toEqual({
+      status: "ready",
+      roles: [Role.Admin, Role.User],
+      loggedInUntil: dates.format(sessionEnd),
+    });
   });
 
   it("keeps the tabs while authentication cannot check the session", async () => {
@@ -138,6 +187,7 @@ describe("account layout", () => {
       authorization: "unavailable",
       summary: { status: "error", feedback: "sessionUnavailable" },
       credentials: { status: "unavailable" },
+      profile: { status: "unavailable" },
     });
     expect(credentialsGetSelf).not.toHaveBeenCalled();
   });
