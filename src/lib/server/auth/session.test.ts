@@ -3,13 +3,16 @@ import {
   AuthenticationUnavailableError,
   type SessionClient,
   type SessionCookies,
+  createSessionClient,
   readTokenExpiry,
 } from "./session";
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpError } from "@a-novel-kit/nodelib-browser/http";
-import { Role } from "@a-novel/service-authentication-rest";
+import { AuthenticationApi, Role } from "@a-novel/service-authentication-rest";
+
+const checkedCookie = "__Host-account_session_checked";
 
 type CookieSetOptions = Parameters<SessionCookies["set"]>[2];
 
@@ -42,6 +45,7 @@ function createClient(): {
     login: vi.fn<SessionClient["login"]>(),
     refresh: vi.fn<SessionClient["refresh"]>(),
     revoke: vi.fn<SessionClient["revoke"]>(),
+    verify: vi.fn<SessionClient["verify"]>(),
   };
 }
 
@@ -216,7 +220,7 @@ describe("AuthenticationSession", () => {
 
     await expect(session.anonymousAccessToken()).resolves.toBe("access");
     expect(client.createAnonymous).not.toHaveBeenCalled();
-    expect(cookies.writes).toHaveLength(0);
+    expect(cookies.writes.map(({ name }) => name)).toEqual([checkedCookie]);
   });
 
   it("refuses to replace an unavailable session with an anonymous one", async () => {
@@ -269,8 +273,8 @@ describe("AuthenticationSession", () => {
   });
 
   it.each([
-    ["an unchanged", "maya.chen@example.com", 1, []],
-    ["a changed", "maya.writes@example.com", 2, ["maya.writes"]],
+    ["an unchanged", "maya.chen@example.com", 1, ["1"]],
+    ["a changed", "maya.writes@example.com", 2, ["1", "maya.writes", "1"]],
   ])("checks the session again only after %s identity handle", async (_, email, checks, writes) => {
     cookies.values.set("__Host-account_access_token", "access");
     cookies.values.set("__Host-account_identity_handle", "maya.chen");
@@ -349,13 +353,83 @@ describe("AuthenticationSession", () => {
 
     session.accept({ accessToken: "access", refreshToken: "refresh" });
 
-    expect(cookies.writes).toHaveLength(2);
+    expect(cookies.writes).toHaveLength(3);
     expect(cookies.writes[0]?.options).toMatchObject({
       httpOnly: true,
       path: "/",
       sameSite: "lax",
       secure: true,
     });
+    expect(cookies.writes.find(({ name }) => name === checkedCookie)?.options).toEqual({
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+      maxAge: 300,
+    });
+  });
+
+  it("trusts a verified token without asking Authentication within five minutes of its last check", async () => {
+    cookies.values.set("__Host-account_access_token", "access");
+    cookies.values.set(checkedCookie, "1");
+    client.verify.mockResolvedValue({ roles: [Role.User], userID: "test-user" });
+    const session = new AuthenticationSession(client, cookies);
+
+    await expect(session.authenticated()).resolves.toMatchObject({
+      accessToken: "access",
+      claims: { userID: "test-user" },
+    });
+    expect(client.verify).toHaveBeenCalledExactlyOnceWith("access");
+    expect(client.claims).not.toHaveBeenCalled();
+    expect(cookies.writes).toHaveLength(0);
+  });
+
+  it("asks Authentication, and remembers its answer for five minutes, once the last check is older", async () => {
+    cookies.values.set("__Host-account_access_token", "access");
+    client.claims.mockResolvedValue({ roles: [Role.User], userID: "test-user" });
+    const session = new AuthenticationSession(client, cookies);
+
+    await expect(session.current()).resolves.toMatchObject({ status: "available" });
+    expect(client.verify).not.toHaveBeenCalled();
+    expect(cookies.values.get(checkedCookie)).toBe("1");
+  });
+
+  it("asks Authentication when the token cannot be verified offline", async () => {
+    cookies.values.set("__Host-account_access_token", "access");
+    cookies.values.set(checkedCookie, "1");
+    client.verify.mockRejectedValue(new Error("keys unavailable"));
+    client.claims.mockResolvedValue({ roles: [Role.User], userID: "test-user" });
+    const session = new AuthenticationSession(client, cookies);
+
+    await expect(session.current()).resolves.toMatchObject({ status: "available", claims: { userID: "test-user" } });
+    expect(client.claims).toHaveBeenCalledExactlyOnceWith("access");
+  });
+
+  it("reads a refreshed token's claims offline, since the refresh checked the session", async () => {
+    cookies.values.set("__Host-account_access_token", "expired-access");
+    cookies.values.set("__Host-account_refresh_token", "refresh");
+    client.claims.mockRejectedValue(new HttpError(401, "expired"));
+    client.refresh.mockResolvedValue({ accessToken: "fresh-access", refreshToken: "fresh-refresh" });
+    client.verify.mockResolvedValue({ roles: [Role.User], userID: "test-user" });
+    const session = new AuthenticationSession(client, cookies);
+
+    await expect(session.current()).resolves.toMatchObject({ status: "available", accessToken: "fresh-access" });
+    expect(client.verify).toHaveBeenCalledExactlyOnceWith("fresh-access");
+    expect(client.claims).toHaveBeenCalledOnce();
+    expect(cookies.values.get(checkedCookie)).toBe("1");
+  });
+
+  it("signs the visitor out at the first check after the session ended elsewhere", async () => {
+    cookies.values.set("__Host-account_access_token", "access");
+    cookies.values.set("__Host-account_refresh_token", "revoked-refresh");
+    cookies.values.set(checkedCookie, "1");
+    client.verify.mockRejectedValue(new Error("expired"));
+    client.claims.mockRejectedValue(new HttpError(401, "signed out"));
+    client.refresh.mockRejectedValue(new HttpError(401, "revoked"));
+    const session = new AuthenticationSession(client, cookies);
+
+    await expect(session.current()).resolves.toEqual({ status: "none" });
+    expect(cookies.values.size).toBe(0);
   });
 });
 
@@ -366,5 +440,49 @@ describe("readTokenExpiry", () => {
 
   it.each(["not-a-jwt", "a.invalid-json.c", createJwt(-1)])("rejects malformed or invalid expiry data", (token) => {
     expect(readTokenExpiry(token)).toBeNull();
+  });
+});
+
+describe("createSessionClient", () => {
+  const api = new AuthenticationApi("https://authentication.test");
+  const now = new Date("2026-11-04T12:00:00Z");
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("reads a verified token's claims as Authentication returns them", async () => {
+    vi.useFakeTimers({ now, toFake: ["Date"] });
+    const payload = {
+      iss: "anovel-authentication",
+      exp: now.getTime() / 1000 + 900,
+      userID: "test-user",
+      roles: [Role.User],
+      refreshTokenID: "refresh-id",
+      sessionExp: now.getTime() / 1000 + 3600,
+    };
+    const client = createSessionClient(api, async () => payload);
+
+    await expect(client.verify("access")).resolves.toStrictEqual({
+      userID: "test-user",
+      roles: [Role.User],
+      refreshTokenID: "refresh-id",
+      sessionID: "refresh-id",
+      sessionExp: payload.sessionExp,
+      clientID: undefined,
+    });
+  });
+
+  it("refuses a verified token whose session has ended", async () => {
+    vi.useFakeTimers({ now, toFake: ["Date"] });
+    const client = createSessionClient(api, async () => ({ userID: "test-user", sessionExp: now.getTime() / 1000 }));
+
+    await expect(client.verify("access")).rejects.toThrow("ended");
+  });
+
+  it("refuses a token the verifier rejects", async () => {
+    const client = createSessionClient(api, async () => Promise.reject(new Error("JWT expired")));
+
+    await expect(client.verify("access")).rejects.toThrow("expired");
   });
 });

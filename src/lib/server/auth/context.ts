@@ -2,8 +2,10 @@ import type { Locale } from "#lib/i18n/config.js";
 
 import { getRuntimeConfig } from "../runtime-config.server";
 import { serviceFetch } from "../service-fetch";
+import { createAccessTokenVerifier } from "./access-token";
 import { AuthenticationSession, createSessionClient } from "./session";
 
+import type { JwtPayload } from "@a-novel-kit/nodelib-server";
 import { AuthenticationApi, Lang } from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
@@ -19,6 +21,9 @@ export type AuthenticationEvent = Pick<RequestEvent, "cookies" | "getClientAddre
 
 // SvelteKit hands the hooks, actions and loads of one request the same cookies object.
 const requestContexts = new WeakMap<AuthenticationEvent["cookies"], AuthenticationContext>();
+
+// One verifier per process caches JSON keys' public keys for every request.
+let verifyAccessToken: ((accessToken: string) => Promise<JwtPayload>) | undefined;
 
 /**
  * Returns the authentication client and session of one visitor's request. Every load and action of
@@ -37,7 +42,11 @@ export function getAuthenticationContext(event: AuthenticationEvent): Authentica
       visitorAddress: event.getClientAddress(),
     })
   );
-  const context = { api, session: new AuthenticationSession(createSessionClient(api), event.cookies) };
+  verifyAccessToken ??= createAccessTokenVerifier(config.jsonKeysServiceUrl);
+  const context = {
+    api,
+    session: new AuthenticationSession(createSessionClient(api, verifyAccessToken), event.cookies),
+  };
 
   requestContexts.set(event.cookies, context);
   return context;
