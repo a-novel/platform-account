@@ -80,7 +80,7 @@ platform's public URL.
 | `ADDRESS_HEADER`, `XFF_DEPTH`     | Behind a proxy | Where the visitor's IP is read, which the platform forwards for rate limiting. On Cloud Run, `X-Forwarded-For` and `1`.    |
 | `HEALTHCHECK_TIMEOUT_MS`          | No             | Downstream timeout from 100 to 10,000 ms. The default is 2,000.                                                            |
 | `DOWNTIME_URL`                    | No             | Planned downtime document. The default is the one infra publishes.                                                         |
-| `PUBLIC_SENTRY_DSN`               | No             | Sentry project of the browser telemetry. Without it, the browser reports nothing and asks no consent.                      |
+| `PUBLIC_FARO_URL`                 | No             | Collector URL of the platform's Faro app. Without it, the browser reports nothing and asks no consent.                     |
 | `OTEL`                            | No             | `true` records traces, continuing an incoming `traceparent`.                                                               |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`     | No             | Exports traces over OTLP/HTTP to this base URL instead of stdout.                                                          |
 | `OTEL_EXPORTER_OTLP_HEADERS`      | No             | Headers each export sends, such as the backend's key. Inject it as a secret.                                               |
