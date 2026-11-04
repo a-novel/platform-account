@@ -71,6 +71,7 @@ test("a visitor sets their username, then clears it", async ({ page, account }, 
   await expect(dialog).toHaveCount(0);
   await expect(profileCard(page)).toContainText("Maya Chen 👩🏽‍💻");
   await expect(page.getByRole("heading", { level: 1, name: "Maya Chen 👩🏽‍💻", exact: true })).toBeVisible();
+  await expect(page.locator(".account-widget").first()).toContainText("Maya Chen 👩🏽‍💻");
 
   await page.reload();
   await profileCard(page).getByRole("link", { name: "Change username", exact: true }).click();
@@ -79,6 +80,7 @@ test("a visitor sets their username, then clears it", async ({ page, account }, 
   await dialog.getByRole("button", { name: "Save username", exact: true }).click();
   await expect(profileCard(page)).toContainText("Not set");
   await expect(page.getByRole("heading", { level: 1, name: account.email, exact: true })).toBeVisible();
+  await expect(page.locator(".account-widget").first()).not.toContainText("Maya Chen 👩🏽‍💻");
 });
 
 test("a visitor uploads, frames, replaces and removes their picture", async ({ page, account }, info) => {

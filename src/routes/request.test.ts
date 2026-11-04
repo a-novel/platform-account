@@ -298,7 +298,7 @@ describe("account session at the request boundary", () => {
     ]);
   });
 
-  it("reads the profile once for the shell and the account layout, as the platform, with the visitor's token", async () => {
+  it("reads the profile once for the shell and the account layout, as the platform, with the visitor's token, and names the account by its username", async () => {
     const directory = await mkdtemp(join(tmpdir(), "profile-token-"));
     env.PROFILE_SERVICE_TOKEN_PATH = join(directory, "token");
     onTestFinished(async () => {
@@ -319,7 +319,7 @@ describe("account session at the request boundary", () => {
 
     const [shell, account] = await Promise.all([loadShell(event), loadAccount(event)]);
 
-    expect(shell.session).toEqual({ status: "authenticated", displayName: "Maya Chen", initials: "MC", picture });
+    expect(shell.session).toEqual({ status: "authenticated", displayName: "Maya", initials: "MC", picture });
     expect(account.profile).toEqual({ status: "ready", username: "Maya", picture });
     expect(account.summary).toMatchObject({ profile: { username: "Maya", picture } });
     expect(fetchProfile).toHaveBeenCalledOnce();

@@ -31,7 +31,8 @@
   };
   const withPicture: ShellViewModel = {
     ...anonymous,
-    session: { status: "authenticated", displayName: "Maya Chen", initials: "MC", picture: portraitPicture },
+    // A profile with a username and a picture: the username names the account, the handle keeps the initials.
+    session: { status: "authenticated", displayName: "Moonlit Maya 🌊", initials: "MC", picture: portraitPicture },
   };
   const loadingAccount: ShellViewModel = {
     ...anonymous,
