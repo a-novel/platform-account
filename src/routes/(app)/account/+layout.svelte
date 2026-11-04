@@ -1,6 +1,7 @@
 <script lang="ts">
   import { loginHref } from "#lib/application/auth/navigation.js";
   import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
+  import PageTitle from "#lib/ui/PageTitle.svelte";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
@@ -9,7 +10,10 @@
 
   import { untrack } from "svelte";
 
+  import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+
   let { data, children } = $props();
+  const { t } = getI18nContext();
 
   const routeTabs: Record<string, AccountTab> = {
     "/(app)/account/(information)": "information",
@@ -36,7 +40,21 @@
   });
 
   const currentPath = $derived(page.url.pathname + page.url.search);
+
+  const tabTitles = {
+    information: "pageTitles.account",
+    devices: "pageTitles.devices",
+    privacy: "pageTitles.privacy",
+  } as const;
+  // The tab names its section, then the outage that hides the account's details, as the header does.
+  const title = $derived.by(() => {
+    const section = t(tabTitles[currentTab() ?? "information"]);
+    if (data.summary.status !== "error") return section;
+    return t("pageTitles.withState", { title: section, status: t("authUi.account.loadErrorTitle") });
+  });
 </script>
+
+<PageTitle {title} />
 
 {#snippet frame()}
   <Screen {controller}>{@render children()}</Screen>

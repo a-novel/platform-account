@@ -106,11 +106,11 @@
   }
 </script>
 
-<Story name="My information — desktop" globals={reviewStoryGlobals.desktop} asChild play={verifyHeader}>
+<Story name="My information: desktop" globals={reviewStoryGlobals.desktop} asChild play={verifyHeader}>
   <StoryHarness {summary} tab="information" {information} />
 </Story>
 
-<Story name="My information — mobile" globals={reviewStoryGlobals.mobile} asChild play={verifyHeader}>
+<Story name="My information: mobile" globals={reviewStoryGlobals.mobile} asChild play={verifyHeader}>
   <StoryHarness {summary} tab="information" {information} />
 </Story>
 
@@ -138,7 +138,7 @@
   <StoryHarness {summary} tab="information" information={{ ...information, editor: "email" }} />
 </Story>
 
-<Story name="Email editor — wrong password" asChild>
+<Story name="Email editor: wrong password" asChild>
   <StoryHarness
     {summary}
     tab="information"
@@ -153,7 +153,7 @@
   />
 </Story>
 
-<Story name="Email editor — invalid" asChild>
+<Story name="Email editor: invalid" asChild>
   <StoryHarness
     {summary}
     tab="information"
@@ -165,7 +165,7 @@
   />
 </Story>
 
-<Story name="Email editor — link sent" asChild>
+<Story name="Email editor: link sent" asChild>
   <StoryHarness
     {summary}
     tab="information"
@@ -182,7 +182,7 @@
   <StoryHarness {summary} tab="information" information={{ ...information, editor: "password" }} />
 </Story>
 
-<Story name="Password editor — invalid" asChild>
+<Story name="Password editor: invalid" asChild>
   <StoryHarness
     {summary}
     tab="information"
@@ -198,7 +198,7 @@
   />
 </Story>
 
-<Story name="Password editor — changed" asChild>
+<Story name="Password editor: changed" asChild>
   <StoryHarness
     {summary}
     tab="information"
@@ -210,23 +210,23 @@
   />
 </Story>
 
-<Story name="Devices — locations off" asChild>
+<Story name="Devices: locations off" asChild>
   <StoryHarness {summary} tab="devices" {devices} />
 </Story>
 
-<Story name="Devices — locations on, mobile" globals={reviewStoryGlobals.mobile} asChild>
+<Story name="Devices: locations on, mobile" globals={reviewStoryGlobals.mobile} asChild>
   <StoryHarness {summary} tab="devices" devices={located} />
 </Story>
 
-<Story name="Devices — confirm one" asChild>
+<Story name="Devices: confirm one" asChild>
   <StoryHarness {summary} tab="devices" devices={{ ...located, confirmation: { kind: "device", id: phone.id } }} />
 </Story>
 
-<Story name="Devices — confirm all" asChild>
+<Story name="Devices: confirm all" asChild>
   <StoryHarness {summary} tab="devices" devices={{ ...located, confirmation: { kind: "others" } }} />
 </Story>
 
-<Story name="Devices — device logged out" asChild>
+<Story name="Devices: device logged out" asChild>
   <StoryHarness
     {summary}
     tab="devices"
@@ -238,7 +238,7 @@
   />
 </Story>
 
-<Story name="Devices — device removed" asChild>
+<Story name="Devices: device removed" asChild>
   <StoryHarness
     {summary}
     tab="devices"
@@ -250,7 +250,7 @@
   />
 </Story>
 
-<Story name="Devices — only this one" asChild>
+<Story name="Devices: only this one" asChild>
   <StoryHarness
     {summary}
     tab="devices"
@@ -258,7 +258,7 @@
   />
 </Story>
 
-<Story name="Devices — change failed" asChild>
+<Story name="Devices: change failed" asChild>
   <StoryHarness
     {summary}
     tab="devices"
@@ -266,19 +266,19 @@
   />
 </Story>
 
-<Story name="Devices — unavailable" asChild>
+<Story name="Devices: unavailable" asChild>
   <StoryHarness {summary} tab="devices" devices={{ ...devices, devices: { status: "unavailable" } }} />
 </Story>
 
-<Story name="Privacy — locations off" asChild>
+<Story name="Privacy: locations off" asChild>
   <StoryHarness {summary} tab="privacy" privacy={{ status: "ready", locationConsent: false }} />
 </Story>
 
-<Story name="Privacy — locations on" asChild>
+<Story name="Privacy: locations on" asChild>
   <StoryHarness {summary} tab="privacy" privacy={{ status: "ready", locationConsent: true }} />
 </Story>
 
-<Story name="Privacy — change failed" asChild>
+<Story name="Privacy: change failed" asChild>
   <StoryHarness
     {summary}
     tab="privacy"

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { AccountDeviceConfirmation } from "#lib/application/auth/types.js";
-  import PageTitle from "#lib/ui/PageTitle.svelte";
   import { afterNavigate, goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -13,10 +12,7 @@
 
   import { onMount, untrack } from "svelte";
 
-  import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-
   let { data, form } = $props();
-  const { t } = getI18nContext();
   const actions = {
     logoutDevice: "?/logoutDevice",
     logoutOtherDevices: "?/logoutOtherDevices",
@@ -66,7 +62,5 @@
     return () => window.removeEventListener("popstate", synchronizeConfirmation);
   });
 </script>
-
-<PageTitle title={t("pageTitles.devices")} />
 
 <Screen {controller} />

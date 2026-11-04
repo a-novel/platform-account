@@ -49,7 +49,10 @@ export const load = async (event: PageServerLoadEvent) => {
   try {
     const { authentication, session } = await requireAuthorization(event);
     const sessions = await sessionList(authentication.api, session.accessToken);
-    const devices = sessions.map((device) => readDevice(device, dates, regions));
+    // This device leads, and the others keep the service's order, most recently active first.
+    const devices = sessions
+      .toSorted((a, b) => Number(b.current) - Number(a.current))
+      .map((device) => readDevice(device, dates, regions));
     return { devices: { status: "ready" as const, devices }, locationConsent };
   } catch (error) {
     // Redirects, refusals and planned downtimes render their own pages, as the layout's do.
@@ -88,6 +91,15 @@ async function namedDevice(event: RequestEvent): Promise<string | null> {
   return typeof id === "string" && id.length > 0 ? id : null;
 }
 
+/** Removes a logged-out device. One already gone, removed in another tab or purged, counts as removed. */
+async function removeSession(api: AuthenticationApi, accessToken: string, id: string): Promise<void> {
+  try {
+    await sessionDelete(api, accessToken, { id });
+  } catch (error) {
+    if (!isHttpStatusError(error, 404)) throw error;
+  }
+}
+
 const missingDevice = () =>
   fail(400, { devicesAction: { status: "service-error", feedback: "serviceUnavailable" } } satisfies DevicesActionData);
 
@@ -102,6 +114,6 @@ export const actions = {
   removeDevice: async (event: RequestEvent) => {
     const id = await namedDevice(event);
     if (!id) return missingDevice();
-    return await changeDevices(event, "removed", (api, token) => sessionDelete(api, token, { id }));
+    return await changeDevices(event, "removed", (api, token) => removeSession(api, token, id));
   },
 };

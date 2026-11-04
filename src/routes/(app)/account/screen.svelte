@@ -111,13 +111,17 @@
 </div>
 
 <style>
+  /* A full width up to its cap: the shell's column would shrink it to its content, which the
+     container query hides, and a long email would then wrap at every character. */
   .account-layout {
     display: grid;
     gap: var(--space-6);
+    box-sizing: border-box;
     container-type: inline-size;
     margin-inline: auto;
     padding-inline: var(--layout-gutter);
     padding-block: var(--space-6) var(--space-12);
+    inline-size: 100%;
     max-inline-size: 48rem;
   }
 

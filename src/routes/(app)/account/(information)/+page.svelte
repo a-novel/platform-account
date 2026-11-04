@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { AccountEditor } from "#lib/application/auth/types.js";
-  import PageTitle from "#lib/ui/PageTitle.svelte";
   import { afterNavigate, goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -13,10 +12,7 @@
 
   import { onMount, untrack } from "svelte";
 
-  import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-
   let { data, form } = $props();
-  const { t } = getI18nContext();
   // An editor's form posts to a URL that keeps it open, so its result shows in the dialog.
   const actions = {
     password: "?edit=password&/password",
@@ -59,7 +55,5 @@
     return () => window.removeEventListener("popstate", synchronizeEditor);
   });
 </script>
-
-<PageTitle title={t("pageTitles.account")} />
 
 <Screen {controller} />
