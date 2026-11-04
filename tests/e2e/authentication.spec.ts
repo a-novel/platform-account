@@ -1,4 +1,4 @@
-import { compose, emailLink, endSessionCheckWindow, expect, login, test } from "./fixtures";
+import { compose, emailLink, endSessionCheckWindow, expect, login, stableScreenshot, test } from "./fixtures";
 import { accountCaller, callerFetch } from "./service-token";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
@@ -18,11 +18,6 @@ async function openAccountControls(page: Page, isMobile: boolean) {
 /** The account controls: the rail on a wide screen, the open menu on a phone. Pages repeat "Log in". */
 function accountControls(page: Page, isMobile: boolean) {
   return isMobile ? page.getByRole("dialog") : page.getByRole("complementary");
-}
-
-/** The values that change with each run: the account's address and the session's end. */
-function perRunValues(page: Page, email: string) {
-  return [page.getByText(email, { exact: true }), page.getByText("Logged in until", { exact: true }).locator("..")];
 }
 
 async function authenticationResponds(): Promise<boolean> {
@@ -59,7 +54,7 @@ test("login returns to the protected account, survives reload and logout protect
   await page.reload();
   await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
   await expect(page).toHaveTitle("Account settings | Agora");
-  await screenshot(page, info, "authenticated-account", perRunValues(page, account.email));
+  await stableScreenshot(page, info, "authenticated-account");
 
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
   await expect(page).toHaveURL("/");
@@ -149,7 +144,7 @@ test("account forms change the password and confirm an email update", async ({ p
   await choosePassword(page, "Changed-password-42!");
   await passwordDialog.getByRole("button", { name: "Change password", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Password changed", exact: true })).toBeVisible();
-  await screenshot(page, info, "password-changed", perRunValues(page, account.email));
+  await stableScreenshot(page, info, "password-changed");
   await page.getByRole("link", { name: "Got it", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL("/account");
@@ -164,7 +159,7 @@ test("account forms change the password and confirm an email update", async ({ p
   await expect(sent).toContainText(
     `If no other account uses ${email}, a confirmation link should arrive there shortly.`
   );
-  await screenshot(page, info, "email-link-sent", [...perRunValues(page, account.email), page.getByText(email)]);
+  await stableScreenshot(page, info, "email-link-sent");
   await sent.getByRole("link", { name: "Got it", exact: true }).click();
   // The header keeps the current email until the new one is confirmed.
   await expect(page.getByRole("heading", { level: 1, name: account.email, exact: true })).toBeVisible();

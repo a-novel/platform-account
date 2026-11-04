@@ -1,6 +1,4 @@
-import { endSessionCheckWindow, expect, login, test } from "./fixtures";
-
-import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
+import { endSessionCheckWindow, expect, login, stableScreenshot, test } from "./fixtures";
 
 import type { Browser, Locator, Page, TestInfo } from "playwright/test";
 
@@ -34,32 +32,28 @@ function deviceRow(group: Locator, name: string) {
   return group.getByRole("listitem").filter({ hasText: name });
 }
 
-/** The values that change with each run: the account's address and the session's end. */
-function perRunValues(page: Page, account: Account) {
-  return [
-    page.getByText(account.email, { exact: true }),
-    page.getByText("Logged in until", { exact: true }).locator(".."),
-    page.getByText(/^Last active /),
-  ];
-}
-
 test("a device logs another out after a confirmation, then removes it", async ({ page, browser, account }, info) => {
+  // The account's own session opened before the test began.
+  const accountSession = Date.now();
   await page.goto("/account/devices");
   await login(page, account);
   await expect(page).toHaveURL("/account/devices");
   await expect(page).toHaveTitle("Devices | Agora");
+  // Authentication records activity to the second and orders a tie by a random ID, so the phone logs
+  // in a second after the account's session for the list to keep one order.
+  await expect.poll(() => Date.now() - accountSession).toBeGreaterThanOrEqual(1000);
   const phone = await loginElsewhere(browser, info, account);
 
   await page.reload();
   await expect(deviceRow(activeDevices(page), "This device")).toContainText("Active now");
   await expect(deviceRow(activeDevices(page), "Safari on iOS")).toBeVisible();
   await expect(page.getByRole("note").filter({ hasText: "Locations are off" })).toBeVisible();
-  await screenshot(page, info, "account-devices", perRunValues(page, account));
+  await stableScreenshot(page, info, "account-devices");
 
   await page.getByRole("link", { name: "Log out Safari on iOS", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Log out Safari on iOS?", exact: true });
   await expect(dialog).toContainText("It can take up to 15 minutes for a logged-out device to lose access.");
-  await screenshot(page, info, "account-device-logout", perRunValues(page, account));
+  await stableScreenshot(page, info, "account-device-logout");
   await dialog.getByRole("button", { name: "Log out", exact: true }).click();
   await expect(page.getByText("That device is logged out", { exact: true })).toBeVisible();
   const loggedOut = page.getByRole("region", { name: "Logged out", exact: true });
@@ -114,7 +108,7 @@ test("the location consent records where devices log in until it is withdrawn", 
   await expect(consent).toBeChecked();
   await page.reload();
   await expect(consent).toBeChecked();
-  await screenshot(page, info, "account-privacy", perRunValues(page, account));
+  await stableScreenshot(page, info, "account-privacy");
 
   // Only a login after the consent records its address.
   const phone = await loginElsewhere(browser, info, account);
