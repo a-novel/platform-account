@@ -31,12 +31,8 @@ export const GET: RequestHandler = async ({ fetch }) => {
     // Probes prove the platform's identity to Authentication like any call, but are made for no
     // visitor. JSON keys' API is public, so its probe carries no token.
     fetch: async (input, init) => {
-      const {
-        authenticationServiceAudience: audience,
-        authenticationServiceUrl,
-        serviceTokenPath,
-      } = getRuntimeConfig();
-      const identity = String(input).startsWith(`${authenticationServiceUrl}/`) ? { audience, serviceTokenPath } : {};
+      const { authenticationServiceUrl, serviceTokenPath } = getRuntimeConfig();
+      const identity = String(input).startsWith(`${authenticationServiceUrl}/`) ? { serviceTokenPath } : {};
       return await serviceFetch(identity, fetch)(input, init);
     },
   });

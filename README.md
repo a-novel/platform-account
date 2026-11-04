@@ -73,23 +73,22 @@ platform's public URL.
 
 ### Configuration
 
-| Name                              | Required       | Description                                                                                                                |
-| --------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `AUTHENTICATION_SERVICE_URL`      | Yes            | Base HTTP or HTTPS URL for the authentication service.                                                                     |
-| `JSON_KEYS_SERVICE_URL`           | Yes            | Base HTTP or HTTPS URL for the JSON keys service's REST API, whose public keys verify access tokens.                       |
-| `STUDIO_URL`                      | Yes            | Public URL of Studio, which the app list opens.                                                                            |
-| `AUTHENTICATION_SERVICE_AUDIENCE` | Cloud Run      | Audience of the Google ID token the authentication service's IAM admits. The platform fetches it from the metadata server. |
-| `SERVICE_TOKEN_PATH`              | Kubernetes     | File of the projected service token, sent instead of a Google ID token. The platform reads it on every call.               |
-| `ADDRESS_HEADER`, `XFF_DEPTH`     | Behind a proxy | Where the visitor's IP is read, which the platform forwards for rate limiting. On Cloud Run, `X-Forwarded-For` and `1`.    |
-| `HEALTHCHECK_TIMEOUT_MS`          | No             | Downstream timeout from 100 to 10,000 ms. The default is 2,000.                                                            |
-| `DOWNTIME_URL`                    | No             | Planned downtime document. The default is the one infra publishes.                                                         |
-| `PUBLIC_FARO_URL`                 | No             | Collector URL of the platform's Faro app. Without it, the browser reports nothing and asks no consent.                     |
-| `OTEL`                            | No             | `true` records traces, continuing an incoming `traceparent`.                                                               |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`     | No             | Exports traces over OTLP/HTTP to this base URL instead of stdout.                                                          |
-| `OTEL_EXPORTER_OTLP_HEADERS`      | No             | Headers each export sends, such as the backend's key. Inject it as a secret.                                               |
-| `OTEL_EXPORTER_OTLP_COMPRESSION`  | No             | `gzip` compresses each export.                                                                                             |
-| `HOST`                            | No             | Listen address. The image sets `0.0.0.0`.                                                                                  |
-| `PORT`                            | No             | Listen port. The image sets `3000`.                                                                                        |
+| Name                             | Required       | Description                                                                                                                         |
+| -------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `AUTHENTICATION_SERVICE_URL`     | Yes            | Base HTTP or HTTPS URL for the authentication service.                                                                              |
+| `JSON_KEYS_SERVICE_URL`          | Yes            | Base HTTP or HTTPS URL for the JSON keys service's REST API, whose public keys verify access tokens.                                |
+| `STUDIO_URL`                     | Yes            | Public URL of Studio, which the app list opens.                                                                                     |
+| `SERVICE_TOKEN_PATH`             | Kubernetes     | File of the projected service token that proves the platform's identity. The platform reads it on every call.                       |
+| `ADDRESS_HEADER`, `XFF_DEPTH`    | Behind a proxy | Where the visitor's IP is read, for rate limiting. The cluster's load balancer appends it, then its own: `X-Forwarded-For` and `2`. |
+| `HEALTHCHECK_TIMEOUT_MS`         | No             | Downstream timeout from 100 to 10,000 ms. The default is 2,000.                                                                     |
+| `DOWNTIME_URL`                   | No             | Planned downtime document. The default is the one infra publishes.                                                                  |
+| `PUBLIC_FARO_URL`                | No             | Collector URL of the platform's Faro app. Without it, the browser reports nothing and asks no consent.                              |
+| `OTEL`                           | No             | `true` records traces, continuing an incoming `traceparent`.                                                                        |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`    | No             | Exports traces over OTLP/HTTP to this base URL instead of stdout.                                                                   |
+| `OTEL_EXPORTER_OTLP_HEADERS`     | No             | Headers each export sends, such as the backend's key. Inject it as a secret.                                                        |
+| `OTEL_EXPORTER_OTLP_COMPRESSION` | No             | `gzip` compresses each export.                                                                                                      |
+| `HOST`                           | No             | Listen address. The image sets `0.0.0.0`.                                                                                           |
+| `PORT`                           | No             | Listen port. The image sets `3000`.                                                                                                 |
 
 ## Operational endpoints
 

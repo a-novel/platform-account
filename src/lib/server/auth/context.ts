@@ -37,7 +37,6 @@ export function getAuthenticationContext(event: AuthenticationEvent): Authentica
   const api = new AuthenticationApi(
     config.authenticationServiceUrl,
     serviceFetch({
-      audience: config.authenticationServiceAudience,
       serviceTokenPath: config.serviceTokenPath,
       visitorAddress: event.getClientAddress(),
     })
