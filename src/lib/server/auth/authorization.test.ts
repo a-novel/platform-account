@@ -41,10 +41,14 @@ describe("protected operations", () => {
     expect(authenticated).toHaveBeenCalledTimes(2);
   });
 
-  it("redirects anonymous requests to the modal with their page and query", async () => {
+  it.each([
+    ["a load", "GET", 307],
+    ["a form action", "POST", 303],
+  ])("redirects %s from an anonymous visitor to the modal with its page and query", async (_, method, status) => {
     authenticated.mockResolvedValue(null);
-    await expect(requireAuthorization(event)).rejects.toMatchObject({
-      status: 303,
+    const request = new Request(event.url, { method });
+    await expect(requireAuthorization({ ...event, request })).rejects.toMatchObject({
+      status,
       location: "/?auth=login&returnTo=%2Faccount%3Fpanel%3Demail",
     });
   });

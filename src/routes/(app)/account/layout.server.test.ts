@@ -59,7 +59,7 @@ describe("account layout", () => {
     authenticated.mockResolvedValue(null);
 
     await expect(loadAccount(event("/account/devices?confirm=others"))).rejects.toMatchObject({
-      status: 303,
+      status: 307,
       location: "/?auth=login&returnTo=%2Faccount%2Fdevices%3Fconfirm%3Dothers",
     });
     expect(credentialsGetSelf).not.toHaveBeenCalled();

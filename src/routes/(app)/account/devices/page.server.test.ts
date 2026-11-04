@@ -185,7 +185,7 @@ describe("devices load", () => {
     authenticated.mockResolvedValue(null);
 
     await expect(loadDevices(loadEvent(consenting))).rejects.toMatchObject({
-      status: 303,
+      status: 307,
       location: "/?auth=login&returnTo=%2Faccount%2Fdevices",
     });
     expect(sessionList).not.toHaveBeenCalled();
