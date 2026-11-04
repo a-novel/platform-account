@@ -20,6 +20,11 @@ function accountControls(page: Page, isMobile: boolean) {
   return isMobile ? page.getByRole("dialog") : page.getByRole("complementary");
 }
 
+/** The values that change with each run: the account's address and the session's end. */
+function perRunValues(page: Page, email: string) {
+  return [page.getByText(email, { exact: true }), page.getByText("Logged in until", { exact: true }).locator("..")];
+}
+
 async function authenticationResponds(): Promise<boolean> {
   try {
     return (await fetch("http://127.0.0.1:14100/v2/ping")).ok;
@@ -40,8 +45,8 @@ test("login returns to the protected account, survives reload and logout protect
   await login(page, account);
   await expect(page).toHaveURL("/account");
   await expect(page).toHaveTitle("Account settings | Agora");
-  await expect(page.getByRole("heading", { name: "Manage your account", exact: true })).toBeVisible();
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: account.email, exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 
   const cookies = (await context.cookies()).filter((cookie) => cookie.name.startsWith("__Host-account_"));
   expect(cookies.map((cookie) => cookie.name)).toEqual(
@@ -52,15 +57,9 @@ test("login returns to the protected account, survives reload and logout protect
   ).toBe(true);
 
   await page.reload();
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
   await expect(page).toHaveTitle("Account settings | Agora");
-  const perRunValues = [
-    page.getByLabel("Current email", { exact: true }),
-    ...["Account ID", "Access expires", "Session expires"].map((label) =>
-      page.getByText(label, { exact: true }).locator("+ dd")
-    ),
-  ];
-  await screenshot(page, info, "authenticated-account", perRunValues);
+  await screenshot(page, info, "authenticated-account", perRunValues(page, account.email));
 
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
   await expect(page).toHaveURL("/");
@@ -99,7 +98,7 @@ test("a real invitation creates an account and cannot be reused", async ({ page,
 
   await page.getByRole("link", { name: "Continue to your account" }).click();
   await expect(page).toHaveURL("/account");
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 
   await page.goto(invitation.link);
   await choosePassword(page, "Another-password-42!");
@@ -135,29 +134,41 @@ test("password recovery follows the delivered email and replaces the old passwor
   await login(page, { ...account, password: "Recovered-password-42!" });
   // The account page is the only screen, so a signed-in visitor lands on it.
   await expect(page).toHaveURL("/account");
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 });
 
 test("account forms change the password and confirm an email update", async ({ page, account }, info) => {
   await page.goto("/?auth=login&returnTo=%2Faccount");
   await login(page, account);
 
-  // The password and email forms each ask for the current password.
-  const passwordSection = page.getByRole("region", { name: "Password" });
-  await passwordSection.getByLabel(/^Current password/).fill(account.password);
+  // The password and email dialogs each ask for the current password.
+  await page.getByRole("link", { name: "Change password", exact: true }).click();
+  await expect(page).toHaveURL("/account?edit=password");
+  const passwordDialog = page.getByRole("dialog", { name: "Change your password", exact: true });
+  await passwordDialog.getByLabel(/^Current password/).fill(account.password);
   await choosePassword(page, "Changed-password-42!");
-  await page.getByRole("button", { name: "Change password", exact: true }).click();
-  await expect(page.getByText("Your password was changed.", { exact: true })).toBeVisible();
+  await passwordDialog.getByRole("button", { name: "Change password", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Password changed", exact: true })).toBeVisible();
+  await screenshot(page, info, "password-changed", perRunValues(page, account.email));
+  await page.getByRole("link", { name: "Got it", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL("/account");
 
   const email = `updated-${account.email}`;
-  await page.getByLabel(/^New email address/).fill(email);
-  await page
-    .getByRole("region", { name: "Email" })
-    .getByLabel(/^Current password/)
-    .fill("Changed-password-42!");
-  await page.getByRole("button", { name: "Send link", exact: true }).click();
-  await expect(page.getByText("Check your inbox", { exact: true })).toBeVisible();
-  await expect(page.getByRole("note")).toContainText(email);
+  await page.getByRole("link", { name: "Change email", exact: true }).click();
+  const emailDialog = page.getByRole("dialog", { name: "Change your email", exact: true });
+  await emailDialog.getByLabel(/^New email address/).fill(email);
+  await emailDialog.getByLabel(/^Current password/).fill("Changed-password-42!");
+  await emailDialog.getByRole("button", { name: "Send link", exact: true }).click();
+  const sent = page.getByRole("dialog", { name: "Check your inbox", exact: true });
+  await expect(sent).toContainText(
+    `If no other account uses ${email}, a confirmation link should arrive there shortly.`
+  );
+  await screenshot(page, info, "email-link-sent", [...perRunValues(page, account.email), page.getByText(email)]);
+  await sent.getByRole("link", { name: "Got it", exact: true }).click();
+  // The header keeps the current email until the new one is confirmed.
+  await expect(page.getByRole("heading", { level: 1, name: account.email, exact: true })).toBeVisible();
+  await expect(page.getByRole("note").filter({ hasText: "Awaiting confirmation" })).toContainText(email);
 
   await page.goto(await emailLink(email, "/ext/email/validate"));
   await expect(page).toHaveURL("/ext/email/validate?result=success");
@@ -170,7 +181,7 @@ test("account forms change the password and confirm an email update", async ({ p
   await page.goto("/?auth=login&returnTo=%2Faccount");
   await login(page, { email, password: "Changed-password-42!" });
   await expect(page).toHaveURL("/account");
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: email, exact: true })).toBeVisible();
 });
 
 test("dialog history and keyboard dismissal restore the shell focus", async ({ page, isMobile }) => {
@@ -248,14 +259,14 @@ test("an authentication outage preserves the session and recovers after reload",
 }, info) => {
   await page.goto("/?auth=login&returnTo=%2Faccount");
   await login(page, account);
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 
   const cookies = await context.cookies();
   try {
     await compose("stop", "authentication");
     await page.reload();
-    await expect(page.getByText("Session details unavailable", { exact: true })).toBeVisible();
-    await expect(page).toHaveTitle("Account settings: Session details unavailable | Agora");
+    await expect(page.getByText("Account details unavailable", { exact: true })).toBeVisible();
+    await expect(page).toHaveTitle("Account settings: Account details unavailable | Agora");
     expect(await context.cookies()).toEqual(cookies);
     await screenshot(page, info, "recoverable-service-outage");
   } finally {
@@ -264,7 +275,7 @@ test("an authentication outage preserves the session and recovers after reload",
   }
 
   await page.reload();
-  await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
   await expect(page).toHaveTitle("Account settings | Agora");
 });
 
@@ -304,7 +315,7 @@ test.describe("native forms without JavaScript", () => {
 
     await login(page, account);
     await expect(page).toHaveURL("/account");
-    await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+    await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
   });
 
   test("an invitation, password change and logout work with server-rendered forms", async ({ page, invitation }) => {
@@ -318,15 +329,15 @@ test.describe("native forms without JavaScript", () => {
 
     await page.goto("/account");
     await expect(page).toHaveTitle("Account settings | Agora");
-    await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
+    await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 
-    await page
-      .getByRole("region", { name: "Password" })
-      .getByLabel(/^Current password/)
-      .fill(password);
+    await page.getByRole("link", { name: "Change password", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Change your password", exact: true });
+    await dialog.getByLabel(/^Current password/).fill(password);
     await choosePassword(page, "Updated-native-password-42!");
-    await page.getByRole("button", { name: "Change password", exact: true }).click();
-    await expect(page.getByText("Your password was changed.", { exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Change password", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Password changed", exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Got it", exact: true }).click();
 
     await page.getByRole("button", { name: "Log out", exact: true }).last().click();
     await page.goto("/account");

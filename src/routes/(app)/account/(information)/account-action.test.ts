@@ -33,6 +33,14 @@ describe("mergeAccountAction", () => {
     });
   });
 
+  it.each([
+    ["no action", null],
+    ["text", "accountAction"],
+    ["another form's result", { authentication: { journey: "login", state: { status: "ready" } } }],
+  ])("ignores %s", (_, data) => {
+    expect(mergeAccountAction(ready, data)).toBe(ready);
+  });
+
   it("preserves action feedback when the credentials are unavailable", () => {
     const unavailable = createInformationModel({ status: "unavailable" }, null);
     expect(
