@@ -3,7 +3,7 @@ import { accountCaller, callerFetch } from "./service-token";
 import { randomUUID } from "node:crypto";
 
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
-import { createCompose, emailLink as deliveredLink } from "@a-novel-kit/nodelib-test/playwright";
+import { createCompose, emailLink as deliveredLink, screenshot } from "@a-novel-kit/nodelib-test/playwright";
 import {
   AuthenticationApi,
   Lang,
@@ -13,7 +13,7 @@ import {
   tokenCreateAnon,
 } from "@a-novel/service-authentication-rest";
 
-import { type BrowserContext, type Page, test as base } from "playwright/test";
+import { type BrowserContext, type Page, type TestInfo, test as base } from "playwright/test";
 import { z } from "zod";
 
 const api = new AuthenticationApi("http://127.0.0.1:14100", callerFetch(accountCaller));
@@ -33,6 +33,52 @@ export function emailLink(email: string, pathname: string): Promise<string> {
  */
 export async function endSessionCheckWindow(context: BrowserContext) {
   await context.clearCookies({ name: "__Host-account_session_checked" });
+}
+
+interface PerRunValues {
+  originals: Map<Text, string>;
+  observer: MutationObserver;
+}
+
+/**
+ * Captures a screenshot with fixed text over the values that change with each run, then puts them
+ * back: an account's address holds a fresh ID, and a date the moment the stack ran. Masks cannot
+ * stand in, since their boxes follow the text's width and its wrapping.
+ *
+ * Hydration and reloaded data write the real text back, so the fixed text holds until the capture
+ * ends.
+ */
+export async function stableScreenshot(page: Page, info: TestInfo, name: string) {
+  await page.evaluate(() => {
+    const originals = new Map<Text, string>();
+    const fix = (text: Text) => {
+      const fixed = text.data
+        .replace(/account\.tester\+[0-9a-f-]+@example\.com/g, "account.tester@example.com")
+        .replace(/[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2}\s[AP]M/g, "Jan 1, 2099, 12:00 AM");
+      if (fixed === text.data) return;
+      originals.set(text, text.data);
+      text.data = fixed;
+    };
+    const fixWithin = (node: Node) => {
+      if (node instanceof Text) return fix(node);
+      const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+      for (let text = walker.nextNode(); text; text = walker.nextNode()) fix(text as Text);
+    };
+
+    fixWithin(document.body);
+    const observer = new MutationObserver((records) => records.forEach((record) => fixWithin(record.target)));
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+    Object.assign(window, { perRunValues: { originals, observer } satisfies PerRunValues });
+  });
+  try {
+    await screenshot(page, info, name);
+  } finally {
+    await page.evaluate(() => {
+      const { perRunValues } = window as unknown as { perRunValues?: PerRunValues };
+      perRunValues?.observer.disconnect();
+      for (const [text, original] of perRunValues?.originals ?? []) text.data = original;
+    });
+  }
 }
 
 /** Fills and submits the login dialog. */
