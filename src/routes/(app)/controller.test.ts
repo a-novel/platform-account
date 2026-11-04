@@ -1,8 +1,11 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
-import type { ShellViewModel } from "#lib/application/shell/types.js";
 
+import { withAuthView } from "./auth-dialog-state";
 import {
+  type AuthenticationPanelControllerState,
+  type ShellControllerOptions,
+  type ShellData,
   createAuthenticationPanelController,
   createShellController,
   readyAuthenticationModel,
@@ -14,39 +17,43 @@ const links = {
   homeHref: "/",
   accountHref: "/account",
   logoutAction: "/logout",
+};
+
+const anonymous: ShellData = {
+  activeNavigation: "home",
+  session: { status: "anonymous" },
   apps: { studio: "https://studio.example.test" },
 };
 
-function model(patch: Partial<ShellViewModel> = {}): ShellViewModel {
-  return {
-    activeNavigation: "home",
-    rail: "expanded",
-    drawerOpen: false,
-    authView: null,
-    session: { status: "anonymous" },
-    ...patch,
-  };
+function shell(options: Partial<ShellControllerOptions> = {}) {
+  return createShellController({
+    ...links,
+    getData: () => anonymous,
+    authentication: createAuthenticationPanelController({
+      getState: () => ({ model: readyAuthenticationModel("login"), action: "/" }),
+    }),
+    ...options,
+  });
 }
 
 describe("createShellController", () => {
   it("accepts semantic shell transitions", () => {
     const onAuthViewChange = vi.fn();
-    let url = new URL("https://account.example.test/base/?document=42&returnTo=%2Faccount#selection");
-    const authentication = createAuthenticationPanelController({
-      model: readyAuthenticationModel("login"),
-      action: "/auth",
-      allowNativeSubmission: false,
-    });
-    const controller = createShellController({
-      ...links,
-      model: model({ authView: "login" }),
-      authentication,
+    let data = anonymous;
+    let url = new URL("https://account.example.test/base/?document=42&returnTo=%2Faccount&auth=login#selection");
+    const controller = shell({
+      getData: () => data,
       allowNativeLogout: false,
-      onAuthViewChange,
+      // The layout shows each view in the URL, which the shell then reads back.
+      onAuthViewChange: (view) => {
+        onAuthViewChange(view);
+        url = withAuthView(url, view);
+      },
       getUrl: () => url,
     });
 
     expect(controller.state.apps).toEqual({ studio: "https://studio.example.test" });
+    expect(controller.state.model.authView).toBe("login");
     expect(controller.authenticationHref("register")).toBe(
       "/base/?document=42&returnTo=%2Faccount&auth=register#selection"
     );
@@ -69,7 +76,7 @@ describe("createShellController", () => {
     expect(onAuthViewChange.mock.calls).toEqual([[null], ["login"], [null], ["login"]]);
 
     for (const session of [{ status: "anonymous" }, { status: "loading" }, { status: "error" }] as const) {
-      controller.synchronizeRoute({ activeNavigation: "home", authView: null, session });
+      data = { ...data, session };
       expect(controller.logout()).toBe(false);
       expect(controller.state.model.session).toEqual(session);
     }
@@ -78,13 +85,7 @@ describe("createShellController", () => {
   it("toggles the rail and the mobile menu", () => {
     const onRailChange = vi.fn();
     const onDrawerChange = vi.fn();
-    const controller = createShellController({
-      ...links,
-      model: model(),
-      authentication: createAuthenticationPanelController({ model: readyAuthenticationModel("login"), action: "/" }),
-      onRailChange,
-      onDrawerChange,
-    });
+    const controller = shell({ onRailChange, onDrawerChange });
 
     controller.navigationDialog.open();
     expect(onDrawerChange).toHaveBeenCalledExactlyOnceWith(true);
@@ -110,13 +111,9 @@ describe("createShellController", () => {
 
   it("links the menu and authentication views without the open menu", () => {
     const url = new URL("https://account.example.test/base/?document=42&menu=open#selection");
-    const controller = createShellController({
-      ...links,
-      model: model({ drawerOpen: true }),
-      authentication: createAuthenticationPanelController({ model: readyAuthenticationModel("login"), action: "/" }),
-      getUrl: () => url,
-    });
+    const controller = shell({ getUrl: () => url });
 
+    expect(controller.state.model.drawerOpen).toBe(true);
     expect(controller.navigationHref(false)).toBe("/base/?document=42#selection");
     expect(controller.navigationHref(true)).toBe("/base/?document=42&menu=open#selection");
     expect(controller.authenticationHref("login")).toBe("/base/?document=42&auth=login#selection");
@@ -125,10 +122,8 @@ describe("createShellController", () => {
 
   it("closes the mobile menu before it shows an authentication journey", () => {
     const changes = vi.fn();
-    const controller = createShellController({
-      ...links,
-      model: model({ drawerOpen: true }),
-      authentication: createAuthenticationPanelController({ model: readyAuthenticationModel("login"), action: "/" }),
+    const controller = shell({
+      getUrl: () => new URL("https://account.example.test/?menu=open"),
       onDrawerChange: (open) => changes("drawer", open),
       onAuthViewChange: (view) => changes("auth", view),
     });
@@ -146,83 +141,44 @@ describe("createShellController", () => {
     expect(changes).toHaveBeenCalledTimes(3);
   });
 
-  it("synchronizes route state around accepted shell transitions", () => {
-    const onAuthViewChange = vi.fn();
-    const authentication = createAuthenticationPanelController({
-      model: readyAuthenticationModel("login"),
-      action: "/auth/login",
-      allowNativeSubmission: false,
-    });
-    const controller = createShellController({
-      ...links,
-      model: model(),
-      authentication,
-      resolveAuthentication: (view) => ({
-        model: readyAuthenticationModel(view),
-        action: `/auth/${view}`,
-      }),
-      allowNativeLogout: false,
-      onAuthViewChange,
-    });
-
-    controller.openAuthentication("register");
-    expect(controller.state.model.authView).toBe("register");
-    expect(controller.authentication.state).toEqual({
-      model: { journey: "register", state: { status: "ready" } },
-      action: "/auth/register",
-    });
-    expect(onAuthViewChange).toHaveBeenCalledExactlyOnceWith("register");
-
-    controller.openAuthentication("register");
-    controller.authenticationDialog.close();
-    expect(onAuthViewChange).toHaveBeenLastCalledWith(null);
+  it("derives the menu, the dialog and the authorization request from the URL, the rest from the load data", () => {
+    let data = anonymous;
+    let url = new URL("https://account.example.test/?menu=open");
+    const controller = shell({ getData: () => data, allowNativeLogout: false, getUrl: () => url });
 
     controller.synchronizeRail("collapsed");
-    controller.navigationDialog.open();
-    controller.synchronizeRoute({
-      activeNavigation: null,
-      authView: "reset",
-      session: { status: "authenticated", displayName: "Maya Chen" },
-      authorizationRequest: true,
-      authentication: {
-        model: readyAuthenticationModel("reset"),
-        action: "/auth/reset",
-      },
-    });
     expect(controller.state.model).toEqual({
-      activeNavigation: null,
+      activeNavigation: "home",
       rail: "collapsed",
       drawerOpen: true,
-      authView: "reset",
-      session: { status: "authenticated", displayName: "Maya Chen" },
-      authorizationRequest: true,
-    });
-    expect(controller.authentication.state.action).toBe("/auth/reset");
-    expect(onAuthViewChange.mock.calls).toEqual([["register"], [null]]);
-
-    controller.synchronizeRoute({ activeNavigation: "home", authView: null, session: { status: "anonymous" } });
-    expect(controller.state.model.drawerOpen).toBe(true);
-    controller.synchronizeRoute({
-      activeNavigation: "home",
       authView: null,
-      session: { status: "authenticated", displayName: "Maya Chen" },
-      drawerOpen: false,
+      session: { status: "anonymous" },
+      authorizationRequest: false,
     });
-    expect(controller.state.model.drawerOpen).toBe(false);
+
+    data = { activeNavigation: null, session: { status: "authenticated", displayName: "Maya Chen" }, apps: null };
+    url = new URL("https://account.example.test/?auth=reset&returnTo=%2Fauthorize%3Fclient_id%3Dstudio");
+    expect(controller.state).toEqual({
+      model: {
+        activeNavigation: null,
+        rail: "collapsed",
+        drawerOpen: false,
+        authView: "reset",
+        session: { status: "authenticated", displayName: "Maya Chen" },
+        authorizationRequest: true,
+      },
+      ...links,
+      apps: null,
+      platformDowntime: undefined,
+    });
 
     expect(controller.logout()).toBe(false);
     expect(controller.state.model.session.status).toBe("anonymous");
   });
 
   it("allows native logout without replacing the authenticated session", () => {
-    const authentication = createAuthenticationPanelController({
-      model: readyAuthenticationModel("login"),
-      action: "/auth",
-    });
-    const controller = createShellController({
-      ...links,
-      model: model({ session: { status: "authenticated", displayName: "Maya Chen" } }),
-      authentication,
+    const controller = shell({
+      getData: () => ({ ...anonymous, session: { status: "authenticated", displayName: "Maya Chen" } }),
     });
 
     expect(controller.logout()).toBe(true);
@@ -234,7 +190,9 @@ describe("createAuthenticationPanelController", () => {
   it.each(["login", "register", "reset"] as const)(
     "returns shared validation for %s before accepting corrected input",
     (journey) => {
-      const controller = createAuthenticationPanelController({ model: readyAuthenticationModel(journey), action: "/" });
+      const controller = createAuthenticationPanelController({
+        getState: () => ({ model: readyAuthenticationModel(journey), action: "/" }),
+      });
       const invalid = new FormData();
       const validate =
         journey === "login" ? validateLogin : journey === "register" ? validateInvitationRequest : validateEmailRequest;
@@ -248,22 +206,16 @@ describe("createAuthenticationPanelController", () => {
     }
   );
 
-  it("owns authentication submission without owning form fields", () => {
-    const controller = createAuthenticationPanelController({
-      model: readyAuthenticationModel("login"),
-      action: "/auth",
-      allowNativeSubmission: false,
-    });
+  it("shows the route's form, then owns its submission without owning form fields", () => {
+    let state: AuthenticationPanelControllerState = { model: readyAuthenticationModel("login"), action: "/auth" };
+    const controller = createAuthenticationPanelController({ getState: () => state, allowNativeSubmission: false });
+
+    state = { model: readyAuthenticationModel("register"), action: "/register" };
+    expect(controller.state).toEqual(state);
 
     expect(controller.submit(validForm())).toBe(false);
-    expect(controller.state.model).toEqual({ journey: "login", state: { status: "submitting" } });
+    expect(controller.state.model).toEqual({ journey: "register", state: { status: "submitting" } });
     expect(controller.submit(validForm())).toBe(false);
-
-    controller.synchronize(readyAuthenticationModel("register"), "/register");
-    expect(controller.state).toEqual({
-      model: { journey: "register", state: { status: "ready" } },
-      action: "/register",
-    });
   });
 
   it.each(["register", "reset"] as const)("keeps a completed %s request fixed until navigation", (journey) => {
@@ -271,22 +223,17 @@ describe("createAuthenticationPanelController", () => {
       journey === "register"
         ? ({ journey, state: { status: "recorded", email: "creator@example.test" } } as const)
         : ({ journey, state: { status: "pending-email", targetHint: "creator@example.test" } } as const);
-    const controller = createAuthenticationPanelController({ model, action: "/" });
+    let state: AuthenticationPanelControllerState = { model, action: "/" };
+    const controller = createAuthenticationPanelController({ getState: () => state });
     expect(controller.submit(validForm())).toBe(false);
     expect(controller.state.model).toEqual(model);
 
-    controller.synchronize({ journey, state: { status: "service-error", feedback: "serviceUnavailable" } }, "/retry");
+    state = {
+      model: { journey, state: { status: "service-error", feedback: "serviceUnavailable" } },
+      action: "/retry",
+    };
     expect(controller.submit(validForm())).toBe(true);
     expect(controller.submit(validForm())).toBe(false);
     expect(controller.state).toEqual({ model: { journey, state: { status: "submitting" } }, action: "/retry" });
-  });
-
-  it("masks a shown password whenever it synchronizes", () => {
-    const controller = createAuthenticationPanelController({ model: readyAuthenticationModel("login"), action: "/" });
-    controller.passwordVisibility.toggle();
-    expect(controller.passwordVisibility.state.pressed).toBe(true);
-
-    controller.synchronize(readyAuthenticationModel("login"), "/");
-    expect(controller.passwordVisibility.state.pressed).toBe(false);
   });
 });

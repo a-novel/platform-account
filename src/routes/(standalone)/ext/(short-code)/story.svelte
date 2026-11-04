@@ -29,7 +29,7 @@
       return { model: initialModel, action: "#complete", restartHref: "#restart", continueHref: "#continue" };
     },
     passwordVisibility: { newPassword: visibility, confirmPassword: visibility },
-    synchronize: () => {},
+    fail: () => {},
     submit: () => false,
   };
 </script>

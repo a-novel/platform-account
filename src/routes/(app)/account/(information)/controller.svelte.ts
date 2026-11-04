@@ -42,8 +42,6 @@ export interface AccountInformationController {
   readonly pictureZoom: SliderController;
   /** Native navigation destination that opens an editor, or closes it for null. */
   editorHref(editor: AccountEditor | null): string;
-  /** Reconciles a completed route load or action with the rendered tab. */
-  synchronize(model: AccountInformationModel): void;
   /** Records that the page runs its scripts, once it has hydrated. */
   enableScripts(): void;
   /** Validates password fields into state and reports whether native submission may continue. */
@@ -67,7 +65,14 @@ export interface AccountInformationController {
 }
 
 /** Configuration for the default "My information" controller. */
-export interface AccountInformationControllerOptions extends Omit<AccountInformationControllerState, "scripted"> {
+export interface AccountInformationControllerOptions extends Omit<
+  AccountInformationControllerState,
+  "model" | "scripted"
+> {
+  /** The tab the route loads, its forms showing the last action's result. Each load and action replaces it. */
+  getModel: () => Omit<AccountInformationModel, "editor">;
+  /** The editor the URL names, which Back and Forward change. */
+  getEditor: () => AccountEditor | null;
   /** Allows the browser to submit forms after the controller accepts their transition. */
   allowNativeSubmission?: boolean;
   /** Observes accepted editor changes, which the route mirrors in the URL. */
@@ -80,7 +85,8 @@ export interface AccountInformationControllerOptions extends Omit<AccountInforma
 
 /** Creates a reactive controller for the "My information" tab. */
 export function createAccountInformationController({
-  model: initialModel,
+  getModel,
+  getEditor,
   actions,
   devicesHref,
   logoutOthersHref,
@@ -89,51 +95,56 @@ export function createAccountInformationController({
   editorUrl = (editor) => (editor ? `?edit=${editor}` : "?"),
   pictures = browserPictureFiles,
 }: AccountInformationControllerOptions): AccountInformationController {
-  let model = $state(initialModel);
+  // A transition opens or closes an editor at once, and the next URL, such as Back's, decides again.
+  let editor = $derived(getEditor());
+  // The visitor's edits fill the forms until the next load or action result.
+  let forms = $derived(getModel());
   let scripted = $state(false);
+  const state = $derived({ model: { ...forms, editor }, actions, devicesHref, logoutOthersHref, scripted });
   // Counts the files chosen, so only the latest one opens once decoded.
   let choices = 0;
 
-  function update(patch: Partial<AccountInformationModel>): boolean {
-    model = { ...model, ...patch };
+  function update(patch: Partial<Omit<AccountInformationModel, "editor">>): boolean {
+    forms = { ...forms, ...patch };
     return allowNativeSubmission;
   }
 
   /** Frees the image being framed, once the picture dialog shows it no more. */
   function releasePicture() {
-    if (model.picture.status === "cropping" || model.picture.status === "saving")
-      pictures.release(model.picture.source);
+    if (forms.picture.status === "cropping" || forms.picture.status === "saving")
+      pictures.release(forms.picture.source);
   }
 
   // Closing a dialog ends its journey, so the next opening starts from a blank form.
-  function setEditor(editor: AccountEditor | null) {
-    if (model.editor === editor) return;
+  function setEditor(next: AccountEditor | null) {
+    if (editor === next) return;
     releasePicture();
-    model = { ...model, editor, ...blankEditors(model.profile) };
-    onEditorChange?.(editor);
+    editor = next;
+    forms = { ...forms, ...blankEditors(forms.profile) };
+    onEditorChange?.(next);
   }
 
-  function editorController(editor: AccountEditor): OpenController {
+  function editorController(name: AccountEditor): OpenController {
     return {
       get state() {
-        return { open: model.editor === editor };
+        return { open: editor === name };
       },
-      open: () => setEditor(editor),
+      open: () => setEditor(name),
       close: () => setEditor(null),
-      toggle: () => setEditor(model.editor === editor ? null : editor),
+      toggle: () => setEditor(editor === name ? null : name),
     };
   }
 
   /** Applies a change of framing while the picture is being framed. */
   function reframe(change: (source: PictureSource, crop: PictureCrop) => PictureCrop) {
-    const picture = model.picture;
+    const picture = forms.picture;
     if (picture.status !== "cropping") return;
-    model = { ...model, picture: { ...picture, crop: change(picture.source, picture.crop) } };
+    forms = { ...forms, picture: { ...picture, crop: change(picture.source, picture.crop) } };
   }
 
   return {
     get state() {
-      return { model, actions, devicesHref, logoutOthersHref, scripted };
+      return state;
     },
     passwordVisibility: {
       currentPassword: createPressedController(),
@@ -149,20 +160,17 @@ export function createAccountInformationController({
     },
     pictureZoom: {
       get state() {
-        const picture = model.picture;
+        const picture = forms.picture;
         return { value: picture.status === "cropping" || picture.status === "saving" ? picture.crop.zoom : 1 };
       },
       setValue: (zoom) => reframe((source, crop) => zoomCrop(source, crop, zoom)),
     },
     editorHref: editorUrl,
-    synchronize(nextModel) {
-      model = nextModel;
-    },
     enableScripts() {
       scripted = true;
     },
     submitPassword(form) {
-      if (model.passwordState.status === "submitting") return false;
+      if (forms.passwordState.status === "submitting") return false;
       const result = validatePasswordChange(form);
       if (!result.success) {
         update({ passwordState: { status: "validation-error", issues: result.issues } });
@@ -171,7 +179,7 @@ export function createAccountInformationController({
       return update({ passwordState: { status: "submitting" } });
     },
     submitEmail(form) {
-      if (model.emailState.status === "submitting") return false;
+      if (forms.emailState.status === "submitting") return false;
       const result = validateEmailUpdate(form);
       if (!result.success) {
         update({ emailState: { status: "validation-error", issues: result.issues } });
@@ -180,10 +188,10 @@ export function createAccountInformationController({
       return update({ emailState: { status: "submitting" } });
     },
     editUsername(draft) {
-      model = { ...model, username: { ...model.username, draft } };
+      forms = { ...forms, username: { ...forms.username, draft } };
     },
     submitUsername(form) {
-      if (model.username.state.status === "submitting") return false;
+      if (forms.username.state.status === "submitting") return false;
       const draft = String(form.get("username") ?? "");
       const issue = usernameIssue(draft);
       if (issue) {
@@ -195,15 +203,15 @@ export function createAccountInformationController({
     async choosePicture(file) {
       releasePicture();
       const choice = ++choices;
-      model = { ...model, picture: { status: "opening" } };
+      forms = { ...forms, picture: { status: "opening" } };
 
       try {
         const source = await pictures.open(file);
-        if (choice !== choices || model.picture.status !== "opening") return pictures.release(source);
-        model = { ...model, picture: { status: "cropping", source, crop: centeredCrop(source) } };
+        if (choice !== choices || forms.picture.status !== "opening") return pictures.release(source);
+        forms = { ...forms, picture: { status: "cropping", source, crop: centeredCrop(source) } };
       } catch {
-        if (choice !== choices || model.picture.status !== "opening") return;
-        model = { ...model, picture: { status: "choosing", refusal: "unreadable" } };
+        if (choice !== choices || forms.picture.status !== "opening") return;
+        forms = { ...forms, picture: { status: "choosing", refusal: "unreadable" } };
       }
     },
     panPicture(dx, dy) {
@@ -213,20 +221,20 @@ export function createAccountInformationController({
       reframe((source, crop) => zoomCrop(source, crop, zoom, focusX, focusY));
     },
     async savePicture() {
-      const picture = model.picture;
+      const picture = forms.picture;
       if (picture.status !== "cropping") return null;
-      model = { ...model, picture: { ...picture, status: "saving" } };
+      forms = { ...forms, picture: { ...picture, status: "saving" } };
 
       try {
         return await pictures.encode(picture.source, picture.crop);
       } catch {
         pictures.release(picture.source);
-        model = { ...model, picture: { status: "choosing", refusal: "unreadable" } };
+        forms = { ...forms, picture: { status: "choosing", refusal: "unreadable" } };
         return null;
       }
     },
     submitPictureRemoval() {
-      if (model.picture.status === "removing" || model.picture.status === "saving") return false;
+      if (forms.picture.status === "removing" || forms.picture.status === "saving") return false;
       releasePicture();
       return update({ picture: { status: "removing" } });
     },

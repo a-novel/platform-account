@@ -1,6 +1,6 @@
 import type { AccountSummaryState } from "#lib/application/auth/types.js";
 
-import { createAccountLayoutController } from "./controller.svelte";
+import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";
 
@@ -9,12 +9,14 @@ const summary: AccountSummaryState = { status: "ready", roles: ["auth:user"], em
 
 describe("createAccountLayoutController", () => {
   it("follows the loads and navigations that change the header or the tab", () => {
+    let current: AccountSummaryState = summary;
+    let tab: AccountTab | null = "information";
     const controller = createAccountLayoutController({
-      summary,
+      getSummary: () => current,
       logoutAction: "/auth/logout",
       pictureEditorHref: "/account?edit=picture",
       tabs,
-      currentTab: "information",
+      getCurrentTab: () => tab,
     });
     expect(controller.state).toEqual({
       summary,
@@ -26,20 +28,21 @@ describe("createAccountLayoutController", () => {
     });
 
     const unavailable: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
-    controller.synchronize(unavailable, "devices");
+    current = unavailable;
+    tab = "devices";
     expect(controller.state).toMatchObject({ summary: unavailable, currentTab: "devices" });
 
-    controller.synchronize(summary, null);
+    tab = null;
     expect(controller.state.currentTab).toBeNull();
   });
 
   it("submits one logout at a time", () => {
     const controller = createAccountLayoutController({
-      summary,
+      getSummary: () => summary,
       logoutAction: "/auth/logout",
       pictureEditorHref: "/account?edit=picture",
       tabs,
-      currentTab: "information",
+      getCurrentTab: () => "information",
     });
 
     expect(controller.submitLogout()).toBe(true);

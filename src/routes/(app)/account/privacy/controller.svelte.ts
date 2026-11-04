@@ -9,38 +9,36 @@ export interface LocationConsentController {
   /** Set while a change is on its way to the server. */
   readonly pending: boolean;
   readonly consent: SwitchController;
-  /** Reconciles a completed load or action with the rendered consent. */
-  synchronize(account: PrivacyAccountState | null): void;
 }
 
-/** Creates the controller of the privacy page's account section. */
-export function createLocationConsentController(initial: PrivacyAccountState | null): LocationConsentController {
-  let account = $state(initial);
-  let pending = $state(false);
+/**
+ * Creates the controller of the privacy page's account section, from the consent the route loads or the
+ * result its last change returned.
+ */
+export function createLocationConsentController(
+  getAccount: () => PrivacyAccountState | null
+): LocationConsentController {
+  // The switch's answer shows, pending, until the next load or action result replaces it.
+  let answer = $derived({ account: getAccount(), pending: false });
 
   function setChecked(checked: boolean) {
-    if (account?.status !== "ready" || pending) return;
-    account = { status: "ready", locationConsent: checked };
-    pending = true;
+    if (answer.account?.status !== "ready" || answer.pending) return;
+    answer = { account: { status: "ready", locationConsent: checked }, pending: true };
   }
 
   return {
     get account() {
-      return account;
+      return answer.account;
     },
     get pending() {
-      return pending;
+      return answer.pending;
     },
     consent: {
       get state() {
-        return { checked: account?.status === "ready" && account.locationConsent };
+        return { checked: answer.account?.status === "ready" && answer.account.locationConsent };
       },
       setChecked,
-      toggle: () => setChecked(!(account?.status === "ready" && account.locationConsent)),
-    },
-    synchronize(next) {
-      account = next;
-      pending = false;
+      toggle: () => setChecked(!(answer.account?.status === "ready" && answer.account.locationConsent)),
     },
   };
 }

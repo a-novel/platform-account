@@ -15,10 +15,7 @@ import { PasswordSchema } from "@a-novel/service-authentication-rest";
 
 function shortCodeController(model: ShortCodeScreenModel) {
   return createShortCodeScreenController({
-    model,
-    action: "/ext/complete",
-    restartHref: "/?auth=reset",
-    continueHref: "/",
+    getState: () => ({ model, action: "/ext/complete", restartHref: "/?auth=reset", continueHref: "/" }),
     allowNativeSubmission: false,
   });
 }
@@ -148,10 +145,12 @@ describe("secure-link screen", () => {
     "renders %s email validation without a confirmation form",
     async (status) => {
       const controller = createShortCodeScreenController({
-        model: { journey: "email-update", state: { status } },
-        action: "/ext/email/validate",
-        restartHref: "/account",
-        continueHref: "/account",
+        getState: () => ({
+          model: { journey: "email-update", state: { status } },
+          action: "/ext/email/validate",
+          restartHref: "/account",
+          continueHref: "/account",
+        }),
         allowNativeSubmission: false,
       });
 
@@ -164,6 +163,23 @@ describe("secure-link screen", () => {
       expect(controller.state.model.state.status).toBe(status);
     }
   );
+
+  it("shows the result the route returns in place of the email validation it started", async () => {
+    let model = $state<ShortCodeScreenModel>({ journey: "email-update", state: { status: "ready" } });
+    const controller = createShortCodeScreenController({
+      getState: () => ({ model, action: "/ext/email/validate", restartHref: "/account", continueHref: "/account" }),
+      allowNativeSubmission: false,
+    });
+    render(ShortCodeScreen, { controller }, withLocale());
+
+    expect(controller.submit()).toBe(false);
+    await expect.element(page.getByRole("status")).toMatchTextContent("Updating email…");
+
+    model = { journey: "email-update", state: { status: "service-error", feedback: "serviceUnavailable" } };
+    await expect.element(page.getByRole("heading", { level: 1, name: "Email update unavailable" })).toBeVisible();
+    expect(controller.submit()).toBe(false);
+    expect(controller.state.model.state.status).toBe("submitting");
+  });
 
   it("renders failed automatic email validation as a page outcome", async () => {
     render(

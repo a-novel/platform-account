@@ -10,7 +10,7 @@
   import { editorParameter, readEditor } from "./editor-state";
   import Screen from "./screen.svelte";
 
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
 
   let { data, form } = $props();
   // An editor's form posts to a URL that keeps it open, so its result shows in the dialog.
@@ -25,38 +25,39 @@
   /** The URL with the editor open or closed, built on the address bar so the shell's own state stays. */
   const editorUrl = (editor: AccountEditor | null) => dialogUrl(addressBar(page.url), editorParameter, editor);
 
-  const model = () => mergeAccountAction(createInformationModel(data.credentials, data.profile, null), form);
-
+  // The address bar, which shallow routing changes without a navigation that page.url would follow.
+  let currentHref = $state(page.url.href);
   const controller = createAccountInformationController({
-    model: untrack(() => ({ ...model(), editor: readEditor(new URL(page.url.href).searchParams) })),
+    getModel: () => mergeAccountAction(createInformationModel(data.credentials, data.profile, null), form),
+    getEditor: () => readEditor(new URL(currentHref).searchParams),
     actions,
     devicesHref: resolve("/(app)/account/devices"),
     logoutOthersHref: `${resolve("/(app)/account/devices")}?confirm=others`,
-    // Opening an editor adds a history entry, so Back closes it. Closing replaces the entry.
-    // eslint-disable-next-line svelte/no-navigation-without-resolve -- Shallow routing edits the current, resolved URL.
-    onEditorChange: (editor) => goto(editorUrl(editor), { shallow: true, replace: editor === null, state: page.state }),
+    onEditorChange: showEditor,
     editorUrl: (editor) => localHref(editorUrl(editor)),
   });
 
-  $effect(() => {
-    const next = model();
-    untrack(() => controller.synchronize({ ...next, editor: controller.state.model.editor }));
-  });
+  /** Shows an editor in the URL. Opening one adds a history entry, so Back closes it. Closing replaces the entry. */
+  function showEditor(editor: AccountEditor | null) {
+    const next = editorUrl(editor);
+    // eslint-disable-next-line svelte/no-navigation-without-resolve -- Shallow routing edits the current, resolved URL.
+    goto(next, { shallow: true, replace: editor === null, state: page.state });
+    currentHref = next.href;
+  }
 
-  /** Opens the editor the address bar names, after Back, Forward or a navigation from a link. */
-  function synchronizeEditor() {
-    const editor = readEditor(new URL(window.location.href).searchParams);
-    controller.synchronize({ ...controller.state.model, editor });
+  /** Reads the editor the address bar names, after Back, Forward or a navigation from a link. */
+  function synchronizeUrl() {
+    currentHref = window.location.href;
   }
 
   afterNavigate(({ shallow }) => {
-    if (!shallow) synchronizeEditor();
+    if (!shallow) synchronizeUrl();
   });
 
   onMount(() => {
     controller.enableScripts();
-    window.addEventListener("popstate", synchronizeEditor);
-    return () => window.removeEventListener("popstate", synchronizeEditor);
+    window.addEventListener("popstate", synchronizeUrl);
+    return () => window.removeEventListener("popstate", synchronizeUrl);
   });
 </script>
 

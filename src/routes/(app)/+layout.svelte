@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
   import type { AuthDialogView } from "#lib/application/shell/types.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { setAuthenticationTitle } from "#lib/ui/PageTitle.svelte";
@@ -16,11 +15,11 @@
     createShellController,
     readyAuthenticationModel,
   } from "./controller.svelte";
-  import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
+  import { withNavigationOpen } from "./navigation-state";
   import { readRailCollapsed, writeRailCollapsed } from "./rail-preference";
   import Screen from "./screen.svelte";
 
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { AuthorizationProvider } from "@a-novel-kit/uikit";
@@ -33,28 +32,18 @@
   });
 
   let currentHref = $state(page.url.href);
-  const initialRoute = untrack(routeState);
-  const authentication = createAuthenticationPanelController(
-    initialRoute.authentication ?? authenticationState("login")
-  );
+  const authentication = createAuthenticationPanelController({
+    // The dialog's journey, or a blank login form while the dialog is closed.
+    getState: () => authenticationState(readAuthView(new URL(currentHref).searchParams) ?? "login"),
+  });
   const controller = createShellController({
-    model: {
-      activeNavigation: initialRoute.activeNavigation,
-      rail: "expanded",
-      drawerOpen: initialRoute.drawerOpen,
-      authView: initialRoute.authView,
-      session: initialRoute.session,
-      authorizationRequest: initialRoute.authorizationRequest,
-    },
+    getData: () => data,
     homeHref: resolve(""),
     accountHref: resolve("account"),
     logoutAction: resolve("auth/logout"),
     // Only a platform that collects browser telemetry asks for consent, so only it offers to change the answer.
     platformDowntime: getPlatformDowntime(),
-    // The app list comes from the runtime config, which a navigation never changes.
-    apps: untrack(() => data.apps),
     authentication,
-    resolveAuthentication: authenticationState,
     onAuthViewChange: changeAuthView,
     onDrawerChange: (open) => showShallow(withNavigationOpen(new URL(currentHref), open)),
     onRailChange: (rail) => writeRailCollapsed(window.localStorage, rail === "collapsed"),
@@ -66,11 +55,6 @@
       ? authenticationPageTitle(t, controller.authentication.state.model)
       : undefined
   );
-
-  $effect(() => {
-    const route = routeState();
-    untrack(() => controller.synchronizeRoute(route));
-  });
 
   afterNavigate(async ({ complete, shallow }) => {
     if (shallow) return;
@@ -87,21 +71,6 @@
 
     return () => window.removeEventListener("popstate", synchronizeUrl);
   });
-
-  /** The shell state that the route data and the current URL hold. */
-  function routeState() {
-    const parameters = new URL(currentHref).searchParams;
-    const authView = readAuthView(parameters);
-
-    return {
-      activeNavigation: data.activeNavigation,
-      session: data.session,
-      drawerOpen: readNavigationOpen(parameters),
-      authView,
-      authorizationRequest: returnsToAuthorization(parameters.get("returnTo")),
-      authentication: authView ? authenticationState(authView) : undefined,
-    };
-  }
 
   /** Shows a URL change without loading the page, and makes it the shell's current URL. */
   function showShallow(next: URL, replace = true) {

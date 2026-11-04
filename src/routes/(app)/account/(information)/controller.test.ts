@@ -1,6 +1,6 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type { AccountInformationModel } from "#lib/application/auth/types.js";
+import type { AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
 import type { PictureSource } from "#lib/application/profile/types.js";
 
 import { createInformationModel } from "./account-action";
@@ -14,12 +14,15 @@ const ready = createInformationModel(
   null
 );
 
+/** A controller whose editor changes reach its URL, as the page's do. */
 function controller(
   model: AccountInformationModel = ready,
   options: Partial<AccountInformationControllerOptions> = {}
 ) {
+  let editor = model.editor;
   return createAccountInformationController({
-    model,
+    getModel: () => model,
+    getEditor: () => editor,
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",
@@ -30,6 +33,10 @@ function controller(
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
     ...options,
+    onEditorChange: (next) => {
+      editor = next;
+      options.onEditorChange?.(next);
+    },
   });
 }
 
@@ -106,15 +113,19 @@ describe("createAccountInformationController", () => {
     expect(information.state.model[key]).toEqual({ status: "submitting" });
   });
 
-  it("shows the action's result once the route synchronizes it", () => {
-    const information = controller();
-    information.submitEmail(validForm());
+  it("opens the editor the URL names and shows the route's action result in it", () => {
+    let model = ready;
+    let editor: AccountEditor | null = null;
+    const information = controller(ready, { getModel: () => model, getEditor: () => editor });
 
-    const sent: AccountInformationModel = { ...ready, editor: "email", emailState: { status: "pending-email" } };
-    information.synchronize(sent);
-
-    expect(information.state.model).toEqual(sent);
+    model = { ...ready, emailState: { status: "pending-email" } };
+    editor = "email";
+    expect(information.state.model).toEqual({ ...model, editor: "email" });
     expect(information.editors.email.state.open).toBe(true);
+
+    editor = null;
+    expect(information.editors.email.state.open).toBe(false);
+    expect(information.state.model.emailState).toEqual({ status: "pending-email" });
   });
 
   it("shows each password field on its own", () => {

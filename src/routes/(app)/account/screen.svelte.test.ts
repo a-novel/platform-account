@@ -27,11 +27,11 @@ const summary: AccountSummaryState = {
 
 function controller(state: AccountSummaryState = summary, currentTab: AccountTab | null = "information") {
   return createAccountLayoutController({
-    summary: state,
+    getSummary: () => state,
     logoutAction: "/auth/logout",
     pictureEditorHref: "/account?edit=picture",
     tabs: { information: "/account", devices: "/account/devices", privacy: "/account/privacy" },
-    currentTab,
+    getCurrentTab: () => currentTab,
   });
 }
 

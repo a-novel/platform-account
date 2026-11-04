@@ -90,7 +90,6 @@
         currentTab: tab,
       };
     },
-    synchronize: noop,
     submitLogout: () => false,
   };
 
@@ -141,7 +140,6 @@
             setValue: noop,
           },
           editorHref: (name) => (name ? `?edit=${name}` : "?"),
-          synchronize: noop,
           enableScripts: noop,
           submitPassword: () => false,
           submitEmail: () => false,
@@ -178,7 +176,6 @@
           confirmationHref: (confirmation) =>
             confirmation ? `?confirm=${confirmation.kind === "others" ? "others" : confirmation.id}` : "?",
           openConfirmation: noop,
-          synchronize: noop,
           submitChange: () => false,
         }
       : null
@@ -194,7 +191,6 @@
             setChecked: noop,
             toggle: noop,
           },
-          synchronize: noop,
         }
       : null
   );

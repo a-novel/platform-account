@@ -17,7 +17,7 @@ function declined(): TelemetryPreference {
 }
 
 async function screen(account: PrivacyAccountState | null, telemetry: TelemetryPreference | null = declined()) {
-  const location = createLocationConsentController(account);
+  const location = createLocationConsentController(() => account);
   await render(Screen, { telemetry, location }, withLocale());
   return location;
 }
