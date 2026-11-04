@@ -59,9 +59,11 @@ point it at the authentication service and at Studio. The image runs as a non-ro
 ```bash
 PLATFORM_ACCOUNT_VERSION="vX.Y.Z"
 AUTHENTICATION_SERVICE_URL="https://authentication.example.com"
+JSON_KEYS_SERVICE_URL="https://json-keys.example.com"
 STUDIO_URL="https://studio.example.com"
 podman run --detach --name platform-account --publish 3000:3000 \
   --env AUTHENTICATION_SERVICE_URL="$AUTHENTICATION_SERVICE_URL" \
+  --env JSON_KEYS_SERVICE_URL="$JSON_KEYS_SERVICE_URL" \
   --env STUDIO_URL="$STUDIO_URL" \
   ghcr.io/a-novel/platform-account:"$PLATFORM_ACCOUNT_VERSION"
 ```
@@ -74,6 +76,7 @@ platform's public URL.
 | Name                              | Required       | Description                                                                                                                |
 | --------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `AUTHENTICATION_SERVICE_URL`      | Yes            | Base HTTP or HTTPS URL for the authentication service.                                                                     |
+| `JSON_KEYS_SERVICE_URL`           | Yes            | Base HTTP or HTTPS URL for the JSON keys service's REST API, whose public keys verify access tokens.                       |
 | `STUDIO_URL`                      | Yes            | Public URL of Studio, which the app list opens.                                                                            |
 | `AUTHENTICATION_SERVICE_AUDIENCE` | Cloud Run      | Audience of the Google ID token the authentication service's IAM admits. The platform fetches it from the metadata server. |
 | `SERVICE_TOKEN_PATH`              | Kubernetes     | File of the projected service token, sent instead of a Google ID token. The platform reads it on every call.               |

@@ -79,6 +79,11 @@ The platform server is the only caller of platform services.
   on every response.
 - The only external redirect is an authorization response, to a redirect URI the authentication
   service matched against its client registry.
+- Authentication checks the session at most once every five minutes. In between, the server verifies
+  the access token's signature and expiry against JSON keys' public keys, so a sign-out on another
+  platform reaches this one within five minutes. A token the server cannot verify goes to
+  Authentication. Authentication still refuses an ended session wherever it issues something, such
+  as an authorization code.
 - A service outage keeps the session cookies and shows a recoverable state. Only a rejected token
   logs the user out.
 - Logout revokes the session's refresh token, then clears the cookies. A failed revocation still

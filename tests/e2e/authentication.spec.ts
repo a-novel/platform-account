@@ -3,7 +3,7 @@ import { accountCaller, callerFetch } from "./service-token";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
-import type { Page } from "playwright/test";
+import type { BrowserContext, Page } from "playwright/test";
 
 async function choosePassword(page: Page, password: string) {
   await page.getByLabel(/^New password/).fill(password);
@@ -18,6 +18,14 @@ async function openAccountControls(page: Page, isMobile: boolean) {
 /** The account controls: the rail on a wide screen, the open menu on a phone. Pages repeat "Log in". */
 function accountControls(page: Page, isMobile: boolean) {
   return isMobile ? page.getByRole("dialog") : page.getByRole("complementary");
+}
+
+/**
+ * Ends the five minutes in which the platform trusts the access token without asking Authentication,
+ * so the next request checks the session.
+ */
+async function endSessionCheckWindow(context: BrowserContext) {
+  await context.clearCookies({ name: "__Host-account_session_checked" });
 }
 
 async function authenticationResponds(): Promise<boolean> {
@@ -250,6 +258,7 @@ test("an authentication outage preserves the session and recovers after reload",
   await login(page, account);
   await expect(page.getByText("auth:user", { exact: true })).toBeVisible();
 
+  await endSessionCheckWindow(context);
   const cookies = await context.cookies();
   try {
     await compose("stop", "authentication");
