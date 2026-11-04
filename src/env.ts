@@ -3,13 +3,13 @@ import { defineEnvVars } from "@sveltejs/kit/env";
 export const variables = defineEnvVars({
   // The service settings pass through as text. parseRuntimeConfig validates them on use, so a
   // misconfigured server still starts and reports itself unhealthy.
-  AUTHENTICATION_SERVICE_AUDIENCE: {
-    schema: (value) => value,
-    description: "Audience of the Google ID token the authentication service's IAM admits, on Cloud Run.",
-  },
   AUTHENTICATION_SERVICE_URL: {
     schema: (value) => value,
     description: "Base HTTP or HTTPS URL of the authentication service.",
+  },
+  JSON_KEYS_SERVICE_URL: {
+    schema: (value) => value,
+    description: "Base HTTP or HTTPS URL of the JSON keys service, whose public keys verify access tokens.",
   },
   SERVICE_TOKEN_PATH: {
     schema: (value) => value,
@@ -31,10 +31,10 @@ export const variables = defineEnvVars({
     schema: (value) => value === "true",
     description: "Records and exports traces when `true`.",
   },
-  PUBLIC_SENTRY_DSN: {
+  PUBLIC_FARO_URL: {
     public: true,
     schema: (value) => value || undefined,
     description:
-      "Sentry project of the browser telemetry. Without it, the browser reports nothing and asks no consent.",
+      "Collector URL of the platform's Faro app. Without it, the browser reports nothing and asks no consent.",
   },
 });

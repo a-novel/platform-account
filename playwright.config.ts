@@ -12,6 +12,7 @@ function platformServer(state: string, port: number) {
     serverEnvironment: {
       AUTHENTICATION_SERVICE_URL: "http://127.0.0.1:14100",
       DOWNTIME_URL: downtimeUrl(state),
+      JSON_KEYS_SERVICE_URL: "http://127.0.0.1:14103",
       SERVICE_TOKEN_PATH: serviceTokenPath,
       STUDIO_URL: "https://studio.example.test",
     },

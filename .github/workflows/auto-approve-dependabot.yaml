@@ -1,5 +1,3 @@
-# Managed by `a-novel repo update` — edit the template in stack, not this copy.
-#
 # Approves the pull requests the trusted dependency bots open, so routine version
 # bumps wait on no person, and adds each approved one to the merge queue. Two
 # facts keep it safe. A contributor cannot impersonate the bot that authors the
@@ -57,7 +55,7 @@ jobs:
       contents: read
       attestations: read
       packages: read
-    uses: a-novel-kit/workflows/.github/workflows/auto-approve-dependabot-run.yaml@v1.81.4
+    uses: a-novel-kit/workflows/.github/workflows/auto-approve-dependabot-run.yaml@v1.82.0
     with:
       client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
       dependency_bot_login: ${{ vars.DEPENDENCY_BOT_LOGIN }}
@@ -120,7 +118,7 @@ jobs:
 
       - name: Evaluate the merge gate
         if: steps.pr.outputs.number != ''
-        uses: a-novel-kit/workflows/generic-actions/merge-gate@v1.81.4
+        uses: a-novel-kit/workflows/generic-actions/merge-gate@v1.82.0
         with:
           client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
           app_private_key: ${{ secrets.AGENT_BOT_PRIVATE_KEY }}
@@ -130,7 +128,7 @@ jobs:
 
       - name: Evaluate the review gate
         if: steps.pr.outputs.number != ''
-        uses: a-novel-kit/workflows/generic-actions/review-gate@v1.81.4
+        uses: a-novel-kit/workflows/generic-actions/review-gate@v1.82.0
         with:
           client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
           app_private_key: ${{ secrets.AGENT_BOT_PRIVATE_KEY }}
@@ -149,7 +147,7 @@ jobs:
 
       - name: Evaluate the epic freeze
         if: steps.pr.outputs.number != ''
-        uses: a-novel-kit/workflows/generic-actions/detect-partial-landing@v1.81.4
+        uses: a-novel-kit/workflows/generic-actions/detect-partial-landing@v1.82.0
         with:
           client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
           app_private_key: ${{ secrets.AGENT_BOT_PRIVATE_KEY }}

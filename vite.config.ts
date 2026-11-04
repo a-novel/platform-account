@@ -12,8 +12,14 @@ export default SvelteKitVite(
   },
   {
     // Any page can open the login dialog, so no site may frame one (RFC 9700 §4.16). nodelib's preset
-    // sends this directive by default from 2.4.3, which a directive of the same name replaces.
-    csp: { directives: { "frame-ancestors": ["none"] } },
+    // sends this directive by default from 2.4.3, which a directive of the same name replaces. The
+    // browser reports to its Faro app's collector (a-novel/.github#527).
+    csp: {
+      directives: {
+        "frame-ancestors": ["none"],
+        "connect-src": ["self", "https://faro-collector-prod-eu-west-2.grafana.net"],
+      },
+    },
     // Deployments derive the origin from each request. A build for a known address, such as the
     // Playwright server, trusts ORIGIN instead.
     paths: { origin: process.env.ORIGIN },

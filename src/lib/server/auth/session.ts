@@ -1,7 +1,9 @@
 import { isDowntimeError, isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
+import type { JwtPayload } from "@a-novel-kit/nodelib-server";
 import {
   AuthenticationApi,
   type Claims,
+  ClaimsSchema,
   type Token,
   claimsGet,
   tokenCreate,
@@ -17,7 +19,16 @@ import type { Cookies } from "@sveltejs/kit";
 const accessTokenCookie = "__Host-account_access_token";
 const refreshTokenCookie = "__Host-account_refresh_token";
 const identityHandleCookie = "__Host-account_identity_handle";
+// Present while Authentication's last check of the session is recent: the browser drops it once
+// `sessionCheckSeconds` pass, and the next request asks Authentication again.
+const sessionCheckedCookie = "__Host-account_session_checked";
 const rejectedSessionStatuses = [401, 403] as const;
+
+/**
+ * How long the platform trusts a signed access token without asking Authentication whether its
+ * session ended. A sign-out elsewhere reaches the platform within this time.
+ */
+const sessionCheckSeconds = 300;
 
 /** SessionCookies is the part of SvelteKit's `Cookies` API the session uses. */
 export interface SessionCookies {
@@ -29,13 +40,15 @@ export interface SessionCookies {
 /** SessionClient is the part of the authentication API the session calls. */
 export interface SessionClient {
   claims(accessToken: string): Promise<Claims>;
+  /** Reads the claims of an access token whose signature and expiry it checked offline. Throws on any doubt. */
+  verify(accessToken: string): Promise<Claims>;
   createAnonymous(): Promise<Token>;
   login(email: string, password: string): Promise<Token>;
   refresh(token: Token): Promise<Token>;
   revoke(accessToken: string, refreshToken: string): Promise<void>;
 }
 
-/** ResolvedSession is what the session cookies prove about a visitor once Authentication has checked them. */
+/** ResolvedSession is what the session cookies prove about a visitor once their session is checked. */
 export type ResolvedSession =
   | { status: "none" }
   | { status: "unavailable" }
@@ -78,7 +91,11 @@ export class AuthenticationSession {
     private readonly cookies: SessionCookies
   ) {}
 
-  /** Checks the session cookies, refreshing a rejected access token. An outage keeps the cookies. */
+  /**
+   * Checks the session cookies, refreshing a rejected access token. Authentication checks the session
+   * at most once per `sessionCheckSeconds`, and the token's signature vouches for it in between. An
+   * outage keeps the cookies.
+   */
   current(): Promise<ResolvedSession> {
     this.check ??= this.resolve();
     return this.check;
@@ -93,8 +110,20 @@ export class AuthenticationSession {
       return { status: "none" };
     }
 
+    const verified = this.cookies.get(sessionCheckedCookie) ? await this.verify(accessToken) : null;
+    if (verified) {
+      return {
+        status: "available",
+        accessToken,
+        refreshToken,
+        identityHandle: this.readIdentityHandle(),
+        claims: verified,
+      };
+    }
+
     try {
       const claims = await this.client.claims(accessToken);
+      this.markChecked();
       return {
         status: "available",
         accessToken,
@@ -119,7 +148,8 @@ export class AuthenticationSession {
   private async refresh(accessToken: string, refreshToken: string): Promise<ResolvedSession> {
     try {
       const refreshed = await this.client.refresh({ accessToken, refreshToken });
-      const claims = await this.client.claims(refreshed.accessToken);
+      // The refresh checked the session, so the new token needs no second check.
+      const claims = (await this.verify(refreshed.accessToken)) ?? (await this.client.claims(refreshed.accessToken));
       this.accept(refreshed);
 
       return {
@@ -187,7 +217,10 @@ export class AuthenticationSession {
     this.clear();
   }
 
-  /** Stores a token pair from the service, with the identity it belongs to when known. */
+  /**
+   * Stores a token pair from the service, with the identity it belongs to when known. Authentication
+   * checked the session when it issued them.
+   */
   accept(token: Token, identityEmail?: string): void {
     this.check = undefined;
 
@@ -203,6 +236,7 @@ export class AuthenticationSession {
       this.cookies.delete(refreshTokenCookie, { path: "/" });
     }
 
+    this.markChecked();
     if (identityEmail) this.rememberIdentity(identityEmail);
   }
 
@@ -231,6 +265,21 @@ export class AuthenticationSession {
     this.cookies.delete(accessTokenCookie, { path: "/" });
     this.cookies.delete(refreshTokenCookie, { path: "/" });
     this.cookies.delete(identityHandleCookie, { path: "/" });
+    this.cookies.delete(sessionCheckedCookie, { path: "/" });
+  }
+
+  /** Remembers that Authentication has just checked the session. The request keeps its session check. */
+  private markChecked(): void {
+    this.cookies.set(sessionCheckedCookie, "1", { ...this.cookieOptions(), maxAge: sessionCheckSeconds });
+  }
+
+  /** Verifies an access token offline, or returns null when it cannot vouch for it. */
+  private async verify(accessToken: string): Promise<Claims | null> {
+    try {
+      return await this.client.verify(accessToken);
+    } catch {
+      return null;
+    }
   }
 
   private readIdentityHandle(): string | undefined {
@@ -253,15 +302,34 @@ export function hasSession(cookies: SessionCookies): boolean {
   return cookies.get(accessTokenCookie) !== undefined || cookies.get(refreshTokenCookie) !== undefined;
 }
 
-/** Binds the session API to an authentication client. */
-export function createSessionClient(api: AuthenticationApi): SessionClient {
+/**
+ * Binds the session API to an authentication client, and to the verifier of the access tokens JSON
+ * keys signs for Authentication.
+ */
+export function createSessionClient(
+  api: AuthenticationApi,
+  verifyAccessToken: (accessToken: string) => Promise<JwtPayload>
+): SessionClient {
   return {
     claims: async (accessToken) => await claimsGet(api, accessToken),
+    verify: async (accessToken) => readSessionClaims(await verifyAccessToken(accessToken)),
     createAnonymous: async () => await tokenCreateAnon(api),
     login: async (email, password) => await tokenCreate(api, { email, password }),
     refresh: async (token) => await tokenRefresh(api, token),
     revoke: async (accessToken, refreshToken) => await tokenRevoke(api, accessToken, { refreshToken }),
   };
+}
+
+/**
+ * Reads the claims `GET /v2/session` returns from a verified access token, refusing a token whose
+ * session has ended, as Authentication does.
+ */
+function readSessionClaims(payload: JwtPayload): Claims {
+  const { userID, roles, refreshTokenID, sessionID, sessionExp, clientID } = ClaimsSchema.parse(payload);
+  if (sessionExp && Date.now() >= sessionExp * 1000) throw new Error("The session has ended.");
+
+  // A token without a session ID belongs to the session its refresh token opened.
+  return { userID, roles, refreshTokenID, sessionID: sessionID || refreshTokenID, sessionExp, clientID };
 }
 
 /** Reads the expiry of a JWT without verifying it, or null when the token carries no valid one. */

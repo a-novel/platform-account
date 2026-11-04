@@ -1,4 +1,4 @@
-import { expect, login, test } from "./fixtures";
+import { endSessionCheckWindow, expect, login, test } from "./fixtures";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
@@ -66,7 +66,8 @@ test("a device logs another out after a confirmation, then removes it", async ({
   await expect(deviceRow(loggedOut, "Safari on iOS")).toBeVisible();
   await expect(deviceRow(activeDevices(page), "Safari on iOS")).toHaveCount(0);
 
-  // The platform checks its session on every request, so the phone is logged out at its next one.
+  // The platform trusts a recent check for five minutes, then the phone's next request finds it logged out.
+  await endSessionCheckWindow(phone.context());
   await phone.reload();
   await expect(phone).toHaveURL(/auth=login&returnTo=%2Faccount/);
   await phone.context().close();
@@ -88,6 +89,7 @@ test("logging out all devices keeps only this one", async ({ page, browser, acco
   await dialog.getByRole("button", { name: "Log out all devices", exact: true }).click();
   await expect(page.getByText("Your other devices are logged out", { exact: true })).toBeVisible();
 
+  await endSessionCheckWindow(phone.context());
   await phone.reload();
   await expect(phone).toHaveURL(/auth=login&returnTo=%2Faccount/);
   await phone.context().close();
@@ -156,6 +158,7 @@ test.describe("without JavaScript", () => {
     await dialog.getByRole("button", { name: "Log out", exact: true }).click();
     await expect(page.getByText("That device is logged out", { exact: true })).toBeVisible();
 
+    await endSessionCheckWindow(phone.context());
     await phone.reload();
     await expect(phone).toHaveURL(/auth=login&returnTo=%2Faccount/);
     await phone.context().close();

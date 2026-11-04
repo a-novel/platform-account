@@ -1,5 +1,3 @@
-# Managed by `a-novel repo update` — edit the template in stack, not this copy.
-#
 # Reverts a landed Epic's merged members across repos and lands the reverts
 # together, through the epic-rollback-run workflow. A rollback undoes merged code,
 # so four fences guard it:
@@ -50,7 +48,7 @@ jobs:
     # grants exactly the callee's.
     permissions:
       contents: read
-    uses: a-novel-kit/workflows/.github/workflows/epic-rollback-run.yaml@v1.81.4
+    uses: a-novel-kit/workflows/.github/workflows/epic-rollback-run.yaml@v1.82.0
     with:
       epic_number: ${{ inputs.epic_number }}
       confirm: ${{ inputs.confirm }}

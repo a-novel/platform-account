@@ -1,4 +1,4 @@
-import { compose, emailLink, expect, login, test } from "./fixtures";
+import { compose, emailLink, endSessionCheckWindow, expect, login, test } from "./fixtures";
 import { accountCaller, callerFetch } from "./service-token";
 
 import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
@@ -261,6 +261,7 @@ test("an authentication outage preserves the session and recovers after reload",
   await login(page, account);
   await expect(page.getByRole("list", { name: "Roles" })).toHaveText("User");
 
+  await endSessionCheckWindow(context);
   const cookies = await context.cookies();
   try {
     await compose("stop", "authentication");

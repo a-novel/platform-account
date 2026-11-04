@@ -9,6 +9,8 @@ import { actions as devicesActions, load as loadDevices } from "./(app)/account/
 import { actions as privacyActions } from "./(app)/account/privacy/+page.server";
 import { loadShortCodeRoute, submitShortCodeRoute } from "./(standalone)/ext/(short-code)/short-code.server";
 
+import { Buffer } from "node:buffer";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Role } from "@a-novel/service-authentication-rest";
@@ -16,10 +18,10 @@ import { Role } from "@a-novel/service-authentication-rest";
 import type { Cookies, RequestEvent } from "@sveltejs/kit";
 
 const env = vi.hoisted(() => ({
-  AUTHENTICATION_SERVICE_AUDIENCE: undefined,
   AUTHENTICATION_SERVICE_URL: "https://authentication.test",
   DOWNTIME_URL: undefined,
   HEALTHCHECK_TIMEOUT_MS: undefined,
+  JSON_KEYS_SERVICE_URL: "https://json-keys.test",
   SERVICE_TOKEN_PATH: undefined,
   STUDIO_URL: "https://studio.test",
 }));
@@ -43,6 +45,15 @@ function sentRequest() {
 }
 
 const userId = "140f24ee-1531-4a9d-ace8-20b38e1b21bc";
+
+/** Signs an access token as JSON keys does for Authentication, with the given key. */
+async function signAccessToken(privateKey: CryptoKey, claims: object): Promise<string> {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const signed = `${encode({ alg: "Ed25519", typ: "JWT", kid: "key" })}.${encode(claims)}`;
+  const signature = await crypto.subtle.sign("Ed25519", privateKey, new TextEncoder().encode(signed));
+
+  return `${signed}.${Buffer.from(signature).toString("base64url")}`;
+}
 const credentials = {
   id: userId,
   email: "maya.chen@example.com",
@@ -225,6 +236,39 @@ describe("account session at the request boundary", () => {
     });
   });
 
+  it("verifies a recently checked session against JSON keys' public keys, without asking authentication", async () => {
+    const { privateKey, publicKey } = (await crypto.subtle.generateKey("Ed25519", true, [
+      "sign",
+      "verify",
+    ])) as CryptoKeyPair;
+    const key = {
+      ...(await crypto.subtle.exportKey("jwk", publicKey)),
+      kid: "key",
+      alg: "Ed25519",
+      use: "sig",
+      key_ops: ["verify"],
+    };
+    const accessToken = await signAccessToken(privateKey, {
+      iss: "anovel-authentication",
+      aud: "anovel-client",
+      sub: "user-access",
+      exp: Math.floor(Date.now() / 1000) + 900,
+      ...identity,
+    });
+    fetchService.mockImplementation(async () => Response.json([key]));
+    const { event } = request("/account", {
+      "__Host-account_access_token": accessToken,
+      "__Host-account_identity_handle": "maya.chen",
+      "__Host-account_session_checked": "1",
+    });
+
+    await expect(loadShell(event)).resolves.toMatchObject({
+      session: { status: "authenticated", displayName: "Maya Chen" },
+      authorization: "allowed",
+    });
+    expect(fetchService.mock.calls.map(([url]) => String(url))).toEqual(["https://json-keys.test/v2/jwks?usage=auth"]);
+  });
+
   it("checks the session once for the shell, the account layout and the tab of one request", async () => {
     // The identity cookie already names the account's email, so the layout rewrites no cookie, which would discard
     // the request's session check.
@@ -323,9 +367,11 @@ describe("account session at the request boundary", () => {
       "__Host-account_access_token": "new-access",
       "__Host-account_refresh_token": "new-refresh",
       "__Host-account_identity_handle": "maya.chen",
+      "__Host-account_session_checked": "1",
     });
-    for (const [, , options] of cookies.set.mock.calls) {
-      expect(options).toEqual({ httpOnly: true, path: "/", sameSite: "lax", secure: true });
+    for (const [name, , options] of cookies.set.mock.calls) {
+      const lifetime = name === "__Host-account_session_checked" ? { maxAge: 300 } : {};
+      expect(options).toEqual({ httpOnly: true, path: "/", sameSite: "lax", secure: true, ...lifetime });
     }
   });
 
@@ -379,6 +425,7 @@ describe("account session at the request boundary", () => {
       ["__Host-account_access_token", { path: "/" }],
       ["__Host-account_refresh_token", { path: "/" }],
       ["__Host-account_identity_handle", { path: "/" }],
+      ["__Host-account_session_checked", { path: "/" }],
     ]);
     // The unreachable session check leaves nothing to revoke.
     expect(fetchService).toHaveBeenCalledOnce();
@@ -660,10 +707,15 @@ describe("secure-link request boundary", () => {
             "__Host-account_access_token": "registered-access",
             "__Host-account_refresh_token": "registered-refresh",
             "__Host-account_identity_handle": "maya.chen",
+            "__Host-account_session_checked": "1",
           }
         : scenario.journey === "email-update"
-          ? { "__Host-account_access_token": "anonymous-access", "__Host-account_identity_handle": "maya.chen" }
-          : { "__Host-account_access_token": "anonymous-access" }
+          ? {
+              "__Host-account_access_token": "anonymous-access",
+              "__Host-account_identity_handle": "maya.chen",
+              "__Host-account_session_checked": "1",
+            }
+          : { "__Host-account_access_token": "anonymous-access", "__Host-account_session_checked": "1" }
     );
   });
 
