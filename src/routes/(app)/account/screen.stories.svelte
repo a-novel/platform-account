@@ -1,7 +1,12 @@
 <script module lang="ts">
   import { validationFixture } from "#lib/application/auth/forms.fixture.js";
   import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-  import type { AccountScreenModel } from "#lib/application/auth/types.js";
+  import type {
+    AccountDevice,
+    AccountDevicesModel,
+    AccountInformationModel,
+    AccountSummaryState,
+  } from "#lib/application/auth/types.js";
   import { createStorybookTranslator } from "#lib/i18n/storybook.js";
 
   import StoryHarness from "./story.svelte";
@@ -12,236 +17,135 @@
   import type { StoryContext } from "@storybook/sveltekit";
   import { expect, within } from "storybook/test";
 
-  const ready = {
-    claims: {
-      status: "ready",
-      userId: "2f798f4a-0694-4f68-9928-42f3e906e871",
-      roles: ["auth:user"],
-      accessExpiresAt: "2026-08-18T19:30:00Z",
-      refreshExpiresAt: "2026-08-25T18:30:00Z",
-    },
-    credentials: { status: "ready", email: "maya.chen@example.test" },
+  const summary = {
+    status: "ready",
+    roles: ["auth:user"],
+    email: "maya.chen@example.test",
+    loggedInUntil: "2026-11-10T18:40:00Z",
+  } satisfies AccountSummaryState;
+
+  const credentials = { status: "ready", email: summary.email, locationConsent: false } as const;
+
+  const information = {
+    credentials,
+    editor: null,
     passwordState: { status: "ready" },
     emailState: { status: "ready" },
-    logoutState: "ready",
-  } satisfies AccountScreenModel;
+  } satisfies AccountInformationModel;
 
-  const pendingChange = {
-    ...ready,
-    credentials: {
-      ...ready.credentials,
-      pendingEmail: { email: "maya.writes@example.test", expiresAt: "2026-08-18T20:30:00Z" },
-    },
-  } satisfies AccountScreenModel;
+  const pendingCredentials = {
+    ...credentials,
+    pendingEmail: { email: "maya.writes@example.test", expiresAt: "2026-11-04T18:40:00Z" },
+  };
+
+  const thisDevice = {
+    id: "0c6f2bde-3d1e-4f5b-9a57-61f4c3e1b0a1",
+    current: true,
+    loggedOut: false,
+    browser: "Firefox",
+    system: "Linux",
+    form: "desktop",
+    lastActiveAt: "2026-11-03T18:40:00Z",
+  } satisfies AccountDevice;
+
+  const phone = {
+    id: "5a1d9e0c-8b7f-4c2a-b3e4-2f9d6c8a7e10",
+    current: false,
+    loggedOut: false,
+    browser: "Safari",
+    system: "iOS",
+    form: "phone",
+    lastActiveAt: "2026-11-02T21:15:00Z",
+  } satisfies AccountDevice;
+
+  const oldTablet = {
+    id: "9e4b2c7a-1f3d-4e6b-8a0c-5d7f2b9e1c34",
+    current: false,
+    loggedOut: true,
+    system: "Android",
+    form: "tablet",
+    lastActiveAt: "2026-10-12T08:05:00Z",
+  } satisfies AccountDevice;
+
+  const thisDeviceLocated = { ...thisDevice, place: "Lyon, France", ipAddress: "203.0.113.24" } satisfies AccountDevice;
+  const phoneLocated = {
+    ...phone,
+    place: "Paris, France",
+    ipAddress: "2001:db8:85a3::8a2e:370:7334",
+  } satisfies AccountDevice;
+
+  const devices = {
+    devices: { status: "ready", devices: [thisDevice, phone, oldTablet] },
+    locationConsent: false,
+    confirmation: null,
+    action: { status: "ready" },
+  } satisfies AccountDevicesModel;
+
+  const located = {
+    ...devices,
+    locationConsent: true,
+    devices: { status: "ready", devices: [thisDeviceLocated, phoneLocated, oldTablet] },
+  } satisfies AccountDevicesModel;
 
   const { Story } = defineMeta({
-    title: "Authentication/Account screen",
+    title: "Authentication/Account",
     tags: ["!autodocs"],
-    parameters: {
-      layout: "fullscreen",
-    },
+    parameters: { layout: "fullscreen" },
   });
 
   type PlayContext = Pick<StoryContext, "canvasElement" | "globals">;
 
-  async function verifySessionFits({ canvasElement, globals }: PlayContext) {
-    const t = createStorybookTranslator(globals);
-    const recap = within(canvasElement).getByRole("region", { name: t("authUi.account.claims.title") });
-    const bounds = recap.getBoundingClientRect();
-    const summary = within(recap);
-    await expect(summary.queryByRole("note")).not.toBeInTheDocument();
-    for (const value of [summary.getByRole("heading"), ...summary.getAllByRole("definition")]) {
-      const box = value.getBoundingClientRect();
-      await expect(box.left).toBeGreaterThanOrEqual(bounds.left);
-      await expect(box.right).toBeLessThanOrEqual(bounds.right);
-      await expect(value.scrollWidth).toBeLessThanOrEqual(value.clientWidth);
-    }
-  }
-
-  async function verifyReadyAccount({ canvasElement, globals }: PlayContext) {
+  async function verifyHeader({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await verifySessionFits({ canvasElement, globals });
-    await expect(canvas.getByRole("heading", { name: t("authUi.account.title"), level: 1 })).toBeVisible();
-    await expect(canvas.getByText("2f798f4a-0694-4f68-9928-42f3e906e871")).toBeVisible();
-    const locale = globals.locale === "fr" ? "fr" : "en";
-    const accessExpiry = new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "UTC",
-    }).format(new Date(ready.claims.accessExpiresAt));
-    await expect(canvas.getByText(accessExpiry)).toBeVisible();
-    const emailInput = canvas.getByRole("textbox", { name: t("authUi.account.email.label") });
-    await expect(emailInput).toBeVisible();
-    if (window.matchMedia("(width < 35rem)").matches) {
-      const submit = canvas.getByRole<HTMLButtonElement>("button", { name: t("authUi.account.email.submit") });
-      if (!submit.form) throw new Error("Submit button must belong to a form");
-      await expect(submit.getBoundingClientRect().width).toBeCloseTo(submit.form.getBoundingClientRect().width);
-    }
-
-    const password = canvas.getByRole("region", { name: t("authUi.account.password.title") }).getBoundingClientRect();
-    await expect(password.width).toBeLessThanOrEqual(640);
-    const email = canvas.getByRole("region", { name: t("authUi.account.email.title") }).getBoundingClientRect();
-    const session = canvas.getByRole("region", { name: t("authUi.account.claims.title") });
-    await expect(email.top).toBeGreaterThan(password.bottom);
-    await expect(session.getBoundingClientRect().top).toBeGreaterThan(email.bottom);
-    await expect(within(session).getByRole("button", { name: t("authUi.account.logout.submit") })).toBeVisible();
-  }
-
-  async function verifyPendingEmail({ canvasElement, globals }: PlayContext) {
-    const t = createStorybookTranslator(globals);
-    const email = within(within(canvasElement).getByRole("region", { name: t("authUi.account.email.title") }));
-    const current = email.getByLabelText(t("authUi.account.email.current"));
-    await expect(current).toHaveValue(ready.credentials.email);
-    await expect(current).toHaveAttribute("readonly");
-    const pending = email.getByRole("note");
-    await expect(pending).toHaveTextContent(t("authUi.account.email.pending"));
-    await expect(pending).toHaveTextContent(pendingChange.credentials.pendingEmail.email);
-  }
-
-  async function verifyEmailUnavailable({ canvasElement, globals }: PlayContext) {
-    const t = createStorybookTranslator(globals);
-    const email = within(within(canvasElement).getByRole("region", { name: t("authUi.account.email.title") }));
-    await expect(email.getByRole("alert")).toHaveTextContent(t("authUi.account.email.unavailable"));
-    await expect(email.getByRole("textbox", { name: t("authUi.account.email.label") })).toBeEnabled();
-  }
-
-  async function verifyPasswordValidation({ canvasElement }: { canvasElement: HTMLElement }) {
-    await expect(canvasElement.querySelectorAll('[aria-invalid="true"]')).toHaveLength(2);
-    expect(canvasElement.querySelector('a[href$="-confirm-password"]')).toBeNull();
-  }
-
-  async function verifyFormsAvailable({ canvasElement, globals }: PlayContext) {
-    const canvas = within(canvasElement);
-    const t = createStorybookTranslator(globals);
-    const recap = canvas.getByRole("region", { name: t("authUi.account.claims.title") });
-    await expect(within(recap).getByRole("alert")).toBeVisible();
-    const submitKeys = [
-      "authUi.account.password.submit",
-      "authUi.account.email.submit",
-      "authUi.account.logout.submit",
-    ] as const;
-
-    for (const key of submitKeys) {
-      await expect(canvas.getByRole("button", { name: t(key) })).toBeEnabled();
-    }
-    await expect(canvas.getByRole("textbox", { name: t("authUi.account.email.label") })).toBeEnabled();
-  }
-
-  async function verifyPasswordLocked({ canvasElement, globals }: PlayContext) {
-    const canvas = within(canvasElement);
-    const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("button", { name: t("authUi.account.password.submitting") })).toBeDisabled();
-    const passwordSection = within(canvas.getByRole("region", { name: t("authUi.account.password.title") }));
-    await expect(
-      passwordSection.getByLabelText(t("authUi.account.password.currentLabel"), {
-        exact: false,
-        selector: 'input[name="currentPassword"]',
-      })
-    ).toHaveAttribute("readonly");
+    await expect(canvas.getByRole("heading", { level: 1, name: summary.email })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: t("authUi.account.logout.submit") })).toBeEnabled();
+    const tabs = within(canvas.getByRole("navigation", { name: t("authUi.account.tabs.label") }));
+    const current = tabs.getByRole("link", { name: t("authUi.account.tabs.information") });
+    await expect(current).toHaveAttribute("aria-current", "page");
   }
 </script>
 
-<Story
-  name="Ready — desktop"
-  exportName="ReadyDesktop"
-  globals={reviewStoryGlobals.desktop}
-  asChild
-  play={verifyReadyAccount}
->
-  <StoryHarness initialModel={ready} />
+<Story name="My information: desktop" globals={reviewStoryGlobals.desktop} asChild play={verifyHeader}>
+  <StoryHarness {summary} tab="information" {information} />
 </Story>
 
-<Story
-  name="Ready — mobile"
-  exportName="ReadyMobile"
-  globals={reviewStoryGlobals.mobile}
-  asChild
-  play={verifyReadyAccount}
->
-  <StoryHarness initialModel={ready} />
+<Story name="My information: mobile" globals={reviewStoryGlobals.mobile} asChild play={verifyHeader}>
+  <StoryHarness {summary} tab="information" {information} />
 </Story>
 
-<Story
-  name="Email change pending — desktop"
-  exportName="EmailChangePendingDesktop"
-  globals={reviewStoryGlobals.desktop}
-  asChild
-  play={verifyPendingEmail}
->
-  <StoryHarness initialModel={pendingChange} />
-</Story>
-
-<Story
-  name="Email change pending — mobile"
-  exportName="EmailChangePendingMobile"
-  globals={reviewStoryGlobals.mobile}
-  asChild
-  play={verifyPendingEmail}
->
-  <StoryHarness initialModel={pendingChange} />
-</Story>
-
-<Story name="Email unavailable" asChild play={verifyEmailUnavailable}>
-  <StoryHarness initialModel={{ ...ready, credentials: { status: "unavailable" } }} />
-</Story>
-
-<Story name="No roles" asChild>
-  <StoryHarness initialModel={{ ...ready, claims: { ...ready.claims, roles: [] } }} />
-</Story>
-
-<Story name="Passwords shown" asChild>
-  <StoryHarness initialModel={ready} passwordsShown />
-</Story>
-
-<Story name="Loading" asChild>
-  <StoryHarness initialModel={{ ...ready, claims: { status: "loading" } }} />
-</Story>
-
-<Story name="Load error" asChild play={verifyFormsAvailable}>
+<Story name="Every role" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      claims: { status: "error", feedback: "sessionUnavailable" },
-      credentials: { status: "unavailable" },
-    }}
+    summary={{ ...summary, roles: ["auth:superadmin", "auth:admin", "auth:user"] }}
+    tab="information"
+    {information}
   />
 </Story>
 
-<Story name="Password validation error" asChild play={verifyPasswordValidation}>
+<Story name="Email change pending" asChild>
+  <StoryHarness {summary} tab="information" information={{ ...information, credentials: pendingCredentials }} />
+</Story>
+
+<Story name="Header unavailable" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      passwordState: validationFixture(validatePasswordChange, {
-        currentPassword: "",
-        password: "a-long-example-password",
-        confirmPassword: "different-example-password",
-      }),
-    }}
+    summary={{ status: "error", feedback: "sessionUnavailable" }}
+    tab="information"
+    information={{ ...information, credentials: { status: "unavailable" } }}
   />
 </Story>
 
-<Story name="Password submitting" asChild play={verifyPasswordLocked}>
-  <StoryHarness initialModel={{ ...ready, passwordState: { status: "submitting" } }} />
+<Story name="Email editor" asChild>
+  <StoryHarness {summary} tab="information" information={{ ...information, editor: "email" }} />
 </Story>
 
-<Story name="Password service error" asChild>
+<Story name="Email editor: wrong password" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      passwordState: {
-        status: "service-error",
-        feedback: "serviceUnavailable",
-      },
-    }}
-  />
-</Story>
-
-<Story name="Incorrect current password" asChild>
-  <StoryHarness
-    initialModel={{
-      ...ready,
-      passwordState: {
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      editor: "email",
+      emailState: {
         status: "validation-error",
         issues: [{ field: "currentPassword", feedback: "invalidCurrentPassword" }],
       },
@@ -249,85 +153,135 @@
   />
 </Story>
 
-<Story name="Password success" asChild>
+<Story name="Email editor: invalid" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      editor: "email",
+      emailState: validationFixture(validateEmailUpdate, { email: "maya", currentPassword: "" }),
+    }}
+  />
+</Story>
+
+<Story name="Email editor: link sent" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      credentials: pendingCredentials,
+      editor: "email",
+      emailState: { status: "pending-email" },
+    }}
+  />
+</Story>
+
+<Story name="Password editor" asChild>
+  <StoryHarness {summary} tab="information" information={{ ...information, editor: "password" }} />
+</Story>
+
+<Story name="Password editor: invalid" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      editor: "password",
+      passwordState: validationFixture(validatePasswordChange, {
+        currentPassword: "",
+        password: "abc",
+        confirmPassword: "abd",
+      }),
+    }}
+  />
+</Story>
+
+<Story name="Password editor: changed" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      editor: "password",
       passwordState: { status: "success", feedback: "passwordChanged" },
     }}
   />
 </Story>
 
-<Story name="Email validation error" asChild>
+<Story name="Devices: locations off" asChild>
+  <StoryHarness {summary} tab="devices" {devices} />
+</Story>
+
+<Story name="Devices: locations on, mobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness {summary} tab="devices" devices={located} />
+</Story>
+
+<Story name="Devices: confirm one" asChild>
+  <StoryHarness {summary} tab="devices" devices={{ ...located, confirmation: { kind: "device", id: phone.id } }} />
+</Story>
+
+<Story name="Devices: confirm all" asChild>
+  <StoryHarness {summary} tab="devices" devices={{ ...located, confirmation: { kind: "others" } }} />
+</Story>
+
+<Story name="Devices: device logged out" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      emailState: validationFixture(validateEmailUpdate, {
-        email: "not-an-email",
-        currentPassword: "current-password",
-      }),
+    {summary}
+    tab="devices"
+    devices={{
+      ...located,
+      devices: { status: "ready", devices: [thisDeviceLocated, { ...phoneLocated, loggedOut: true }, oldTablet] },
+      action: { status: "logged-out" },
     }}
   />
 </Story>
 
-<Story name="Email with an incorrect current password" exportName="EmailIncorrectCurrentPassword" asChild>
+<Story name="Devices: device removed" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      emailState: {
-        status: "validation-error",
-        issues: [{ field: "currentPassword", feedback: "invalidCurrentPassword" }],
-      },
+    {summary}
+    tab="devices"
+    devices={{
+      ...located,
+      devices: { status: "ready", devices: [thisDeviceLocated, phoneLocated] },
+      action: { status: "removed" },
     }}
   />
 </Story>
 
-<Story name="Email submitting" asChild>
-  <StoryHarness initialModel={{ ...ready, emailState: { status: "submitting" } }} />
-</Story>
-
-<Story name="Email service error" asChild>
+<Story name="Devices: only this one" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      emailState: {
-        status: "service-error",
-        feedback: "serviceUnavailable",
-      },
-    }}
+    {summary}
+    tab="devices"
+    devices={{ ...located, devices: { status: "ready", devices: [thisDeviceLocated] } }}
   />
 </Story>
 
-<Story name="Email confirmation pending" asChild>
-  <StoryHarness initialModel={{ ...pendingChange, emailState: { status: "pending-email" } }} />
-</Story>
-
-<Story name="Logout submitting" asChild>
-  <StoryHarness initialModel={{ ...ready, logoutState: "submitting" }} />
-</Story>
-
-<Story name="Long content — mobile" globals={reviewStoryGlobals.mobile} asChild play={verifySessionFits}>
+<Story name="Devices: change failed" asChild>
   <StoryHarness
-    initialModel={{
-      ...ready,
-      claims: {
-        ...ready.claims,
-        roles: ["auth:user", "auth:admin"],
-        accessExpiresAt: "2026-09-18T19:30:00Z",
-        refreshExpiresAt: "2026-09-25T18:30:00Z",
-      },
-      credentials: {
-        status: "ready",
-        email: "maya.chen.writing-under-a-long-pen-name@studio-correspondence.example.test",
-        pendingEmail: {
-          email: "maya.chen.after-the-move@a-much-longer-regional-provider.example.test",
-          expiresAt: "2026-09-18T20:30:00Z",
-        },
-      },
-      emailState: {
-        status: "service-error",
-        feedback: "serviceUnavailable",
-      },
-    }}
+    {summary}
+    tab="devices"
+    devices={{ ...devices, action: { status: "service-error", feedback: "serviceUnavailable" } }}
+  />
+</Story>
+
+<Story name="Devices: unavailable" asChild>
+  <StoryHarness {summary} tab="devices" devices={{ ...devices, devices: { status: "unavailable" } }} />
+</Story>
+
+<Story name="Privacy: locations off" asChild>
+  <StoryHarness {summary} tab="privacy" privacy={{ status: "ready", locationConsent: false }} />
+</Story>
+
+<Story name="Privacy: locations on" asChild>
+  <StoryHarness {summary} tab="privacy" privacy={{ status: "ready", locationConsent: true }} />
+</Story>
+
+<Story name="Privacy: change failed" asChild>
+  <StoryHarness
+    {summary}
+    tab="privacy"
+    privacy={{ status: "ready", locationConsent: false, feedback: "serviceUnavailable" }}
   />
 </Story>

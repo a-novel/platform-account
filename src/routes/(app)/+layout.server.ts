@@ -20,11 +20,15 @@ const shellAuthorization = {
   authenticated: "allowed",
 } as const satisfies Record<ShellSession["status"], AuthorizationStatus>;
 
-/** The rail destination each page belongs to. The account page is where a signed-in visitor's home leads. */
+/**
+ * The rail destination each page belongs to. The account pages are where a signed-in visitor's home leads, and
+ * privacy is one of their tabs.
+ */
 const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
   "/": "home",
   "/account": "home",
-  "/privacy": "privacy",
+  "/account/devices": "home",
+  "/account/privacy": "home",
 };
 
 type ShellEvent = AuthenticationEvent & Pick<RequestEvent, "locals">;

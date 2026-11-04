@@ -24,7 +24,6 @@ access:
     description: Your session has been kept. Please reload this page in a few minutes.
     title: Access temporarily unavailable
 authFlow:
-  expiryUnavailable: Not provided
   feedback:
     emailUpdated: Your email address was updated.
     invalidCredentials: The email address or password is incorrect.
@@ -47,42 +46,89 @@ authFlow:
     passwordMismatch: The passwords do not match.
 authUi:
   account:
-    claims:
-      accessExpiresAt: Access expires
-      noRoles: No roles assigned
-      refreshExpiresAt: Session expires
-      roles: Roles
-      title: Your session
-      userId: Account ID
-    description: Your personal information and security settings.
+    closeEditor: Close dialog
+    devices:
+      activeNow: Active now
+      confirm:
+        cancel: Cancel
+        deviceTitle: Log out {{device}}?
+        othersBody: Every device but this one will be logged out.
+        othersTitle: Log out all devices?
+      current: This device
+      description: Devices logged in to your Agora account.
+      lastActive: Last active {{date}}
+      locationTip:
+        body: Turn on “Record where my devices log in” in Privacy to see each device’s IP address and approximate place.
+        link: Open Privacy
+        title: Locations are off
+      loggedOut: That device is logged out
+      loggedOutDescription: Devices you logged out of, or whose session ended. Each one disappears about a month later.
+      loggedOutOthers: Your other devices are logged out
+      loggedOutTitle: Logged out
+      logout: Log out
+      logoutLabel: Log out {{device}}
+      logoutOthers: Log out all devices
+      lossDelay: It can take up to 15 minutes for a logged-out device to lose access.
+      name: "{{browser}} on {{system}}"
+      nameUnknownBrowser: Browser on {{system}}
+      remove: Remove
+      removed: Device removed
+      removeLabel: Remove {{device}}
+      title: Devices
+      unavailable: Your devices can’t be shown right now.
+      unknown: Unknown device
     email:
-      current: Current email
-      description: A confirmation link will be sent to your new email.
+      changeLabel: Change email
+      description: We’ll send a confirmation link to your new email.
+      dialogTitle: Change your email
       hint: Your current email remains active until you confirm.
       label: New email address
       pending: Awaiting confirmation
       pendingDescription: If no other account uses the new address, you’ll receive a confirmation link there.
       pendingExpiry: Link expires {{date}}
-      pendingTitle: Check your inbox
-      resend: Send another link
       submit: Send link
       submitting: Sending link…
+      success:
+        expiry: The link expires on {{date}}.
+        keep: Until you confirm, keep logging in with {{email}}.
+        sent: If no other account uses {{email}}, a confirmation link should arrive there shortly.
+        title: Check your inbox
       title: Email
       unavailable: Your current email can’t be shown right now.
-    loadErrorTitle: Session details unavailable
-    loadingTitle: Loading session
+    gotIt: Got it
+    loadErrorTitle: Account details unavailable
+    loggedInUntil: Logged in until
     logout:
-      description: You’ll be logged out of your Agora account on this device.
       submit: Log out
       submitting: Logging out…
     password:
+      changeLabel: Change password
       confirmLabel: Confirm new password
       currentLabel: Current password
+      dialogTitle: Change your password
+      hint: Choose a long, memorable password.
       newLabel: New password
       submit: Change password
       submitting: Changing password…
+      success:
+        description: Use your new password the next time you log in.
+        devices: Your other devices stay logged in.
+        review: Review your devices
+        title: Password changed
       title: Password
-    title: Manage your account
+    roles:
+      admin: Admin
+      label: Roles
+      superAdmin: Super admin
+      user: User
+    signIn:
+      title: Email and password
+    tabs:
+      devices: Devices
+      information: My information
+      label: Account sections
+      privacy: Privacy
+    title: Your account
   authentication:
     emailLabel: Email address
     journeys:
@@ -138,6 +184,7 @@ pageTitles:
   brand: Agora
   confirmEmail: Confirm email
   createAccount: Create account
+  devices: Devices
   emailUpdated: Email updated
   incompleteLink: Incomplete link
   invalidLink: Invalid link
@@ -146,7 +193,15 @@ pageTitles:
   resetPassword: Reset password
   withState: "{{title}}: {{status}}"
 privacy:
+  account:
+    locationDescription: Show the IP address and approximate location of each device logged in to your account, on your account page.
+    locationTitle: Record where my devices log in
+    save: Save
+    title: Your account
+    unavailable: Your account settings can’t be shown right now.
   description: Choose what we collect on this device.
+  device:
+    title: This device
   noTelemetry: We collect no metrics or logs on this device.
   title: Privacy
 shell:
@@ -178,7 +233,6 @@ shell:
   logout: Log out
   navigation: Agora navigation
   openNavigation: Open navigation
-  privacy: Privacy
   register: Register
   sessionDowntime: Account unavailable during maintenance.
   sessionLoading: Loading account

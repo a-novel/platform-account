@@ -16,8 +16,6 @@ export interface ShellControllerState {
   homeHref: string;
   accountHref: string;
   logoutAction: string;
-  /** The Privacy page, absent on a platform that collects no browser telemetry and so asks nothing. */
-  privacyHref: string | null;
   /** The app list, absent while the server cannot read where the apps live. */
   apps: ShellApps | null;
   /** The planned downtime the shell announces and locks the sign-in dialog for, absent where nothing tracks it. */
@@ -79,7 +77,6 @@ export function createShellController({
   homeHref,
   accountHref,
   logoutAction,
-  privacyHref,
   apps,
   platformDowntime,
   authentication,
@@ -133,7 +130,7 @@ export function createShellController({
 
   return {
     get state() {
-      return { model, homeHref, accountHref, logoutAction, privacyHref, apps, platformDowntime };
+      return { model, homeHref, accountHref, logoutAction, apps, platformDowntime };
     },
     authentication,
     authenticationDialog,

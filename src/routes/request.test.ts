@@ -3,7 +3,10 @@ import { logoutAuthentication } from "#lib/server/auth/logout.js";
 
 import { actions as authenticationActions } from "./(app)/(home)/+page.server";
 import { load as loadShell } from "./(app)/+layout.server";
-import { actions as accountActions, load as loadAccount } from "./(app)/account/+page.server";
+import { actions as informationActions } from "./(app)/account/(information)/+page.server";
+import { load as loadAccount } from "./(app)/account/+layout.server";
+import { actions as devicesActions, load as loadDevices } from "./(app)/account/devices/+page.server";
+import { actions as privacyActions } from "./(app)/account/privacy/+page.server";
 import { loadShortCodeRoute, submitShortCodeRoute } from "./(standalone)/ext/(short-code)/short-code.server";
 
 import { Buffer } from "node:buffer";
@@ -57,8 +60,11 @@ const credentials = {
   role: Role.User,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
+  locationConsent: true,
 };
 const identity = { userID: userId, roles: [Role.User] };
+const deviceId = "5a1d9e0c-8b7f-4c2a-b3e4-2f9d6c8a7e10";
+const firefox = "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0";
 const tokenCookies = {
   "__Host-account_access_token": "private-access",
   "__Host-account_refresh_token": "private-refresh",
@@ -67,7 +73,12 @@ const password = { password: "replacement-password", confirmPassword: "replaceme
 const encodedEmail = Buffer.from("maya.chen@example.com").toString("base64url");
 const registrationLink = `/ext/account/create?shortCode=private-code&target=${encodedEmail}`;
 
-function request(path: string, cookieValues: Record<string, string> = {}, fields?: Record<string, string>) {
+function request(
+  path: string,
+  cookieValues: Record<string, string> = {},
+  fields?: Record<string, string>,
+  headers?: Record<string, string>
+) {
   const values = new Map(Object.entries(cookieValues));
   const cookies = {
     get: vi.fn((name: string) => values.get(name)),
@@ -84,9 +95,14 @@ function request(path: string, cookieValues: Record<string, string> = {}, fields
     getClientAddress: () => "192.0.2.1",
     url,
     locals: { locale: "fr", i18n: createI18n("fr") },
-    request: new Request(url, fields ? { method: "POST", body: new URLSearchParams(fields) } : undefined),
+    request: new Request(url, fields ? { method: "POST", body: new URLSearchParams(fields), headers } : { headers }),
   } as unknown as RequestEvent;
   return { event, cookies, values };
+}
+
+/** The devices tab's load event, whose parent is the account layout's load. */
+function devicesEvent(event: RequestEvent, layout: ReturnType<typeof loadAccount>) {
+  return { ...event, parent: () => layout } as unknown as Parameters<typeof loadDevices>[0];
 }
 
 beforeEach(() => {
@@ -191,7 +207,9 @@ describe("account session at the request boundary", () => {
   });
 
   it.each([
-    ["/privacy", "privacy"],
+    ["/account/devices", "home"],
+    ["/account/privacy", "home"],
+    ["/privacy", null],
     ["/authorize", null],
   ] as const)("marks %s with the %s rail destination", async (path, activeNavigation) => {
     await expect(loadShell(request(path).event)).resolves.toMatchObject({ activeNavigation });
@@ -251,17 +269,20 @@ describe("account session at the request boundary", () => {
     expect(fetchService.mock.calls.map(([url]) => String(url))).toEqual(["https://json-keys.test/v2/jwks?usage=auth"]);
   });
 
-  it("checks the session once for the shell and page loads of one request", async () => {
-    const { event } = request("/account", tokenCookies);
-    fetchService.mockImplementation(async (url) =>
-      Response.json(String(url).endsWith("/credentials/self") ? credentials : identity)
-    );
+  it("checks the session once for the shell, the account layout and the tab of one request", async () => {
+    // The identity cookie already names the account's email, so the layout rewrites no cookie, which would discard
+    // the request's session check.
+    const { event } = request("/account/devices", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
+    const answers: Record<string, unknown> = { "/v2/session": identity, "/v2/credentials/self": credentials };
+    fetchService.mockImplementation(async (url) => Response.json(answers[new URL(String(url)).pathname] ?? []));
 
-    await Promise.all([loadShell(event), loadAccount(event)]);
+    const layout = loadAccount(event);
+    await Promise.all([loadShell(event), layout, loadDevices(devicesEvent(event, layout))]);
 
     expect(fetchService.mock.calls.map(([url]) => url)).toEqual([
       "https://authentication.test/v2/session",
       "https://authentication.test/v2/credentials/self",
+      "https://authentication.test/v2/sessions",
     ]);
   });
 
@@ -354,6 +375,26 @@ describe("account session at the request boundary", () => {
     }
   });
 
+  it("names the device a login opens from the visitor's browser and estimated place", async () => {
+    const { event } = request(
+      "/?auth=login",
+      {},
+      { email: "maya.chen@example.com", password: "private-password" },
+      { "User-Agent": firefox, "X-Client-Region": "FR", "X-Client-City": "Lyon" }
+    );
+    fetchService.mockResolvedValueOnce(Response.json({ accessToken: "new-access", refreshToken: "new-refresh" }));
+
+    await expect(authenticationActions.default(event)).rejects.toMatchObject({ status: 303 });
+    expect(sentRequest().url).toBe("https://authentication.test/v2/session");
+    expect(sentRequest().headers).toEqual({
+      "content-type": "application/json",
+      "x-client-ip": "192.0.2.1",
+      "x-client-user-agent": firefox,
+      "x-client-region": "FR",
+      "x-client-city": "Lyon",
+    });
+  });
+
   it("revokes the refresh token at the service on logout", async () => {
     const { event, values } = request("/auth/logout", tokenCookies);
     fetchService
@@ -390,34 +431,148 @@ describe("account session at the request boundary", () => {
     expect(fetchService).toHaveBeenCalledOnce();
   });
 
-  it("returns an account recap without serializing access or refresh credentials", async () => {
-    const { event } = request("/account", tokenCookies);
+  it("returns the account header without serializing access or refresh credentials", async () => {
+    const sessionEnd = new Date("2026-11-10T18:40:00Z");
+    const refreshToken = [
+      Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url"),
+      Buffer.from(JSON.stringify({ exp: sessionEnd.getTime() / 1000 })).toString("base64url"),
+      "signature",
+    ].join(".");
+    const { event } = request("/account", { ...tokenCookies, "__Host-account_refresh_token": refreshToken });
     fetchService.mockResolvedValueOnce(Response.json(identity)).mockResolvedValueOnce(Response.json(credentials));
-    await expect(loadAccount(event)).resolves.toEqual({
+
+    const data = await loadAccount(event);
+
+    expect(data).toEqual({
       authorization: "allowed",
-      accountModel: {
-        claims: {
-          status: "ready",
-          userId,
-          roles: [Role.User],
-          accessExpiresAt: "Non renseignée",
-          refreshExpiresAt: "Non renseignée",
-        },
-        credentials: { status: "ready", email: credentials.email },
-        passwordState: { status: "ready" },
-        emailState: { status: "ready" },
-        logoutState: "ready",
+      summary: {
+        status: "ready",
+        roles: [Role.User],
+        email: credentials.email,
+        loggedInUntil: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeStyle: "short" }).format(sessionEnd),
       },
+      credentials: { status: "ready", email: credentials.email, locationConsent: true },
+    });
+    expect(sentRequest()).toEqual({
+      url: "https://authentication.test/v2/credentials/self",
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer private-access",
+        "x-client-ip": "192.0.2.1",
+      },
+    });
+    expect(JSON.stringify(data)).not.toContain("private-access");
+    expect(JSON.stringify(data)).not.toContain(refreshToken);
+  });
+
+  it("lists the account's devices without their raw User-Agent", async () => {
+    const { event } = request("/account/devices", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
+    const lastActiveAt = "2026-11-03T18:40:00Z";
+    fetchService
+      .mockResolvedValueOnce(Response.json(identity))
+      .mockResolvedValueOnce(Response.json(credentials))
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            id: deviceId,
+            current: true,
+            loggedOut: false,
+            userAgent: firefox,
+            ipAddress: "203.0.113.24",
+            region: "FR",
+            city: "Lyon",
+            createdAt: "2026-11-01T08:00:00Z",
+            lastActiveAt,
+            expiresAt: "2026-12-01T08:00:00Z",
+          },
+        ])
+      );
+
+    const data = await loadDevices(devicesEvent(event, loadAccount(event)));
+
+    expect(data).toEqual({
+      devices: {
+        status: "ready",
+        devices: [
+          {
+            id: deviceId,
+            current: true,
+            loggedOut: false,
+            browser: "Firefox",
+            system: "Linux",
+            form: "desktop",
+            lastActiveAt: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeStyle: "short" }).format(
+              new Date(lastActiveAt)
+            ),
+            place: "Lyon, France",
+            ipAddress: "203.0.113.24",
+          },
+        ],
+      },
+      locationConsent: true,
+    });
+    expect(sentRequest()).toEqual({
+      url: "https://authentication.test/v2/sessions",
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer private-access",
+        "x-client-ip": "192.0.2.1",
+      },
+    });
+    expect(JSON.stringify(data)).not.toContain("Gecko");
+  });
+
+  const deviceChanges = [
+    ["logoutDevice", "PUT", `/v2/sessions/${deviceId}/revoke`, devicesActions.logoutDevice, "logged-out"],
+    ["logoutOtherDevices", "PUT", "/v2/sessions/revoke-others", devicesActions.logoutOtherDevices, "logged-out-others"],
+    ["removeDevice", "DELETE", `/v2/sessions/${deviceId}`, devicesActions.removeDevice, "removed"],
+  ] as const;
+
+  it.each(deviceChanges)("%s sends %s %s after verifying the session", async (name, method, path, action, status) => {
+    const { event } = request(`/account/devices?/${name}`, tokenCookies, { sessionID: deviceId });
+    fetchService
+      .mockResolvedValueOnce(Response.json(identity))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(action(event)).resolves.toEqual({ devicesAction: { status } });
+    expect(fetchService).toHaveBeenCalledTimes(2);
+    expect(sentRequest()).toEqual({
+      url: `https://authentication.test${path}`,
+      method,
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
+    });
+  });
+
+  it("records the location consent after verifying the session", async () => {
+    const { event } = request("/account/privacy?/locationConsent", tokenCookies, { enabled: "on" });
+    fetchService
+      .mockResolvedValueOnce(Response.json(identity))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(privacyActions.locationConsent(event)).resolves.toEqual({
+      account: { status: "ready", locationConsent: true },
+    });
+    expect(sentRequest()).toEqual({
+      url: "https://authentication.test/v2/credentials/location-consent",
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer private-access",
+        "x-client-ip": "192.0.2.1",
+      },
+      body: JSON.stringify({ enabled: true }),
     });
   });
 
   it("changes a password only after verifying the session and omits confirmation from the API request", async () => {
-    const { event } = request("/account?/password", tokenCookies, {
+    const { event } = request("/account?edit=password&/password", tokenCookies, {
       currentPassword: "old-password",
       ...password,
     });
     fetchService.mockResolvedValueOnce(Response.json(identity)).mockResolvedValueOnce(Response.json(credentials));
-    await expect(accountActions.password(event)).resolves.toEqual({
+    await expect(informationActions.password(event)).resolves.toEqual({
       accountAction: { kind: "password", state: { status: "success", feedback: "passwordChanged" } },
     });
     expect(fetchService).toHaveBeenCalledTimes(2);
@@ -438,12 +593,15 @@ describe("account session at the request boundary", () => {
   });
 
   it("reuses an account action's session check for the loads that render its result", async () => {
-    const { event } = request("/account?/password", tokenCookies, { currentPassword: "old-password", ...password });
+    const { event } = request("/account?edit=password&/password", tokenCookies, {
+      currentPassword: "old-password",
+      ...password,
+    });
     fetchService.mockImplementation(async (url) =>
       Response.json(String(url).endsWith("/v2/session") ? identity : credentials)
     );
 
-    await accountActions.password(event);
+    await informationActions.password(event);
     await Promise.all([loadShell(event), loadAccount(event)]);
 
     expect(fetchService.mock.calls.map(([url]) => url)).toEqual([
@@ -453,19 +611,30 @@ describe("account session at the request boundary", () => {
     ]);
   });
 
-  it.each(["password", "email"] as const)("redirects anonymous %s changes before any mutation", async (action) => {
+  const accountChanges = [
+    ["password", "/account", informationActions.password],
+    ["email", "/account", informationActions.email],
+    ["logoutDevice", "/account/devices", devicesActions.logoutDevice],
+    ["logoutOtherDevices", "/account/devices", devicesActions.logoutOtherDevices],
+    ["removeDevice", "/account/devices", devicesActions.removeDevice],
+    ["locationConsent", "/account/privacy", privacyActions.locationConsent],
+  ] as const;
+
+  it.each(accountChanges)("redirects an anonymous %s change before any mutation", async (name, path, action) => {
     const { event } = request(
-      "/account",
+      `${path}?/${name}`,
       {},
       {
         currentPassword: "old-password",
         ...password,
         email: "new@example.com",
+        sessionID: deviceId,
+        enabled: "on",
       }
     );
-    await expect(accountActions[action](event)).rejects.toMatchObject({
+    await expect(action(event)).rejects.toMatchObject({
       status: 303,
-      location: "/?auth=login&returnTo=%2Faccount",
+      location: `/?auth=login&returnTo=${encodeURIComponent(path)}`,
     });
     expect(fetchService).not.toHaveBeenCalled();
   });

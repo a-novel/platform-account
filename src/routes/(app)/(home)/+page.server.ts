@@ -105,7 +105,7 @@ async function requestPasswordReset(event: RequestEvent, form: FormData) {
 // The account page is the platform's only screen, so a signed-in visitor goes straight to it.
 export const load: PageServerLoad = async ({ parent }) => {
   const { session } = await parent();
-  if (session.status === "authenticated") redirect(303, "/account");
+  if (session.status === "authenticated") redirect(307, "/account");
 };
 
 /** The shell dialog's form action, which serves the journey named in the `auth` parameter. */

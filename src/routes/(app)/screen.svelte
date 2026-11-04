@@ -34,22 +34,11 @@
     VisuallyHidden,
   } from "@a-novel-kit/uikit";
 
-  import {
-    House,
-    LogIn,
-    LogOut,
-    Menu,
-    PanelLeftClose,
-    PanelLeftOpen,
-    ShieldCheck,
-    UserRoundPlus,
-    X,
-  } from "@lucide/svelte";
+  import { House, LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, UserRoundPlus, X } from "@lucide/svelte";
 
   let { controller, children }: ShellProps = $props();
 
   const platformDowntime = $derived(controller.state.platformDowntime);
-  const privacyHref = $derived(controller.state.privacyHref);
   const stoppedUntil = $derived(platformDowntime?.started ? platformDowntime.downtime?.end : undefined);
 
   const model = $derived(controller.state.model);
@@ -62,18 +51,6 @@
   const authenticationId = `${componentId}-authentication`;
   const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
-  const privacyItems = $derived(
-    privacyHref
-      ? [
-          {
-            href: privacyHref,
-            label: t("shell.privacy"),
-            current: model.activeNavigation === "privacy",
-            icon: privacyIcon,
-          },
-        ]
-      : []
-  );
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
   /** The account widget's notice while the session is loading, unavailable or stopped for maintenance. */
   const sessionNotice = $derived.by(() => {
@@ -120,8 +97,6 @@
 
 {#snippet homeIcon()}<House size="var(--icon-size-sm)" />{/snippet}
 
-{#snippet privacyIcon()}<ShieldCheck size="var(--icon-size-sm)" />{/snippet}
-
 {#snippet studioIcon()}
   <img class="app-icon" src={studioIcon48} width="24" height="24" alt="" />
 {/snippet}
@@ -159,7 +134,6 @@
           current: model.activeNavigation === "home",
           icon: homeIcon,
         },
-        ...privacyItems,
       ]}
     />
   </nav>

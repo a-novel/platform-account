@@ -1,17 +1,8 @@
-import { createAccountModel, mergeAccountAction } from "./account-action";
+import { createInformationModel, mergeAccountAction } from "./account-action";
 
 import { describe, expect, it } from "vitest";
 
-const ready = createAccountModel(
-  {
-    status: "ready",
-    userId: "140f24ee-1531-4a9d-ace8-20b38e1b21bc",
-    roles: ["auth:user"],
-    accessExpiresAt: "soon",
-    refreshExpiresAt: "later",
-  },
-  { status: "ready", email: "creator@example.com" }
-);
+const ready = createInformationModel({ status: "ready", email: "creator@example.com", locationConsent: false }, null);
 
 describe("mergeAccountAction", () => {
   it("overlays only the password action state", () => {
@@ -42,11 +33,16 @@ describe("mergeAccountAction", () => {
     });
   });
 
-  it("preserves action feedback when the session recap is unavailable", () => {
-    const unavailable = createAccountModel(
-      { status: "error", feedback: "sessionUnavailable" },
-      { status: "unavailable" }
-    );
+  it.each([
+    ["no action", null],
+    ["text", "accountAction"],
+    ["another form's result", { authentication: { journey: "login", state: { status: "ready" } } }],
+  ])("ignores %s", (_, data) => {
+    expect(mergeAccountAction(ready, data)).toBe(ready);
+  });
+
+  it("preserves action feedback when the credentials are unavailable", () => {
+    const unavailable = createInformationModel({ status: "unavailable" }, null);
     expect(
       mergeAccountAction(unavailable, {
         accountAction: {

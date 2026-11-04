@@ -13,7 +13,7 @@ import {
   tokenCreateAnon,
 } from "@a-novel/service-authentication-rest";
 
-import { type Page, test as base } from "playwright/test";
+import { type BrowserContext, type Page, test as base } from "playwright/test";
 import { z } from "zod";
 
 const api = new AuthenticationApi("http://127.0.0.1:14100", callerFetch(accountCaller));
@@ -25,6 +25,14 @@ export const compose = createCompose();
 /** Reads a delivered email's link, which must point at the application under test. */
 export function emailLink(email: string, pathname: string): Promise<string> {
   return deliveredLink(email, pathname, { mailpit: "http://127.0.0.1:14825", origin: "http://127.0.0.1:4173" });
+}
+
+/**
+ * Ends the five minutes in which the platform trusts the access token without asking Authentication,
+ * so the next request checks the session.
+ */
+export async function endSessionCheckWindow(context: BrowserContext) {
+  await context.clearCookies({ name: "__Host-account_session_checked" });
 }
 
 /** Fills and submits the login dialog. */

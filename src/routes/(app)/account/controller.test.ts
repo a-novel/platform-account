@@ -1,119 +1,46 @@
-import { validForm } from "#lib/application/auth/forms.fixture.js";
-import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type { AccountScreenModel } from "#lib/application/auth/types.js";
+import type { AccountSummaryState } from "#lib/application/auth/types.js";
 
-import { createAccountModel } from "./account-action";
-import { createAccountScreenController } from "./controller.svelte";
+import { createAccountLayoutController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";
 
-const actions = {
-  password: "?/password",
-  email: "?/email",
-  logout: "?/logout",
-};
+const tabs = { information: "/account", devices: "/account/devices", privacy: "/account/privacy" };
+const summary: AccountSummaryState = { status: "ready", roles: ["auth:user"], email: "creator@example.test" };
 
-describe("createAccountScreenController", () => {
-  it("validates independent account forms without changing other actions", () => {
-    const model = createAccountModel({ status: "error", feedback: "sessionUnavailable" }, { status: "unavailable" });
-    const controller = createAccountScreenController({ model, actions });
-    const invalid = new FormData();
-    const accountForms = [
-      [controller.submitPassword, validatePasswordChange, "passwordState"],
-      [controller.submitEmail, validateEmailUpdate, "emailState"],
-    ] as const;
-
-    for (const [submit, validate, key] of accountForms) {
-      controller.synchronize(model, actions);
-      expect(submit(invalid)).toBe(false);
-      const result = validate(invalid);
-      if (result.success) throw new Error("Expected invalid form");
-      expect(controller.state.model).toEqual({
-        ...model,
-        [key]: { status: "validation-error", issues: result.issues },
-      });
-      expect(submit(validForm())).toBe(true);
-    }
-  });
-
-  it("keeps account actions independent while sharing one controller", () => {
-    const controller = createAccountScreenController({
-      model: {
-        claims: {
-          status: "ready",
-          userId: "user-id",
-          roles: [],
-          accessExpiresAt: "later",
-          refreshExpiresAt: "later",
-        },
-        credentials: { status: "ready", email: "creator@example.test" },
-        passwordState: { status: "ready" },
-        emailState: { status: "ready" },
-        logoutState: "ready",
-      },
-      actions,
-      allowNativeSubmission: false,
+describe("createAccountLayoutController", () => {
+  it("follows the loads and navigations that change the header or the tab", () => {
+    const controller = createAccountLayoutController({
+      summary,
+      logoutAction: "/auth/logout",
+      tabs,
+      currentTab: "information",
     });
-
-    expect(controller.submitPassword(validForm())).toBe(false);
-    expect(controller.submitEmail(validForm())).toBe(false);
-    expect(controller.submitLogout()).toBe(false);
-    expect(controller.state.model).toMatchObject({
-      passwordState: { status: "submitting" },
-      emailState: { status: "submitting" },
-      logoutState: "submitting",
-    });
-
-    const nextActions = { ...actions, logout: "/logout" };
-    const unavailable = createAccountModel(
-      { status: "error", feedback: "sessionUnavailable" },
-      { status: "unavailable" }
-    );
-    controller.synchronize(unavailable, nextActions);
     expect(controller.state).toEqual({
-      model: unavailable,
-      actions: nextActions,
+      summary,
+      logoutState: "ready",
+      logoutAction: "/auth/logout",
+      tabs,
+      currentTab: "information",
     });
-    expect(controller.submitPassword(validForm())).toBe(false);
-    expect(controller.submitEmail(validForm())).toBe(false);
+
+    const unavailable: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
+    controller.synchronize(unavailable, "devices");
+    expect(controller.state).toMatchObject({ summary: unavailable, currentTab: "devices" });
+
+    controller.synchronize(summary, null);
+    expect(controller.state.currentTab).toBeNull();
+  });
+
+  it("submits one logout at a time", () => {
+    const controller = createAccountLayoutController({
+      summary,
+      logoutAction: "/auth/logout",
+      tabs,
+      currentTab: "information",
+    });
+
+    expect(controller.submitLogout()).toBe(true);
+    expect(controller.state.logoutState).toBe("submitting");
     expect(controller.submitLogout()).toBe(false);
-    expect(controller.state.model).toMatchObject({
-      claims: unavailable.claims,
-      passwordState: { status: "submitting" },
-      emailState: { status: "submitting" },
-      logoutState: "submitting",
-    });
-  });
-
-  it("allows native account submissions when only the recap failed", () => {
-    const controller = createAccountScreenController({
-      model: createAccountModel({ status: "error", feedback: "sessionUnavailable" }, { status: "unavailable" }),
-      actions,
-    });
-    for (const submit of [controller.submitPassword, controller.submitEmail, controller.submitLogout]) {
-      expect(submit(validForm())).toBe(true);
-      expect(submit(validForm())).toBe(false);
-    }
-  });
-
-  it.each(["completed", "unavailable"] as const)("allows another account change after %s actions", (outcome) => {
-    const model: AccountScreenModel = {
-      ...createAccountModel({ status: "error", feedback: "sessionUnavailable" }, { status: "unavailable" }),
-      passwordState:
-        outcome === "completed"
-          ? { status: "success", feedback: "passwordChanged" }
-          : { status: "service-error", feedback: "serviceUnavailable" },
-      emailState:
-        outcome === "completed"
-          ? { status: "pending-email" }
-          : { status: "service-error", feedback: "serviceUnavailable" },
-    };
-    const controller = createAccountScreenController({ model, actions });
-    expect(controller.submitPassword(validForm())).toBe(true);
-    expect(controller.state.model).toEqual({ ...model, passwordState: { status: "submitting" } });
-    controller.synchronize(model, actions);
-    expect(controller.submitEmail(validForm())).toBe(true);
-    expect(controller.state.model).toEqual({ ...model, emailState: { status: "submitting" } });
-    expect(JSON.stringify(controller.state)).not.toContain("new-password");
   });
 });

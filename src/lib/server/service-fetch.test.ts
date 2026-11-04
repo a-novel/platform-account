@@ -23,6 +23,37 @@ describe("serviceFetch", () => {
     expect(headersOf(base).has("X-Service-Authorization")).toBe(false);
   });
 
+  it("names the visitor's device from their browser and the load balancer's estimated place", async () => {
+    const base = vi.fn(async () => new Response("ok"));
+    const visitorRequest = new Request("https://account.test/?auth=login", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0",
+        "X-Client-Region": "FR",
+        "X-Client-City": "Lyon",
+        Cookie: "__Host-account_access_token=private-access",
+      },
+    });
+
+    await serviceFetch({ visitorAddress: "192.0.2.1", visitorRequest }, base)("https://authentication.test/v2/session");
+
+    // The visitor's cookies stay with the platform.
+    expect(Object.fromEntries(headersOf(base))).toEqual({
+      "x-client-ip": "192.0.2.1",
+      "x-client-user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0",
+      "x-client-region": "FR",
+      "x-client-city": "Lyon",
+    });
+  });
+
+  it("leaves out the device headers the visitor's request lacks", async () => {
+    const base = vi.fn(async () => new Response("ok"));
+    const visitorRequest = new Request("https://account.test/", { headers: { "X-Client-Region": "FR" } });
+
+    await serviceFetch({ visitorAddress: "192.0.2.1", visitorRequest }, base)("https://authentication.test/v2/session");
+
+    expect(Object.fromEntries(headersOf(base))).toEqual({ "x-client-ip": "192.0.2.1", "x-client-region": "FR" });
+  });
+
   it("sends the current projected service token", async () => {
     const directory = await mkdtemp(join(tmpdir(), "service-token-"));
     onTestFinished(async () => await rm(directory, { recursive: true }));
