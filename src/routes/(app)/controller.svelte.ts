@@ -16,6 +16,8 @@ export interface ShellControllerState {
   model: ShellViewModel;
   homeHref: string;
   accountHref: string;
+  /** The Privacy page, absent on a platform that collects no browser telemetry and so asks nothing. */
+  privacyHref: string | null;
   logoutAction: string;
   /** The app list, absent while the server cannot read where the apps live. */
   apps: ShellApps | null;
@@ -71,6 +73,7 @@ export function createShellController({
   getData,
   homeHref,
   accountHref,
+  privacyHref,
   logoutAction,
   platformDowntime,
   authentication,
@@ -95,6 +98,7 @@ export function createShellController({
       model: { activeNavigation, rail, drawerOpen, authView, session, authorizationRequest },
       homeHref,
       accountHref,
+      privacyHref,
       logoutAction,
       apps,
       platformDowntime,

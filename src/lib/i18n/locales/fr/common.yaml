@@ -245,7 +245,7 @@ privacy:
     save: Enregistrer
     title: Votre compte
     unavailable: Les paramètres de votre compte ne peuvent pas être affichés pour le moment.
-  description: Choisissez ce que nous collectons sur cet appareil.
+  description: Choisissez ce que nous collectons sur cet appareil, dans toutes les applications Agora.
   device:
     title: Cet appareil
   noTelemetry: Nous ne collectons ni métriques ni journaux sur cet appareil.
@@ -279,6 +279,7 @@ shell:
   logout: Me déconnecter
   navigation: Navigation d’Agora
   openNavigation: Ouvrir la navigation
+  privacy: Confidentialité
   register: M’inscrire
   sessionDowntime: Compte indisponible pendant la maintenance.
   sessionLoading: Chargement du compte
@@ -286,6 +287,6 @@ shell:
   signIn: Me connecter
   skipToContent: Aller au contenu
 telemetryConsent:
-  change: Vous pouvez modifier ce choix à tout moment depuis la page Confidentialité.
+  change: Votre choix s’applique à toutes les applications Agora sur cet appareil. Vous pouvez le modifier à tout moment depuis la page Confidentialité.
   message: Nous collectons parfois des journaux d’erreurs et des métriques de performances, à des fins d’amélioration de nos produits. Aucune information personnelle n’est enregistrée ou partagée.
   title: Collecte des métriques et des journaux

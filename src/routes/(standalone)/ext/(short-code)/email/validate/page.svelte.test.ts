@@ -18,6 +18,7 @@ vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 function data(state: ShortCodeState = { status: "ready" }): PageData {
   return {
     locale: "en",
+    telemetryChoice: undefined,
     downtime: null,
     downtimeStarted: false,
     model: { journey: "email-update", state },

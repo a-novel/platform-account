@@ -34,7 +34,17 @@
     VisuallyHidden,
   } from "@a-novel-kit/uikit";
 
-  import { House, LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, UserRoundPlus, X } from "@lucide/svelte";
+  import {
+    House,
+    LogIn,
+    LogOut,
+    Menu,
+    PanelLeftClose,
+    PanelLeftOpen,
+    ShieldCheck,
+    UserRoundPlus,
+    X,
+  } from "@lucide/svelte";
 
   let { controller, children }: ShellProps = $props();
 
@@ -42,6 +52,7 @@
   const stoppedUntil = $derived(platformDowntime?.started ? platformDowntime.downtime?.end : undefined);
 
   const model = $derived(controller.state.model);
+  const privacyHref = $derived(controller.state.privacyHref);
   const authenticationState = $derived(controller.authentication.state.model.state.status);
   const authActionsVisible = $derived(authenticationState !== "pending-email" && authenticationState !== "recorded");
 
@@ -232,6 +243,25 @@
           <UserRoundPlus size="var(--icon-size-sm)" />
         </span>
         {#if !compact}<span>{t("shell.register")}</span>{/if}
+      </Button>
+    {/if}
+    {#if privacyHref && !authenticatedSession}
+      <!-- A logged-in visitor changes their answer from their account. -->
+      <Button
+        class="shell-account-button {compact ? 'compact-control' : ''}"
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        square={compact}
+        aria-label={compact ? t("shell.privacy") : undefined}
+        aria-current={model.activeNavigation === "privacy" ? "page" : undefined}
+        title={compact ? t("shell.privacy") : undefined}
+        href={privacyHref}
+      >
+        <span class="account-action-icon" aria-hidden="true">
+          <ShieldCheck size="var(--icon-size-sm)" />
+        </span>
+        {#if !compact}<span>{t("shell.privacy")}</span>{/if}
       </Button>
     {/if}
   </div>

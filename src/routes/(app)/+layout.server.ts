@@ -24,13 +24,14 @@ const shellAuthorization = {
 
 /**
  * The rail destination each page belongs to. The account pages are where a signed-in visitor's home leads, and
- * privacy is one of their tabs.
+ * privacy is one of their tabs. The public Privacy page serves logged-out visitors.
  */
 const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
   "/": "home",
   "/account": "home",
   "/account/devices": "home",
   "/account/privacy": "home",
+  "/privacy": "privacy",
 };
 
 type ShellEvent = AuthenticationEvent & Pick<RequestEvent, "locals">;

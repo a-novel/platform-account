@@ -13,7 +13,7 @@ import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 
 function declined(): TelemetryPreference {
-  return { pending: false, choice: "declined", choose: vi.fn() };
+  return { choice: "declined", choose: vi.fn() };
 }
 
 async function screen(account: PrivacyAccountState | null, telemetry: TelemetryPreference | null = declined()) {
