@@ -1,8 +1,6 @@
-import { expect, login, test } from "./fixtures";
+import { expect, login, stableScreenshot, test } from "./fixtures";
 
 import { createRequire } from "node:module";
-
-import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
 import type { Locator, Page } from "playwright/test";
 
@@ -14,11 +12,6 @@ const icon = images.resolve("@a-novel-kit/ui-images/files/icon/1024x1024/agora-i
 /** The card that holds the public profile. */
 function profileCard(page: Page) {
   return page.getByRole("region", { name: "Public profile", exact: true });
-}
-
-/** The values that change with each run: the account's address and the session's end. */
-function perRunValues(page: Page, email: string) {
-  return [page.getByText(email, { exact: true }), page.getByText("Logged in until", { exact: true }).locator("..")];
 }
 
 /** The address of the picture an image shows, which names its version. */
@@ -64,7 +57,7 @@ test("a visitor sets their username, then clears it", async ({ page, account }, 
 
   await field.fill("Maya Chen 👩🏽‍💻");
   await expect(field).toHaveAccessibleDescription(/remove your username\. 11 \/ 32/);
-  await screenshot(page, info, "account-username-dialog", perRunValues(page, account.email));
+  await stableScreenshot(page, info, "account-username-dialog");
   await dialog.getByRole("button", { name: "Save username", exact: true }).click();
 
   await expect(page).toHaveURL("/account");
@@ -90,7 +83,7 @@ test("a visitor uploads, frames, replaces and removes their picture", async ({ p
   await page.getByRole("link", { name: "Change picture", exact: true }).first().click();
   await expect(page).toHaveURL("/account?edit=picture");
   const dialog = await frame(page, banner);
-  await screenshot(page, info, "account-picture-framing", perRunValues(page, account.email));
+  await stableScreenshot(page, info, "account-picture-framing");
   await dialog.getByRole("button", { name: "Save picture", exact: true }).click();
 
   await expect(page).toHaveURL("/account");
@@ -105,7 +98,7 @@ test("a visitor uploads, frames, replaces and removes their picture", async ({ p
     "content-type": "image/webp",
     "x-content-type-options": "nosniff",
   });
-  await screenshot(page, info, "account-profile-picture", perRunValues(page, account.email));
+  await stableScreenshot(page, info, "account-profile-picture");
 
   // The top bar shows the picture on every page of the platform.
   await page.goto("/account/devices");
