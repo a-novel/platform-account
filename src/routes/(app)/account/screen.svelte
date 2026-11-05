@@ -139,7 +139,9 @@
     padding-inline: var(--layout-gutter);
     padding-block: var(--space-6) var(--space-12);
     inline-size: 100%;
-    max-inline-size: var(--layout-container-sm);
+    /* Off the container scale on purpose: 48rem keeps a long email on one line beside the picture
+       and the logout, where 40rem wraps it. */
+    max-inline-size: 48rem;
   }
 
   .account-header {
