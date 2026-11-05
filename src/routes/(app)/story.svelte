@@ -12,6 +12,8 @@
     passwordShown?: boolean;
     /** Whether the server could read where the apps live, which the app list needs. */
     apps?: boolean;
+    /** Whether the platform collects browser telemetry, which the Privacy link needs. */
+    collectsTelemetry?: boolean;
     /** A planned downtime, which the shell announces and, once started, locks the sign-in dialog for. */
     downtime?: { start: Date; end: Date };
     /** Whether that downtime has started. */
@@ -30,6 +32,7 @@
     authenticationModel,
     passwordShown = false,
     apps = true,
+    collectsTelemetry = false,
     downtime,
     started = true,
     children,
@@ -41,6 +44,7 @@
         model,
         homeHref: "#home",
         accountHref: "#account",
+        privacyHref: collectsTelemetry ? "#privacy" : null,
         logoutAction: "#logout",
         apps: apps ? { studio: "#studio" } : null,
         platformDowntime: downtime && {

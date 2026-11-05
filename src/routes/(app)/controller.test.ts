@@ -16,6 +16,7 @@ import { describe, expect, it, vi } from "vitest";
 const links = {
   homeHref: "/",
   accountHref: "/account",
+  privacyHref: "/privacy",
   logoutAction: "/logout",
 };
 

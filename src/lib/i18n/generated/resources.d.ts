@@ -292,7 +292,7 @@ export default interface Resources {
         "title": "Your account",
         "unavailable": "Your account settings can’t be shown right now."
       },
-      "description": "Choose what we collect on this device.",
+      "description": "Choose what we collect on this device, in every Agora app.",
       "device": {
         "title": "This device"
       },
@@ -333,6 +333,7 @@ export default interface Resources {
       "logout": "Log out",
       "navigation": "Agora navigation",
       "openNavigation": "Open navigation",
+      "privacy": "Privacy",
       "register": "Register",
       "sessionDowntime": "Account unavailable during maintenance.",
       "sessionLoading": "Loading account",
@@ -341,7 +342,7 @@ export default interface Resources {
       "skipToContent": "Skip to content"
     },
     "telemetryConsent": {
-      "change": "Change this anytime from the Privacy page.",
+      "change": "Your answer applies to every Agora app on this device. Change it anytime from the Privacy page.",
       "message": "We sometimes collect error logs and performance metrics to improve our products. No personal information is recorded or shared.",
       "title": "Metrics and log collection"
     }

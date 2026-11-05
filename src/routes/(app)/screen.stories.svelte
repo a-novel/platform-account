@@ -240,7 +240,7 @@
   asChild
   play={verifyExpandedMobileNavigation}
 >
-  <StoryHarness model={withOpenMobileNavigation(anonymous)} />
+  <StoryHarness model={withOpenMobileNavigation(anonymous)} collectsTelemetry />
 </Story>
 
 <Story name="Collapsed rail" exportName="CollapsedRail" asChild play={verifyRailToggle}>
@@ -263,6 +263,10 @@
 
 <Story name="Without the app list" exportName="WithoutTheAppList" asChild>
   <StoryHarness model={authenticated} apps={false} />
+</Story>
+
+<Story name="Privacy link" exportName="PrivacyLink" asChild>
+  <StoryHarness model={{ ...anonymous, activeNavigation: "privacy" }} collectsTelemetry />
 </Story>
 
 <Story name="Collapsed authenticated" asChild>

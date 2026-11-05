@@ -70,7 +70,7 @@
     }
     return value;
   });
-  const telemetry: TelemetryPreference = { pending: false, choice: "declined", choose: noop };
+  const telemetry: TelemetryPreference = { choice: "declined", choose: noop };
   const visibility: PasswordInputController = {
     get state() {
       return { pressed: passwordsShown };
