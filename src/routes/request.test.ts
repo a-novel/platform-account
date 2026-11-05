@@ -211,11 +211,17 @@ describe("account session at the request boundary", () => {
     const { event } = request("/");
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
+      rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "anonymous" },
       authorization: "anonymous",
     });
     expect(fetchService).not.toHaveBeenCalled();
+  });
+
+  it("renders the rail the visitor left on any Agora app", async () => {
+    const { event } = request("/", { "navigation-rail": "collapsed" });
+    await expect(loadShell(event)).resolves.toMatchObject({ rail: "collapsed" });
   });
 
   it.each([
@@ -232,6 +238,7 @@ describe("account session at the request boundary", () => {
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
+      rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "authenticated", displayName: "Maya Chen", initials: "MC" },
       authorization: "allowed",
@@ -367,6 +374,7 @@ describe("account session at the request boundary", () => {
     const { event } = request("/", tokenCookies);
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
+      rail: "expanded",
       apps: null,
       session: { status: "error" },
       authorization: "unavailable",
@@ -381,6 +389,7 @@ describe("account session at the request boundary", () => {
       .mockResolvedValueOnce(new Response("private service detail", { status: 503 }));
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
+      rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "error" },
       authorization: "unavailable",
@@ -851,6 +860,7 @@ describe("planned downtime at the request boundary", () => {
 
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: "home",
+      rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "downtime" },
       authorization: "unavailable",

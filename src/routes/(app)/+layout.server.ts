@@ -8,6 +8,7 @@ import { getRuntimeConfig } from "#lib/server/runtime-config.server.js";
 
 import { type AccountDisplay, accountDisplayFromHandle } from "./account-display";
 
+import { NAVIGATION_RAIL_COOKIE, parseNavigationRail } from "@a-novel-kit/nodelib-browser/preferences";
 import { isDowntimeStarted } from "@a-novel-kit/nodelib-server";
 import type { AuthorizationStatus } from "@a-novel-kit/uikit/authorization";
 
@@ -42,6 +43,8 @@ export const load = async (event: ShellEvent) => {
 
   return {
     activeNavigation: navigation[event.url.pathname] ?? null,
+    // The browser sends the rail the visitor left on any Agora app, so the page renders it from the start.
+    rail: parseNavigationRail(event.cookies.get(NAVIGATION_RAIL_COOKIE)),
     apps: readApps(),
     session,
     authorization: shellAuthorization[session.status],
@@ -84,8 +87,8 @@ function fallbackDisplay(event: ShellEvent, username?: string): AccountDisplay {
 }
 
 /**
- * Reads the visitor's username and picture address. Without the profile service, the shell names the
- * account by its email handle and shows initials.
+ * Reads the visitor's public profile. Without the profile service, the shell names the account by its email
+ * handle and shows initials.
  */
 async function readProfile(event: ShellEvent, accessToken: string): Promise<ProfileSummary> {
   try {

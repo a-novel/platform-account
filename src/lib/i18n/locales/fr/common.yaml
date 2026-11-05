@@ -143,7 +143,7 @@ authUi:
       title: Photo
       zoom: Zoom
     profile:
-      description: Tout le monde sur Agora peut voir votre nom d’utilisateur et votre photo.
+      description: Tout le monde sur Agora peut voir ces informations.
       title: Profil public
       unavailable: Votre profil public ne peut pas être affiché pour le moment.
     roles:
@@ -222,7 +222,7 @@ authUi:
         description: Ouvrez le lien complet reçu par courriel ou demandez-en un nouveau.
         title: Ce lien est incomplet
 home:
-  description: Connectez-vous pour gérer votre courriel, votre mot de passe et vos réglages de confidentialité.
+  description: Connectez-vous pour gérer votre compte.
   title: Votre compte Agora
 pageTitles:
   account: Paramètres du compte

@@ -226,8 +226,14 @@
     align-self: start;
   }
 
+  /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. The
+     canvas's own fill hides what scrolls under them and leaves them unchanged at rest. */
   .tabs {
+    position: sticky;
+    z-index: var(--layer-sticky);
+    inset-block-start: var(--shell-sticky-top, 0);
     border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
+    background: var(--fill-canvas);
     overflow-x: auto;
   }
 

@@ -141,7 +141,7 @@ authUi:
       title: Picture
       zoom: Zoom
     profile:
-      description: Anyone on Agora can see your username and picture.
+      description: Anyone on Agora can see this information.
       title: Public profile
       unavailable: Your public profile can’t be shown right now.
     roles:
@@ -220,7 +220,7 @@ authUi:
         description: Open the complete link from your email or request a new one.
         title: This link is incomplete
 home:
-  description: Log in to manage your email address, password and privacy settings.
+  description: Log in to manage your account.
   title: Your Agora account
 pageTitles:
   account: Account settings

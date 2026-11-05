@@ -166,7 +166,7 @@ export default interface Resources {
           "zoom": "Zoom"
         },
         "profile": {
-          "description": "Anyone on Agora can see your username and picture.",
+          "description": "Anyone on Agora can see this information.",
           "title": "Public profile",
           "unavailable": "Your public profile can’t be shown right now."
         },
@@ -266,7 +266,7 @@ export default interface Resources {
       }
     },
     "home": {
-      "description": "Log in to manage your email address, password and privacy settings.",
+      "description": "Log in to manage your account.",
       "title": "Your Agora account"
     },
     "pageTitles": {

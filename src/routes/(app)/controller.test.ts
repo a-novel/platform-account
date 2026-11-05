@@ -22,6 +22,7 @@ const links = {
 
 const anonymous: ShellData = {
   activeNavigation: "home",
+  rail: "expanded",
   session: { status: "anonymous" },
   apps: { studio: "https://studio.example.test" },
 };
@@ -104,10 +105,9 @@ describe("createShellController", () => {
     expect(controller.navigationDialog.state.open).toBe(false);
     expect(onDrawerChange.mock.calls).toEqual([[true], [false], [true], [false]]);
 
-    controller.synchronizeRail("expanded");
-    controller.synchronizeRail("expanded");
+    controller.toggleRail();
     expect(controller.state.model.rail).toBe("expanded");
-    expect(onRailChange).toHaveBeenCalledOnce();
+    expect(onRailChange.mock.calls).toEqual([["collapsed"], ["expanded"]]);
   });
 
   it("links the menu and authentication views without the open menu", () => {
@@ -143,11 +143,10 @@ describe("createShellController", () => {
   });
 
   it("derives the menu, the dialog and the authorization request from the URL, the rest from the load data", () => {
-    let data = anonymous;
+    let data: ShellData = { ...anonymous, rail: "collapsed" };
     let url = new URL("https://account.example.test/?menu=open");
     const controller = shell({ getData: () => data, allowNativeLogout: false, getUrl: () => url });
 
-    controller.synchronizeRail("collapsed");
     expect(controller.state.model).toEqual({
       activeNavigation: "home",
       rail: "collapsed",
@@ -157,7 +156,12 @@ describe("createShellController", () => {
       authorizationRequest: false,
     });
 
-    data = { activeNavigation: null, session: { status: "authenticated", displayName: "Maya Chen" }, apps: null };
+    data = {
+      activeNavigation: null,
+      rail: "collapsed",
+      session: { status: "authenticated", displayName: "Maya Chen" },
+      apps: null,
+    };
     url = new URL("https://account.example.test/?auth=reset&returnTo=%2Fauthorize%3Fclient_id%3Dstudio");
     expect(controller.state).toEqual({
       model: {

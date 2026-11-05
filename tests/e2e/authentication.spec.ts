@@ -227,7 +227,7 @@ test("the navigation opens each Agora app at its sign-in page", async ({ page, i
   );
 });
 
-test("navigation controls preserve the rail preference and drawer focus", async ({ page, isMobile }) => {
+test("navigation controls keep the rail from the first paint, and the drawer focus", async ({ page, isMobile }) => {
   await page.goto("/");
   if (isMobile) {
     await page.getByRole("link", { name: "Open navigation", exact: true }).click();
@@ -241,6 +241,9 @@ test("navigation controls preserve the rail preference and drawer focus", async 
   await page.getByRole("button", { name: "Collapse navigation", exact: true }).click();
   await expect(page.getByRole("button", { name: "Expand navigation", exact: true })).toBeVisible();
 
+  // The server renders the rail the visitor left, so the page never shows it expanded first.
+  const html = await (await page.request.get("/")).text();
+  expect(html).toContain('data-rail="collapsed"');
   await page.reload();
   await expect(page.getByRole("button", { name: "Expand navigation", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Expand navigation", exact: true }).click();

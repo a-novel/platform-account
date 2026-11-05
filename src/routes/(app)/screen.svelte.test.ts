@@ -58,6 +58,7 @@ function controller(
   const shell = createShellController({
     getData: () => ({
       activeNavigation: shellModel.activeNavigation,
+      rail: shellModel.rail,
       session: shellModel.session,
       apps: options.apps === undefined ? { studio: "https://studio.example.test" } : options.apps,
     }),
@@ -71,7 +72,6 @@ function controller(
     onDrawerChange: (open) => (url = withNavigationOpen(url, open)),
     getUrl: () => url,
   });
-  shell.synchronizeRail(shellModel.rail);
   return shell;
 }
 
