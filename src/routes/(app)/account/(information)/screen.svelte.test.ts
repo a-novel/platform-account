@@ -92,9 +92,7 @@ describe("public profile card", () => {
     const card = page.getByRole("region", { name: "Public profile" });
     await expect
       .element(card)
-      .toMatchTextContent(
-        /Anyone on Agora can see your username and picture\.\s+Username\s+Not set\s+Picture\s+No picture/
-      );
+      .toMatchTextContent(/Anyone on Agora can see this information\.\s+Username\s+Not set\s+Picture\s+No picture/);
     const signIn = page.getByRole("region", { name: "Email and password" }).element();
     expect(card.element().compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 

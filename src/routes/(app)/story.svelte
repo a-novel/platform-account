@@ -91,7 +91,6 @@
     authenticationHref: (view) => `#${view ?? "home"}`,
     toggleRail: () => {},
     logout: () => false,
-    synchronizeRail: () => {},
   };
 </script>
 
