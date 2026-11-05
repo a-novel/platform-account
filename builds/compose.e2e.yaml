@@ -28,7 +28,7 @@ services:
     healthcheck: *postgres-healthcheck
 
   postgres-profile:
-    image: ghcr.io/a-novel/service-profile/database:v1.0.0@sha256:5f8b6a6002d3a1bde29ff8df74842dc584df6c73484f26a3da23b155605b2d42
+    image: ghcr.io/a-novel/service-profile/database:v1.0.1@sha256:5f8b6a6002d3a1bde29ff8df74842dc584df6c73484f26a3da23b155605b2d42
     environment: *postgres-environment
     healthcheck: *postgres-healthcheck
 
