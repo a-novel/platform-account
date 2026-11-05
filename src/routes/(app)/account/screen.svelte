@@ -14,7 +14,7 @@
   import { translateAuthenticationFeedback } from "#lib/i18n/auth-feedback.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Badge, Button, NavList, VisuallyHidden } from "@a-novel-kit/uikit";
+  import { Alert, Avatar, Badge, Button, NavList, VisuallyHidden } from "@a-novel-kit/uikit";
   import { Role } from "@a-novel/service-authentication-rest";
 
   import { Camera, LogOut } from "@lucide/svelte";
@@ -54,15 +54,17 @@
 
 <div class="account-layout">
   <header class="account-header" aria-labelledby={`${componentId}-title`}>
-    <!-- The link reads as its action. The initials stay unread: the heading beside them names the account. -->
+    <!-- The link reads as its action. The picture stays unread: the heading beside it names the account. -->
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
     <a class="picture" href={layout.pictureEditorHref}>
       <VisuallyHidden>{t("authUi.account.picture.changeLabel")}</VisuallyHidden>
-      {#if profile?.picture}
-        <img src={profile.picture} alt="" />
-      {:else}
-        <span aria-hidden="true">{initials}</span>
-      {/if}
+      <Avatar
+        label={profile?.username || (summary.status === "ready" && summary.email) || t("authUi.account.title")}
+        src={profile?.picture}
+        {initials}
+        size="xl"
+        aria-hidden="true"
+      />
       <span class="badge" aria-hidden="true"><Camera size="var(--icon-size-sm)" /></span>
     </a>
 
@@ -147,21 +149,12 @@
     gap: var(--space-4) var(--space-6);
   }
 
-  /* The picture fills its own column; the camera badge tells that it opens the picture's editor. */
+  /* The picture fills its own column, and shrinks on a phone with Avatar's profile size; the camera
+     badge tells that it opens the picture's editor. */
   .picture {
     display: grid;
     position: relative;
-    place-items: center;
-    box-sizing: border-box;
-    border: var(--border-width-thin) solid var(--color-border-default);
     border-radius: var(--radius-round);
-    background: var(--color-surface-selected);
-    inline-size: 6rem;
-    block-size: 6rem;
-    color: var(--color-text-accent);
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-2xl);
-    font-family: var(--font-family-mono);
     text-decoration: none;
   }
 
@@ -172,13 +165,6 @@
   .picture:focus-visible {
     outline: none;
     box-shadow: var(--shadow-focus-ring);
-  }
-
-  .picture img {
-    border-radius: var(--radius-round);
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
   }
 
   .badge {
@@ -243,16 +229,10 @@
     overflow-x: auto;
   }
 
-  /* On a phone the picture shrinks, and logging out moves under the details. */
+  /* On a phone logging out moves under the details. */
   @container (max-width: 34rem) {
     .account-header {
       grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .picture {
-      inline-size: 4rem;
-      block-size: 4rem;
-      font-size: var(--font-size-xl);
     }
 
     /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */
