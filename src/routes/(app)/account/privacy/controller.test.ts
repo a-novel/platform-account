@@ -1,10 +1,12 @@
+import type { PrivacyAccountState } from "#lib/application/auth/types.js";
+
 import { createLocationConsentController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";
 
 describe("createLocationConsentController", () => {
   it("records the switch's answer as pending until the action returns", () => {
-    const location = createLocationConsentController({ status: "ready", locationConsent: false });
+    const location = createLocationConsentController(() => ({ status: "ready", locationConsent: false }));
 
     location.consent.toggle();
     expect(location.account).toEqual({ status: "ready", locationConsent: true });
@@ -14,8 +16,13 @@ describe("createLocationConsentController", () => {
     // The switch waits for the action, so a second change cannot race the first.
     location.consent.setChecked(false);
     expect(location.consent.state.checked).toBe(true);
+  });
 
-    location.synchronize({ status: "ready", locationConsent: false, feedback: "serviceUnavailable" });
+  it("shows the action's result, then accepts another change", () => {
+    let account: PrivacyAccountState = { status: "ready", locationConsent: true };
+    const location = createLocationConsentController(() => account);
+
+    account = { status: "ready", locationConsent: false, feedback: "serviceUnavailable" };
     expect(location.pending).toBe(false);
     expect(location.consent.state.checked).toBe(false);
 
@@ -27,7 +34,7 @@ describe("createLocationConsentController", () => {
     ["unavailable credentials", { status: "unavailable" }],
     ["a logged-out visitor", null],
   ] as const)("offers no change for %s", (_, account) => {
-    const location = createLocationConsentController(account);
+    const location = createLocationConsentController(() => account);
 
     location.consent.toggle();
 

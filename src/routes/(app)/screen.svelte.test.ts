@@ -1,14 +1,16 @@
 import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
-import type { ShellViewModel } from "#lib/application/shell/types.js";
+import type { ShellApps, ShellViewModel } from "#lib/application/shell/types.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
+import { readAuthView, withAuthView } from "./auth-dialog-state";
 import {
   createAuthenticationPanelController,
   createShellController,
   readyAuthenticationModel,
 } from "./controller.svelte";
+import { withNavigationOpen } from "./navigation-state";
 import Screen from "./screen.svelte";
 import ShellStory from "./story.svelte";
 
@@ -31,27 +33,45 @@ function model(patch: Partial<ShellViewModel> = {}): ShellViewModel {
   };
 }
 
+/** The address that opens the menu, the dialog and the authorization request of a model. */
+function shellUrl({ drawerOpen, authView, authorizationRequest }: ShellViewModel): URL {
+  const url = withAuthView(withNavigationOpen(new URL("https://account.example.test/"), drawerOpen), authView);
+  if (authorizationRequest) url.searchParams.set("returnTo", "/authorize?client_id=studio");
+  return url;
+}
+
+/** A shell whose transitions change its URL, as the layout's do. */
 function controller(
   patch: Partial<ShellViewModel> = {},
-  options: { authenticationModel?: AuthenticationPanelModel } = {}
+  options: { authenticationModel?: AuthenticationPanelModel; apps?: ShellApps | null } = {}
 ) {
   const shellModel = model(patch);
+  let url = $state(shellUrl(shellModel));
   const authentication = createAuthenticationPanelController({
-    model: options.authenticationModel ?? readyAuthenticationModel(shellModel.authView ?? "login"),
-    action: "/auth",
+    getState: () => ({
+      model: options.authenticationModel ?? readyAuthenticationModel(readAuthView(url.searchParams) ?? "login"),
+      action: "/auth",
+    }),
     allowNativeSubmission: false,
   });
 
-  return createShellController({
-    model: shellModel,
+  const shell = createShellController({
+    getData: () => ({
+      activeNavigation: shellModel.activeNavigation,
+      session: shellModel.session,
+      apps: options.apps === undefined ? { studio: "https://studio.example.test" } : options.apps,
+    }),
     homeHref: "/",
     accountHref: "/account",
     logoutAction: "/auth/logout",
-    apps: { studio: "https://studio.example.test" },
     authentication,
-    resolveAuthentication: (view) => ({ model: readyAuthenticationModel(view), action: "/auth" }),
     allowNativeLogout: false,
+    onAuthViewChange: (view) => (url = withAuthView(url, view)),
+    onDrawerChange: (open) => (url = withNavigationOpen(url, open)),
+    getUrl: () => url,
   });
+  shell.synchronizeRail(shellModel.rail);
+  return shell;
 }
 
 /** Reads the styles that tell a control's states apart, once its transitions have settled. */
@@ -127,12 +147,7 @@ describe("account shell screen", () => {
   });
 
   it("lists no app while the server cannot read where the apps live", async () => {
-    const shell = controller();
-    render(
-      Screen,
-      { controller: createShellController({ ...shell.state, apps: null, authentication: shell.authentication }) },
-      withLocale()
-    );
+    render(Screen, { controller: controller({}, { apps: null }) }, withLocale());
 
     await expect.element(page.getByRole("link", { name: "Home" })).toBeVisible();
     await expect.element(page.getByRole("navigation", { name: "Agora apps" })).not.toBeInTheDocument();

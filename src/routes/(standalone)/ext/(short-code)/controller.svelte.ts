@@ -1,5 +1,10 @@
 import { validateNewPassword } from "#lib/application/auth/forms.js";
-import type { ShortCodePasswordField, ShortCodeScreenModel } from "#lib/application/auth/types.js";
+import type {
+  AuthenticationFeedback,
+  ShortCodePasswordField,
+  ShortCodeScreenModel,
+  ShortCodeState,
+} from "#lib/application/auth/types.js";
 
 import type { ShortCodeActionData, ShortCodePageData } from "./short-code";
 
@@ -21,46 +26,51 @@ export interface ShortCodeScreenController {
   readonly state: ShortCodeScreenControllerState;
   /** Shows or hides each password field's value. */
   readonly passwordVisibility: Record<ShortCodePasswordField, PasswordInputController>;
-  /** Reconciles a completed route load or action with the rendered secure-link state. */
-  synchronize(state: ShortCodeScreenControllerState): void;
   /** Validates password forms into state before submission. Email confirmation needs no form values. */
   submit(form?: FormData): boolean;
+  /** Shows a failure the route met while it completed the link, until the route sends another state. */
+  fail(feedback: AuthenticationFeedback): void;
 }
 
 /** Configuration for the default secure-link controller. */
-export interface ShortCodeScreenControllerOptions extends ShortCodeScreenControllerState {
+export interface ShortCodeScreenControllerOptions {
+  /** The link's state the route loads, or the result its action returns. */
+  getState: () => ShortCodeScreenControllerState;
   /** Allows the browser to submit the form after the controller accepts the transition. */
   allowNativeSubmission?: boolean;
 }
 
 /** Creates a reactive controller for a standalone secure-link screen. */
 export function createShortCodeScreenController({
+  getState,
   allowNativeSubmission = true,
-  ...initialState
 }: ShortCodeScreenControllerOptions): ShortCodeScreenController {
-  let state = $state<ShortCodeScreenControllerState>(initialState);
+  // A submission shows until the route loads the link again or its action returns.
+  let state = $derived(getState());
+
+  function setStatus(status: ShortCodeState) {
+    state = { ...state, model: { ...state.model, state: status } };
+  }
 
   return {
     get state() {
       return state;
     },
     passwordVisibility: { newPassword: createPressedController(), confirmPassword: createPressedController() },
-    synchronize(nextState) {
-      state = nextState;
-    },
     submit(form = new FormData()) {
       if (lockedStatuses.has(state.model.state.status)) return false;
 
       if (state.model.journey !== "email-update") {
         const result = validateNewPassword(form);
         if (!result.success) {
-          state = { ...state, model: { ...state.model, state: { status: "validation-error", issues: result.issues } } };
+          setStatus({ status: "validation-error", issues: result.issues });
           return false;
         }
       }
-      state = { ...state, model: { ...state.model, state: { status: "submitting" } } };
+      setStatus({ status: "submitting" });
       return allowNativeSubmission;
     },
+    fail: (feedback) => setStatus({ status: "service-error", feedback }),
   };
 }
 

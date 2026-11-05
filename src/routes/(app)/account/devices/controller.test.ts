@@ -1,4 +1,4 @@
-import type { AccountDevicesModel } from "#lib/application/auth/types.js";
+import type { AccountDeviceConfirmation, AccountDevicesModel } from "#lib/application/auth/types.js";
 
 import { type AccountDevicesControllerOptions, createAccountDevicesController } from "./controller.svelte";
 
@@ -13,9 +13,12 @@ const model: AccountDevicesModel = {
   action: { status: "ready" },
 };
 
+/** A controller whose confirmation changes reach its URL, as the page's do. */
 function controller(initial: AccountDevicesModel = model, options: Partial<AccountDevicesControllerOptions> = {}) {
+  let confirmation = initial.confirmation;
   return createAccountDevicesController({
-    model: initial,
+    getModel: () => initial,
+    getConfirmation: () => confirmation,
     actions: {
       logoutDevice: "?/logoutDevice",
       logoutOtherDevices: "?/logoutOtherDevices",
@@ -24,6 +27,10 @@ function controller(initial: AccountDevicesModel = model, options: Partial<Accou
     },
     privacyHref: "/account/privacy",
     ...options,
+    onConfirmationChange: (next) => {
+      confirmation = next;
+      options.onConfirmationChange?.(next);
+    },
   });
 }
 
@@ -76,12 +83,23 @@ describe("createAccountDevicesController", () => {
   });
 
   it.each(["logged-out", "removed"] as const)("allows another change once the route shows it %s", (status) => {
-    const devices = controller();
-    devices.submitChange();
-
-    devices.synchronize({ ...model, action: { status } });
+    const devices = controller({ ...model, action: { status } });
 
     expect(devices.state.model.action).toEqual({ status });
     expect(devices.submitChange()).toBe(true);
+  });
+
+  it("asks about the logout the URL names and shows the route's action result", () => {
+    let loaded = model;
+    let confirmation: AccountDeviceConfirmation | null = null;
+    const devices = controller(model, { getModel: () => loaded, getConfirmation: () => confirmation });
+
+    loaded = { ...model, locationConsent: true, action: { status: "logged-out-others" } };
+    confirmation = { kind: "others" };
+    expect(devices.state.model).toEqual({ ...loaded, confirmation: { kind: "others" } });
+    expect(devices.confirmation.state.open).toBe(true);
+
+    confirmation = null;
+    expect(devices.confirmation.state.open).toBe(false);
   });
 });

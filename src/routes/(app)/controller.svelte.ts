@@ -1,14 +1,15 @@
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
+import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
 import type { AuthenticationJourney, AuthenticationPanelModel } from "#lib/application/auth/types.js";
-import type { AuthDialogView, ShellApps, ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
+import type { AuthDialogView, ShellApps, ShellViewModel } from "#lib/application/shell/types.js";
 import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
 
-import { withAuthView } from "./auth-dialog-state";
-import { withNavigationOpen } from "./navigation-state";
+import { readAuthView, withAuthView } from "./auth-dialog-state";
+import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
 
 import { SvelteURL } from "svelte/reactivity";
 
-import { type OpenController, type PasswordInputController, createPressedController } from "@a-novel-kit/uikit";
+import type { OpenController, PasswordInputController } from "@a-novel-kit/uikit";
 
 /** State rendered by the account shell component. */
 export interface ShellControllerState {
@@ -22,15 +23,8 @@ export interface ShellControllerState {
   platformDowntime?: PlatformDowntime;
 }
 
-/** Route-owned state synchronized into the shell after navigation. */
-export interface ShellRouteState {
-  activeNavigation: ShellViewModel["activeNavigation"];
-  session: ShellSession;
-  drawerOpen?: boolean;
-  authView: AuthDialogView | null;
-  authorizationRequest?: boolean;
-  authentication?: AuthenticationPanelControllerState;
-}
+/** The layout's load data the shell renders: the page's destination, the session and the app list. */
+export type ShellData = Pick<ShellViewModel, "activeNavigation" | "session"> & Pick<ShellControllerState, "apps">;
 
 /** Pure state and transitions consumed by the account shell component. */
 export interface ShellController {
@@ -48,17 +42,15 @@ export interface ShellController {
   toggleRail(): void;
   /** Requests logout and reports whether native form submission should continue. */
   logout(): boolean;
-  /** Reconciles route-owned state after navigation or form actions. */
-  synchronizeRoute(state: ShellRouteState): void;
   /** Reconciles the persisted navigation-rail preference. */
   synchronizeRail(rail: ShellViewModel["rail"]): void;
 }
 
 /** Configuration for the default account shell controller. */
-export interface ShellControllerOptions extends ShellControllerState {
+export interface ShellControllerOptions extends Omit<ShellControllerState, "model" | "apps"> {
+  /** The layout's load data, which each navigation may replace. */
+  getData: () => ShellData;
   authentication: AuthenticationPanelController;
-  /** Resolves the form state used when the user selects an authentication journey. */
-  resolveAuthentication?: (view: AuthDialogView) => AuthenticationPanelControllerState;
   /** Allows the browser to submit the logout form after the controller accepts it. */
   allowNativeLogout?: boolean;
   /** Observes accepted authentication-view changes. */
@@ -67,42 +59,57 @@ export interface ShellControllerOptions extends ShellControllerState {
   onRailChange?: (rail: ShellViewModel["rail"]) => void;
   /** Observes accepted mobile-menu changes. */
   onDrawerChange?: (open: boolean) => void;
-  /** Current base-resolved route, including query and fragment state. */
+  /**
+   * Current base-resolved route, including query and fragment state. It owns the mobile menu, the authentication
+   * view and the authorization request.
+   */
   getUrl?: () => URL;
 }
 
 /** Creates a reactive controller for the account application shell. */
 export function createShellController({
-  model: initialModel,
+  getData,
   homeHref,
   accountHref,
   logoutAction,
-  apps,
   platformDowntime,
   authentication,
-  resolveAuthentication,
   allowNativeLogout = true,
   onAuthViewChange,
   onRailChange,
   onDrawerChange,
   getUrl = () => new SvelteURL(homeHref, "https://account.invalid"),
 }: ShellControllerOptions): ShellController {
-  let model = $state(initialModel);
+  let rail = $state<ShellViewModel["rail"]>("expanded");
+  // The URL owns the menu and the dialog: a transition changes them at once, and the next URL, such as Back's,
+  // decides again.
+  let drawerOpen = $derived(readNavigationOpen(getUrl().searchParams));
+  let authView = $derived(readAuthView(getUrl().searchParams));
+  // A logout the browser does not submit signs the shell out until the next load.
+  let session = $derived(getData().session);
+
+  const state = $derived.by((): ShellControllerState => {
+    const { activeNavigation, apps } = getData();
+    const authorizationRequest = returnsToAuthorization(getUrl().searchParams.get("returnTo"));
+    return {
+      model: { activeNavigation, rail, drawerOpen, authView, session, authorizationRequest },
+      homeHref,
+      accountHref,
+      logoutAction,
+      apps,
+      platformDowntime,
+    };
+  });
 
   function setDrawerOpen(open: boolean) {
-    if (model.drawerOpen === open) return;
-    model = { ...model, drawerOpen: open };
+    if (drawerOpen === open) return;
+    drawerOpen = open;
     onDrawerChange?.(open);
   }
 
   function setAuthentication(view: AuthDialogView | null) {
-    if (model.authView === view) return;
-
-    model = { ...model, authView: view };
-    if (view) {
-      const nextAuthentication = resolveAuthentication?.(view);
-      if (nextAuthentication) authentication.synchronize(nextAuthentication.model, nextAuthentication.action);
-    }
+    if (authView === view) return;
+    authView = view;
     onAuthViewChange?.(view);
   }
 
@@ -112,25 +119,25 @@ export function createShellController({
 
   const authenticationDialog: OpenController = {
     get state() {
-      return { open: model.authView !== null };
+      return { open: authView !== null };
     },
-    open: () => setAuthentication(model.authView ?? "login"),
+    open: () => setAuthentication(authView ?? "login"),
     close: () => setAuthentication(null),
-    toggle: () => setAuthentication(model.authView === null ? "login" : null),
+    toggle: () => setAuthentication(authView === null ? "login" : null),
   };
 
   const navigationDialog: OpenController = {
     get state() {
-      return { open: model.drawerOpen };
+      return { open: drawerOpen };
     },
     open: () => setDrawerOpen(true),
     close: () => setDrawerOpen(false),
-    toggle: () => setDrawerOpen(!model.drawerOpen),
+    toggle: () => setDrawerOpen(!drawerOpen),
   };
 
   return {
     get state() {
-      return { model, homeHref, accountHref, logoutAction, apps, platformDowntime };
+      return state;
     },
     authentication,
     authenticationDialog,
@@ -142,30 +149,16 @@ export function createShellController({
       setAuthentication(view);
     },
     toggleRail() {
-      const rail = model.rail === "expanded" ? "collapsed" : "expanded";
-      model = { ...model, rail };
+      rail = rail === "expanded" ? "collapsed" : "expanded";
       onRailChange?.(rail);
     },
     logout() {
-      if (model.session.status !== "authenticated") return false;
-      if (!allowNativeLogout) model = { ...model, session: { status: "anonymous" } };
+      if (session.status !== "authenticated") return false;
+      if (!allowNativeLogout) session = { status: "anonymous" };
       return allowNativeLogout;
     },
-    synchronizeRoute(routeState) {
-      model = {
-        ...model,
-        activeNavigation: routeState.activeNavigation,
-        session: routeState.session,
-        drawerOpen: routeState.drawerOpen ?? model.drawerOpen,
-        authView: routeState.authView,
-        authorizationRequest: routeState.authorizationRequest,
-      };
-      if (routeState.authentication) {
-        authentication.synchronize(routeState.authentication.model, routeState.authentication.action);
-      }
-    },
-    synchronizeRail(rail) {
-      if (model.rail !== rail) model = { ...model, rail };
+    synchronizeRail(next) {
+      rail = next;
     },
   };
 }
@@ -193,49 +186,53 @@ export interface AuthenticationPanelControllerState {
 /** Pure authentication-form state and transitions. */
 export interface AuthenticationPanelController {
   readonly state: AuthenticationPanelControllerState;
-  /** Shows or hides the password; every synchronization masks it again. */
+  /** Shows or hides the password; every new route state masks it again. */
   readonly passwordVisibility: PasswordInputController;
-  /** Reconciles a completed route load or action with the rendered form. */
-  synchronize(model: AuthenticationPanelModel, action: string): void;
   /** Validates submitted values, exposes field issues in state, and allows valid native submission. */
   submit(form: FormData): boolean;
 }
 
 /** Configuration for the default authentication-form controller. */
-export interface AuthenticationPanelControllerOptions extends AuthenticationPanelControllerState {
+export interface AuthenticationPanelControllerOptions {
+  /** The form the route shows: the latest action result for its journey, or a blank form, and where it posts. */
+  getState: () => AuthenticationPanelControllerState;
   /** Allows the browser to submit the form after the controller accepts the transition. */
   allowNativeSubmission?: boolean;
 }
 
 /** Creates a reactive controller for a shell authentication form. */
 export function createAuthenticationPanelController({
-  model: initialModel,
-  action: initialAction,
+  getState,
   allowNativeSubmission = true,
 }: AuthenticationPanelControllerOptions): AuthenticationPanelController {
-  let model = $state(initialModel);
-  let action = $state(initialAction);
-  const passwordVisibility = createPressedController();
+  // A submission edits the form until the route shows another one, which also masks the password again.
+  let form = $derived({ ...getState(), passwordShown: false });
+  const state = $derived({ model: form.model, action: form.action });
+
+  function setStatus(status: AuthenticationPanelModel["state"]) {
+    form = { ...form, model: { ...form.model, state: status } as AuthenticationPanelModel };
+  }
 
   return {
     get state() {
-      return { model, action };
+      return state;
     },
-    passwordVisibility,
-    synchronize(nextModel, nextAction) {
-      passwordVisibility.setPressed(false);
-      model = nextModel;
-      action = nextAction;
+    passwordVisibility: {
+      get state() {
+        return { pressed: form.passwordShown };
+      },
+      setPressed: (pressed) => (form = { ...form, passwordShown: pressed }),
+      toggle: () => (form = { ...form, passwordShown: !form.passwordShown }),
     },
-    submit(form) {
-      if (lockedStatuses.has(model.state.status)) return false;
+    submit(data) {
+      if (lockedStatuses.has(form.model.state.status)) return false;
 
-      const result = validators[model.journey](form);
+      const result = validators[form.model.journey](data);
       if (!result.success) {
-        model = { ...model, state: { status: "validation-error", issues: result.issues } } as AuthenticationPanelModel;
+        setStatus({ status: "validation-error", issues: result.issues } as AuthenticationPanelModel["state"]);
         return false;
       }
-      model = { ...model, state: { status: "submitting" } } as AuthenticationPanelModel;
+      setStatus({ status: "submitting" });
       return allowNativeSubmission;
     },
   };

@@ -3,7 +3,7 @@ import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { expectFormActionLayout, submitForm } from "#lib/ui/forms.fixture.js";
 
 import AuthenticationPanel from "./authentication-panel.svelte";
-import { createAuthenticationPanelController } from "./controller.svelte";
+import { type AuthenticationPanelControllerState, createAuthenticationPanelController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
@@ -14,8 +14,7 @@ import "@a-novel-kit/uikit-tokens/tokens.css";
 
 function authenticationController(model: AuthenticationPanelModel) {
   return createAuthenticationPanelController({
-    model,
-    action: `/auth?/${model.journey}`,
+    getState: () => ({ model, action: `/auth?/${model.journey}` }),
     allowNativeSubmission: false,
   });
 }
@@ -40,6 +39,29 @@ describe("authentication panel", () => {
     });
     await expect.element(page.getByLabelText(/Email address/)).toHaveAttribute("name", "email");
     await expect.element(page.getByLabelText(/Password/)).toHaveAttribute("name", "password");
+  });
+
+  it("shows each form the route sends in place of the visitor's, with the password masked again", async () => {
+    const login = (state: AuthenticationPanelModel["state"]) =>
+      ({ model: { journey: "login", state }, action: "/auth?/login" }) as AuthenticationPanelControllerState;
+    let state = $state(login({ status: "ready" }));
+    const controller = createAuthenticationPanelController({ getState: () => state, allowNativeSubmission: false });
+    render(AuthenticationPanel, { controller }, withLocale());
+
+    await page.getByLabelText(/Email address/).fill("creator@example.test");
+    await page.getByLabelText(/Password/).fill("valid-example-password");
+    await submitForm("Log in");
+    expect(controller.state.model.state.status).toBe("submitting");
+
+    state = login({ status: "service-error", feedback: "invalidCredentials" });
+    await expect.element(page.getByRole("alert")).toMatchTextContent("The email address or password is incorrect.");
+    await expect.element(page.getByRole("button", { name: "Log in" })).toBeEnabled();
+
+    await page.getByRole("button", { name: "Show password" }).click();
+    await expect.element(page.getByLabelText(/Password/)).toHaveAttribute("type", "text");
+    state = login({ status: "service-error", feedback: "serviceUnavailable" });
+    await expect.element(page.getByRole("alert")).toMatchTextContent("Temporarily unavailable");
+    await expect.element(page.getByLabelText(/Password/)).toHaveAttribute("type", "password");
   });
 
   it("locks an in-flight login at the pure view boundary", async () => {

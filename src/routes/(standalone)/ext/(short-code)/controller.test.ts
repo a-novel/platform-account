@@ -11,10 +11,12 @@ describe("createShortCodeScreenController", () => {
     "validates %s confirmation without retaining passwords",
     (journey) => {
       const controller = createShortCodeScreenController({
-        model: { journey, state: { status: "ready" } },
-        action: "",
-        restartHref: "/",
-        continueHref: "/",
+        getState: () => ({
+          model: { journey, state: { status: "ready" } },
+          action: "",
+          restartHref: "/",
+          continueHref: "/",
+        }),
       });
       const invalid = validForm();
       invalid.set("confirmPassword", "different-password");
@@ -37,10 +39,12 @@ describe("createShortCodeScreenController", () => {
 
   it.each(settledStates)("preserves a secure link in $status state", (state) => {
     const controller = createShortCodeScreenController({
-      model: { journey: "register", state },
-      action: "",
-      restartHref: "/register",
-      continueHref: "/",
+      getState: () => ({
+        model: { journey: "register", state },
+        action: "",
+        restartHref: "/register",
+        continueHref: "/",
+      }),
     });
     expect(controller.submit(validForm())).toBe(false);
     expect(controller.state.model.state).toEqual(state);
@@ -48,55 +52,49 @@ describe("createShortCodeScreenController", () => {
 
   it("confirms email without password fields and recovers from an outage", () => {
     const controller = createShortCodeScreenController({
-      model: { journey: "email-update", state: { status: "ready" } },
-      action: "",
-      restartHref: "/account",
-      continueHref: "/account",
+      getState: () => ({
+        model: { journey: "email-update", state: { status: "ready" } },
+        action: "",
+        restartHref: "/account",
+        continueHref: "/account",
+      }),
     });
     expect(controller.submit()).toBe(true);
     expect(controller.submit()).toBe(false);
-    const next = shortCodeControllerState({
-      model: { journey: "email-update", state: { status: "service-error", feedback: "serviceUnavailable" } },
-      links: { restartHref: "/?auth=login", continueHref: "/account?panel=email" },
+
+    controller.fail("serviceUnavailable");
+    expect(controller.state.model).toEqual({
+      journey: "email-update",
+      state: { status: "service-error", feedback: "serviceUnavailable" },
     });
-    controller.synchronize(next);
-    expect(controller.state).toEqual(next);
     expect(controller.submit()).toBe(true);
-    expect(controller.state).toEqual({ ...next, model: { journey: "email-update", state: { status: "submitting" } } });
+    expect(controller.state.model.state).toEqual({ status: "submitting" });
   });
 
-  it("owns secure-link submission and rejects unavailable states", () => {
-    const controller = createShortCodeScreenController({
+  it("shows the state the route sends and owns its submission", () => {
+    let state = shortCodeControllerState({
       model: { journey: "password-reset", state: { status: "ready" } },
-      action: "",
-      restartHref: "/restart",
-      continueHref: "/",
-      allowNativeSubmission: false,
+      links: { restartHref: "/restart", continueHref: "/" },
     });
+    const controller = createShortCodeScreenController({ getState: () => state, allowNativeSubmission: false });
 
-    expect(controller.submit(validForm())).toBe(false);
-    expect(controller.state.model.state.status).toBe("submitting");
-
-    controller.synchronize({
-      ...controller.state,
-      model: { journey: "password-reset", state: { status: "invalid" } },
-    });
-    expect(controller.submit(validForm())).toBe(false);
-    expect(controller.state.model.state.status).toBe("invalid");
-
-    expect(
-      shortCodeControllerState(
-        {
-          model: { journey: "register", state: { status: "ready" } },
-          links: { restartHref: "/register", continueHref: "/" },
-        },
-        { shortCode: { journey: "register", state: { status: "success", feedback: "registrationCompleted" } } }
-      )
-    ).toEqual({
+    state = shortCodeControllerState(
+      {
+        model: { journey: "register", state: { status: "ready" } },
+        links: { restartHref: "/register", continueHref: "/" },
+      },
+      { shortCode: { journey: "register", state: { status: "success", feedback: "registrationCompleted" } } }
+    );
+    expect(controller.state).toEqual({
       model: { journey: "register", state: { status: "success", feedback: "registrationCompleted" } },
       action: "",
       restartHref: "/register",
       continueHref: "/",
     });
+    expect(controller.submit(validForm())).toBe(false);
+
+    state = { ...state, model: { journey: "register", state: { status: "ready" } } };
+    expect(controller.submit(validForm())).toBe(false);
+    expect(controller.state.model.state.status).toBe("submitting");
   });
 });

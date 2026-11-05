@@ -1,10 +1,10 @@
-import type { AccountCredentialsState, AccountInformationModel } from "#lib/application/auth/types.js";
+import type { AccountCredentialsState, AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
 import { createInformationModel } from "./account-action";
-import { createAccountInformationController } from "./controller.svelte";
+import { type AccountInformationControllerOptions, createAccountInformationController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 
 import { describe, expect, it } from "vitest";
@@ -22,9 +22,14 @@ const pendingCredentials: AccountCredentialsState = {
 };
 const ready = createInformationModel(credentials, { status: "ready" }, null);
 
-function controller(patch: Partial<AccountInformationModel> = {}) {
+function controller(
+  patch: Partial<AccountInformationModel> = {},
+  options: Partial<AccountInformationControllerOptions> = {}
+) {
+  const { editor, ...model } = { ...ready, ...patch };
   return createAccountInformationController({
-    model: { ...ready, ...patch },
+    getModel: () => model,
+    getEditor: () => editor,
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",
@@ -35,6 +40,7 @@ function controller(patch: Partial<AccountInformationModel> = {}) {
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
     allowNativeSubmission: false,
+    ...options,
   });
 }
 
@@ -195,6 +201,22 @@ describe("email dialog", () => {
       .toMatchTextContent(
         /^If no other account uses the new address, you’ll receive a confirmation link there\.\s*Got it$/
       );
+  });
+  it("closes the editor it opened once the URL closes it, as Back does, and reopens it with Forward", async () => {
+    let editor = $state<AccountEditor | null>(null);
+    const information = controller({}, { getEditor: () => editor, onEditorChange: (next) => (editor = next) });
+    await render(Screen, { controller: information }, withLocale());
+
+    await page.getByRole("link", { name: "Change password" }).click();
+    const dialog = page.getByRole("dialog", { name: "Change your password" });
+    await expect.element(dialog).toBeVisible();
+
+    editor = null;
+    await expect.element(dialog).not.toBeInTheDocument();
+    expect(information.state.model.editor).toBeNull();
+
+    editor = "password";
+    await expect.element(dialog).toBeVisible();
   });
 });
 

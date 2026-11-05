@@ -64,7 +64,6 @@
         setPressed: () => {},
         toggle: () => {},
       },
-      synchronize: () => {},
       submit: () => false,
     },
     authenticationDialog: {
@@ -88,7 +87,6 @@
     authenticationHref: (view) => `#${view ?? "home"}`,
     toggleRail: () => {},
     logout: () => false,
-    synchronizeRoute: () => {},
     synchronizeRail: () => {},
   };
 </script>

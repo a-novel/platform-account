@@ -1,8 +1,8 @@
-import type { AccountDevice, AccountDevicesModel } from "#lib/application/auth/types.js";
+import type { AccountDevice, AccountDeviceConfirmation, AccountDevicesModel } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
-import { createAccountDevicesController } from "./controller.svelte";
+import { type AccountDevicesControllerOptions, createAccountDevicesController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 
 import { createRawSnippet } from "svelte";
@@ -53,9 +53,11 @@ const model: AccountDevicesModel = {
   action: { status: "ready" },
 };
 
-function controller(patch: Partial<AccountDevicesModel> = {}) {
+function controller(patch: Partial<AccountDevicesModel> = {}, options: Partial<AccountDevicesControllerOptions> = {}) {
+  const { confirmation, ...loaded } = { ...model, ...patch };
   return createAccountDevicesController({
-    model: { ...model, ...patch },
+    getModel: () => loaded,
+    getConfirmation: () => confirmation,
     actions: {
       logoutDevice: "?/logoutDevice",
       logoutOtherDevices: "?/logoutOtherDevices",
@@ -64,6 +66,7 @@ function controller(patch: Partial<AccountDevicesModel> = {}) {
     },
     privacyHref: "/account/privacy",
     allowNativeSubmission: false,
+    ...options,
   });
 }
 
@@ -236,6 +239,23 @@ describe("logout dialog", () => {
     await expect.element(cancel).toHaveAttribute("href", "?");
     await cancel.click();
 
+    await expect.element(dialog).not.toBeInTheDocument();
+    expect(tab.state.model.confirmation).toBeNull();
+  });
+
+  it("closes the confirmation it asked once the URL closes it, as Back does", async () => {
+    let confirmation = $state<AccountDeviceConfirmation | null>(null);
+    const tab = controller(
+      {},
+      { getConfirmation: () => confirmation, onConfirmationChange: (next) => (confirmation = next) }
+    );
+    await render(Screen, { controller: tab }, withLocale());
+
+    await page.getByRole("link", { name: "Log out all devices" }).click();
+    const dialog = page.getByRole("dialog", { name: "Log out all devices?" });
+    await expect.element(dialog).toBeVisible();
+
+    confirmation = null;
     await expect.element(dialog).not.toBeInTheDocument();
     expect(tab.state.model.confirmation).toBeNull();
   });

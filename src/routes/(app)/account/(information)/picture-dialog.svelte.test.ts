@@ -17,8 +17,10 @@ import "@a-novel-kit/uikit-tokens/tokens.css";
 const credentials = { status: "ready", email: "maya.chen@example.test", locationConsent: false } as const;
 
 function controller(profile: ProfileState = { status: "ready" }, patch: Partial<AccountInformationModel> = {}) {
+  const { editor, ...model } = { ...createInformationModel(credentials, profile, "picture"), ...patch };
   return createAccountInformationController({
-    model: { ...createInformationModel(credentials, profile, "picture"), ...patch },
+    getModel: () => model,
+    getEditor: () => editor,
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",

@@ -10,7 +10,7 @@
   import { createAccountDevicesController } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
 
   let { data, form } = $props();
   const actions = {
@@ -24,42 +24,41 @@
   const confirmationUrl = (confirmation: AccountDeviceConfirmation | null) =>
     dialogUrl(addressBar(page.url), confirmationParameter, confirmationValue(confirmation));
 
-  const model = (confirmation: AccountDeviceConfirmation | null) => ({
-    devices: data.devices,
-    locationConsent: data.locationConsent,
-    confirmation,
-    action: (form as DevicesActionData | null)?.devicesAction ?? { status: "ready" as const },
-  });
-
+  // The address bar, which shallow routing changes without a navigation that page.url would follow.
+  let currentHref = $state(page.url.href);
   const controller = createAccountDevicesController({
-    model: untrack(() => model(readConfirmation(new URL(page.url.href).searchParams))),
+    getModel: () => ({
+      devices: data.devices,
+      locationConsent: data.locationConsent,
+      action: (form as DevicesActionData | null)?.devicesAction ?? { status: "ready" as const },
+    }),
+    getConfirmation: () => readConfirmation(new URL(currentHref).searchParams),
     actions,
     privacyHref: resolve("/(app)/account/privacy"),
-    // Asking adds a history entry, so Back cancels. Cancelling replaces the entry.
-    onConfirmationChange: (confirmation) =>
-      // eslint-disable-next-line svelte/no-navigation-without-resolve -- Shallow routing edits the current, resolved URL.
-      goto(confirmationUrl(confirmation), { shallow: true, replace: confirmation === null, state: page.state }),
+    onConfirmationChange: showConfirmation,
     confirmationUrl: (confirmation) => localHref(confirmationUrl(confirmation)),
   });
 
-  $effect(() => {
-    const next = model(untrack(() => controller.state.model.confirmation));
-    untrack(() => controller.synchronize(next));
-  });
+  /** Asks about a logout in the URL. Asking adds a history entry, so Back cancels. Cancelling replaces the entry. */
+  function showConfirmation(confirmation: AccountDeviceConfirmation | null) {
+    const next = confirmationUrl(confirmation);
+    // eslint-disable-next-line svelte/no-navigation-without-resolve -- Shallow routing edits the current, resolved URL.
+    goto(next, { shallow: true, replace: confirmation === null, state: page.state });
+    currentHref = next.href;
+  }
 
-  /** Asks about the logout the address bar names, after Back, Forward or a navigation from a link. */
-  function synchronizeConfirmation() {
-    const confirmation = readConfirmation(new URL(window.location.href).searchParams);
-    controller.synchronize({ ...controller.state.model, confirmation });
+  /** Reads the logout the address bar names, after Back, Forward or a navigation from a link. */
+  function synchronizeUrl() {
+    currentHref = window.location.href;
   }
 
   afterNavigate(({ shallow }) => {
-    if (!shallow) synchronizeConfirmation();
+    if (!shallow) synchronizeUrl();
   });
 
   onMount(() => {
-    window.addEventListener("popstate", synchronizeConfirmation);
-    return () => window.removeEventListener("popstate", synchronizeConfirmation);
+    window.addEventListener("popstate", synchronizeUrl);
+    return () => window.removeEventListener("popstate", synchronizeUrl);
   });
 </script>
 

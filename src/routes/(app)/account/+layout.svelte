@@ -8,8 +8,6 @@
   import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
-  import { untrack } from "svelte";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 
   let { data, children } = $props();
@@ -23,7 +21,7 @@
   const currentTab = () => routeTabs[page.route.id ?? ""] ?? null;
 
   const controller = createAccountLayoutController({
-    summary: untrack(() => data.summary),
+    getSummary: () => data.summary,
     logoutAction: resolve("/auth/logout"),
     pictureEditorHref: `${resolve("/(app)/account/(information)")}?edit=picture`,
     tabs: {
@@ -31,13 +29,7 @@
       devices: resolve("/(app)/account/devices"),
       privacy: resolve("/(app)/account/privacy"),
     },
-    currentTab: untrack(currentTab),
-  });
-
-  $effect(() => {
-    const summary = data.summary;
-    const tab = currentTab();
-    untrack(() => controller.synchronize(summary, tab));
+    getCurrentTab: currentTab,
   });
 
   const currentPath = $derived(page.url.pathname + page.url.search);

@@ -20,34 +20,42 @@ export interface AccountLayoutControllerState {
 /** Pure state and transitions of the account layout. */
 export interface AccountLayoutController {
   readonly state: AccountLayoutControllerState;
-  /** Reconciles a completed load or navigation with the rendered layout. */
-  synchronize(summary: AccountSummaryState, currentTab: AccountTab | null): void;
   /** Starts a logout and reports whether native submission may continue. */
   submitLogout(): boolean;
 }
 
 /** Configuration for the default account layout controller. */
-export type AccountLayoutControllerOptions = Omit<AccountLayoutControllerState, "logoutState">;
+export interface AccountLayoutControllerOptions extends Pick<
+  AccountLayoutControllerState,
+  "logoutAction" | "pictureEditorHref" | "tabs"
+> {
+  /** The account the layout loads, which each load replaces. */
+  getSummary: () => AccountSummaryState;
+  /** The tab showing, which each navigation may change. */
+  getCurrentTab: () => AccountTab | null;
+}
 
 /** Creates a reactive controller for the account layout. */
 export function createAccountLayoutController({
-  summary: initialSummary,
+  getSummary,
   logoutAction,
   pictureEditorHref,
   tabs,
-  currentTab: initialTab,
+  getCurrentTab,
 }: AccountLayoutControllerOptions): AccountLayoutController {
-  let summary = $state(initialSummary);
-  let currentTab = $state(initialTab);
   let logoutState = $state<"ready" | "submitting">("ready");
+  const state = $derived({
+    summary: getSummary(),
+    logoutState,
+    logoutAction,
+    pictureEditorHref,
+    tabs,
+    currentTab: getCurrentTab(),
+  });
 
   return {
     get state() {
-      return { summary, logoutState, logoutAction, pictureEditorHref, tabs, currentTab };
-    },
-    synchronize(nextSummary, nextTab) {
-      summary = nextSummary;
-      currentTab = nextTab;
+      return state;
     },
     submitLogout() {
       if (logoutState === "submitting") return false;
