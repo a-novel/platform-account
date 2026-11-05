@@ -59,13 +59,13 @@
         {t("authUi.account.password.success.devices")}
         <Link href={controller.state.devicesHref}>{t("authUi.account.password.success.review")}</Link>
       </p>
-      <div class="actions">
+      <FormActions align="end">
         <!-- Logging every device out asks for confirmation on the devices tab, as it does there. -->
         <Button href={controller.state.logoutOthersHref} variant="outline" tone="neutral">
           {t("authUi.account.devices.logoutOthers")}
         </Button>
         <Button href={controller.editorHref(null)} onclick={close}>{t("authUi.account.gotIt")}</Button>
-      </div>
+      </FormActions>
     </div>
   {:else}
     <form method="POST" action={controller.state.actions.password} aria-busy={submitting} novalidate onsubmit={submit}>
@@ -148,14 +148,6 @@
   .success-title > :global(svg) {
     flex: none;
     color: var(--color-text-accent);
-  }
-
-  .actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    justify-self: stretch;
-    gap: var(--space-3);
-    margin-block-start: var(--space-4);
   }
 
   p {

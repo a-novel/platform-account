@@ -139,7 +139,7 @@
     padding-inline: var(--layout-gutter);
     padding-block: var(--space-6) var(--space-12);
     inline-size: 100%;
-    max-inline-size: 48rem;
+    max-inline-size: var(--layout-container-sm);
   }
 
   .account-header {
