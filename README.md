@@ -27,6 +27,7 @@ Where Agora users manage their account and complete the links Agora emails them.
 
 ![GitHub repo file or directory count](https://img.shields.io/github/directory-file-count/a-novel/platform-account)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/a-novel/platform-account)
+[![License: RPL-1.5](https://img.shields.io/badge/license-RPL--1.5-blue)](LICENSE)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/a-novel/platform-account/main.yaml)
 [![codecov](https://codecov.io/gh/a-novel/platform-account/graph/badge.svg)](https://codecov.io/gh/a-novel/platform-account)
 
