@@ -157,7 +157,7 @@ services:
 
   # Stores each user's username and picture. Its image migrates the database before it serves.
   profile:
-    image: ghcr.io/a-novel/service-profile/standalone-rest:v1.0.1@sha256:95c4ac030cc0de06747897718574f80fd537f410767ca202883b60cc2f890a32
+    image: ghcr.io/a-novel/service-profile/standalone-rest:v1.0.2@sha256:1887488ba45ad01d361f4c5fceff424123d037a52a65f4c32e5c4fa3c81b8c2f
     ports:
       - "127.0.0.1:14104:8080"
     # Podman ignores the image's own check, so the journeys' wait needs this one.
