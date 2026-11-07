@@ -49,6 +49,9 @@ authFlow:
 authUi:
   account:
     closeEditor: Fermer la fenêtre
+    credentials:
+      description: Comment vous vous connectez à votre compte.
+      title: Identifiants
     devices:
       activeNow: Actif maintenant
       confirm:
@@ -157,6 +160,7 @@ authUi:
       devices: Appareils
       information: Mes informations
       label: Sections du compte
+      preferences: Préférences
       privacy: Confidentialité
     title: Votre compte
     username:
@@ -235,9 +239,18 @@ pageTitles:
   incompleteLink: Lien incomplet
   invalidLink: Lien invalide
   passwordReset: Mot de passe réinitialisé
+  preferences: Préférences
   privacy: Confidentialité
   resetPassword: Réinitialiser mon mot de passe
   withState: "{{title}}: {{status}}"
+preferences:
+  device:
+    description: Toutes les applications Agora suivent ces préférences sur cet appareil.
+    title: Cet appareil
+  language:
+    browser: Langue du navigateur
+    save: Enregistrer
+    title: Langue
 privacy:
   account:
     locationDescription: Affiche l’adresse IP et la localisation approximative de chaque appareil connecté à votre compte, sur la page de votre compte.

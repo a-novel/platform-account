@@ -7,6 +7,7 @@
   } from "#lib/application/auth/types.js";
 
   import type { AccountTab } from "./controller.svelte";
+  import type { LanguageChoice } from "./preferences/screen.svelte";
 
   /** Fixed-state Storybook harness: the account layout around one of its tabs. */
   export interface AccountStoryProps {
@@ -15,6 +16,8 @@
     information?: AccountInformationModel;
     devices?: AccountDevicesModel;
     privacy?: PrivacyAccountState;
+    /** The language chosen on the Preferences tab. */
+    language?: LanguageChoice;
     /** Whether the password fields show their text. */
     passwordsShown?: boolean;
     /** Whether the page runs its scripts, which framing a picture needs. Defaults to true. */
@@ -31,6 +34,7 @@
   import type { AccountLayoutController } from "./controller.svelte";
   import type { AccountDevicesController } from "./devices/controller.svelte";
   import DevicesScreen from "./devices/screen.svelte";
+  import PreferencesScreen from "./preferences/screen.svelte";
   import type { LocationConsentController } from "./privacy/controller.svelte";
   import PrivacyScreen from "./privacy/screen.svelte";
   import AccountScreen from "./screen.svelte";
@@ -86,7 +90,7 @@
         logoutState: "ready" as const,
         logoutAction: "/storybook/logout",
         pictureEditorHref: "?edit=picture",
-        tabs: { information: "#information", devices: "#devices", privacy: "#privacy" },
+        tabs: { information: "#information", devices: "#devices", privacy: "#privacy", preferences: "#preferences" },
         currentTab: tab,
       };
     },
@@ -204,6 +208,16 @@
       <DevicesScreen controller={devicesController} />
     {:else if tab === "privacy" && location}
       <PrivacyScreen {telemetry} {location} />
+    {:else if tab === "preferences"}
+      <PreferencesScreen
+        language={{
+          state: { open: false, value: props.language ?? "browser" },
+          open: noop,
+          close: noop,
+          toggle: noop,
+          select: noop,
+        }}
+      />
     {/if}
   </AccountScreen>
 </div>

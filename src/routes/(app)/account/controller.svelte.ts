@@ -1,7 +1,7 @@
 import type { AccountSummaryState } from "#lib/application/auth/types.js";
 
 /** The account tabs, each a page under the account layout. */
-export type AccountTab = "information" | "devices" | "privacy";
+export type AccountTab = "information" | "devices" | "privacy" | "preferences";
 
 /** State rendered by the account layout: the header and the tab bar. */
 export interface AccountLayoutControllerState {

@@ -32,6 +32,7 @@ const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
   "/account": "home",
   "/account/devices": "home",
   "/account/privacy": "home",
+  "/account/preferences": "home",
   "/privacy": "privacy",
 };
 

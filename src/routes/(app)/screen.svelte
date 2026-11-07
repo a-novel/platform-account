@@ -213,8 +213,14 @@
         title={name}
         href={controller.state.accountHref}
       >
-        <span class="account-action-icon" aria-hidden="true">
-          <Avatar label={name} initials={authenticatedSession.initials} src={authenticatedSession.picture} size="sm" />
+        <span class="account-action-icon account-picture" aria-hidden="true">
+          <Avatar
+            label={name}
+            initials={authenticatedSession.initials}
+            src={authenticatedSession.picture}
+            size="sm"
+            shape="square"
+          />
         </span>
         {#if compact}
           <VisuallyHidden>{name}</VisuallyHidden>
@@ -448,6 +454,7 @@
 
     display: grid;
     grid-template-columns: var(--shell-rail-width) minmax(0, 1fr);
+    transition: grid-template-columns var(--duration-normal) var(--easing-standard);
     min-block-size: 100dvb;
   }
 
@@ -461,6 +468,7 @@
     grid-template-rows: auto minmax(0, 1fr);
     gap: var(--space-4);
     z-index: var(--layer-sticky);
+    transition: inline-size var(--duration-normal) var(--easing-standard);
     box-sizing: border-box;
     inset-block-start: 0;
     padding: var(--space-2);
@@ -571,6 +579,16 @@
     justify-content: center;
     align-items: center;
     inline-size: var(--control-height-sm);
+  }
+
+  /* The picture stays muted until the pointer or the keyboard reaches its button. */
+  .account-picture {
+    filter: saturate(50%) brightness(75%);
+    transition: filter var(--duration-fast) var(--easing-standard);
+  }
+
+  :global(.shell-account-button:is(:hover, :focus-visible)) .account-picture {
+    filter: none;
   }
 
   .account-label {

@@ -86,43 +86,52 @@
     </section>
   </Card>
 
+  <!-- Each way to log in sits on a card of its own inside the credentials. -->
   <Card surface="raised">
-    <section class="information" aria-labelledby={`${componentId}-title`}>
-      <h2 id={`${componentId}-title`}>{t("authUi.account.signIn.title")}</h2>
-      <dl>
-        <div>
-          <dt>{t("authUi.account.email.title")}</dt>
-          <dd>
-            <div class="row">
-              {#if credentials.status === "ready"}
-                <span class="value">{credentials.email}</span>
-              {/if}
-              {@render changeButton("email", t("authUi.account.email.changeLabel"))}
+    <section class="information" aria-labelledby={`${componentId}-credentials-title`}>
+      <div class="heading">
+        <h2 id={`${componentId}-credentials-title`}>{t("authUi.account.credentials.title")}</h2>
+        <p class="secondary">{t("authUi.account.credentials.description")}</p>
+      </div>
+      <Card surface="raised">
+        <section class="information" aria-labelledby={`${componentId}-title`}>
+          <h3 id={`${componentId}-title`}>{t("authUi.account.signIn.title")}</h3>
+          <dl>
+            <div>
+              <dt>{t("authUi.account.email.title")}</dt>
+              <dd>
+                <div class="row">
+                  {#if credentials.status === "ready"}
+                    <span class="value">{credentials.email}</span>
+                  {/if}
+                  {@render changeButton("email", t("authUi.account.email.changeLabel"))}
+                </div>
+                {#if credentials.status === "unavailable"}
+                  <Alert tone="error" title={t("authUi.account.email.unavailable")} />
+                {:else if credentials.pendingEmail}
+                  {@const pending = credentials.pendingEmail}
+                  <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
+                    {#snippet icon()}
+                      <Hourglass size="var(--icon-size-sm)" />
+                    {/snippet}
+                    <span class="pending-email">{pending.email}</span>
+                    {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+                  </Alert>
+                {/if}
+              </dd>
             </div>
-            {#if credentials.status === "unavailable"}
-              <Alert tone="error" title={t("authUi.account.email.unavailable")} />
-            {:else if credentials.pendingEmail}
-              {@const pending = credentials.pendingEmail}
-              <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
-                {#snippet icon()}
-                  <Hourglass size="var(--icon-size-sm)" />
-                {/snippet}
-                <span class="pending-email">{pending.email}</span>
-                {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
-              </Alert>
-            {/if}
-          </dd>
-        </div>
-        <div>
-          <dt>{t("authUi.account.password.title")}</dt>
-          <dd>
-            <div class="row">
-              <span class="secondary" aria-hidden="true">••••••••</span>
-              {@render changeButton("password", t("authUi.account.password.changeLabel"))}
+            <div>
+              <dt>{t("authUi.account.password.title")}</dt>
+              <dd>
+                <div class="row">
+                  <span class="secondary" aria-hidden="true">••••••••</span>
+                  {@render changeButton("password", t("authUi.account.password.changeLabel"))}
+                </div>
+              </dd>
             </div>
-          </dd>
-        </div>
-      </dl>
+          </dl>
+        </section>
+      </Card>
     </section>
   </Card>
 </div>
@@ -174,11 +183,19 @@
     gap: var(--space-3);
   }
 
-  h2 {
+  h2,
+  h3 {
     margin: 0;
     color: var(--color-text-primary);
-    font-size: var(--font-size-xl);
     font-family: var(--font-family-display);
+  }
+
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
   }
 
   dt {

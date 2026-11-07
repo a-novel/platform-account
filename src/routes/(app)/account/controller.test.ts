@@ -4,7 +4,12 @@ import { type AccountTab, createAccountLayoutController } from "./controller.sve
 
 import { describe, expect, it } from "vitest";
 
-const tabs = { information: "/account", devices: "/account/devices", privacy: "/account/privacy" };
+const tabs = {
+  information: "/account",
+  devices: "/account/devices",
+  privacy: "/account/privacy",
+  preferences: "/account/preferences",
+};
 const summary: AccountSummaryState = { status: "ready", roles: ["auth:user"], email: "creator@example.test" };
 
 describe("createAccountLayoutController", () => {

@@ -1,18 +1,21 @@
-import { resolveLocale } from "#lib/i18n/config.js";
+import { resolveLocale, supportedLocales } from "#lib/i18n/config.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { hasSession } from "#lib/server/auth/session.js";
 import { secureShortCodeResponse } from "#lib/server/auth/short-code-response.js";
+
+import { LANGUAGE_COOKIE, parseLanguage } from "@a-novel-kit/nodelib-browser/preferences";
 
 import { SpanStatusCode } from "@opentelemetry/api";
 import type { RequestEvent } from "@sveltejs/kit";
 import type { Handle } from "@sveltejs/kit/hooks";
 
 /**
- * Gives each request its own locale and translations, refuses framing, keeps signed-in and
- * email-link pages out of caches, and traces the response.
+ * Gives each request its own locale and translations, in the language the visitor chose or else their
+ * browser's, refuses framing, keeps signed-in and email-link pages out of caches, and traces the response.
  */
 export const handle: Handle = async ({ event, resolve }) => {
-  const locale = resolveLocale(event.request.headers.get("accept-language"));
+  const chosen = parseLanguage(event.cookies.get(LANGUAGE_COOKIE), supportedLocales);
+  const locale = resolveLocale(chosen, event.request.headers.get("accept-language"));
 
   event.locals.i18n = createI18n(locale);
   event.locals.locale = locale;
