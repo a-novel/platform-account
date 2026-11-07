@@ -3,11 +3,11 @@
 
   import { untrack } from "svelte";
 
-  import { createValueController } from "@a-novel-kit/uikit";
+  import { createSelectController } from "@a-novel-kit/uikit";
 
   let { data } = $props();
   // The choice stays in the form until it is saved, which reloads the page.
-  const language = createValueController({ initialValue: untrack(() => data.language) });
+  const language = createSelectController({ initialValue: untrack(() => data.language) });
 </script>
 
 <Screen {language} />

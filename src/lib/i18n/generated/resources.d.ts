@@ -297,7 +297,6 @@ export default interface Resources {
       },
       "language": {
         "browser": "Browser language",
-        "browserDescription": "Follows the language set in your browser.",
         "save": "Save",
         "title": "Language"
       }

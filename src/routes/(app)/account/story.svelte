@@ -209,7 +209,15 @@
     {:else if tab === "privacy" && location}
       <PrivacyScreen {telemetry} {location} />
     {:else if tab === "preferences"}
-      <PreferencesScreen language={{ state: { value: props.language ?? "browser" }, setValue: noop }} />
+      <PreferencesScreen
+        language={{
+          state: { open: false, value: props.language ?? "browser" },
+          open: noop,
+          close: noop,
+          toggle: noop,
+          select: noop,
+        }}
+      />
     {/if}
   </AccountScreen>
 </div>

@@ -249,7 +249,6 @@ preferences:
     title: Cet appareil
   language:
     browser: Langue du navigateur
-    browserDescription: Suit la langue réglée dans votre navigateur.
     save: Enregistrer
     title: Langue
 privacy:

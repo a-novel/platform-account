@@ -1,7 +1,7 @@
 <script module lang="ts">
   import type { Locale } from "#lib/i18n/config.js";
 
-  import type { RadioGroupController } from "@a-novel-kit/uikit";
+  import type { SelectController } from "@a-novel-kit/uikit";
 
   /** A language the visitor can choose: one the app supports, or their browser's. */
   export type LanguageChoice = Locale | "browser";
@@ -9,7 +9,7 @@
   /** Props for the pure "Preferences" tab. */
   export interface AccountPreferencesScreenProps {
     /** The language chosen in the form, which saving keeps for this device. */
-    language: RadioGroupController<LanguageChoice>;
+    language: SelectController<LanguageChoice>;
     /** Where the language form posts. */
     languageAction?: string;
   }
@@ -19,19 +19,16 @@
   import { localeNames, supportedLocales } from "#lib/i18n/config.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, FormActions, RadioGroup } from "@a-novel-kit/uikit";
+  import { Button, Card, Field, FormActions, Select } from "@a-novel-kit/uikit";
 
   let { language, languageAction = "?/language" }: AccountPreferencesScreenProps = $props();
 
   const componentId = $props.id();
   const { t } = getI18nContext();
 
+  // Each language reads in its own words, so a reader lost in another one still finds theirs.
   const options = $derived([
-    {
-      value: "browser" as const,
-      label: t("preferences.language.browser"),
-      description: t("preferences.language.browserDescription"),
-    },
+    { value: "browser" as const, label: t("preferences.language.browser") },
     ...supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale] })),
   ]);
 </script>
@@ -44,7 +41,11 @@
   <Card surface="raised">
     <!-- Saving reloads the page in the chosen language, so the choice waits for the button. -->
     <form method="POST" action={languageAction}>
-      <RadioGroup legend={t("preferences.language.title")} name="language" {options} controller={language} />
+      <Field controlId={`${componentId}-language`} label={t("preferences.language.title")}>
+        {#snippet children(control)}
+          <Select {...control} name="language" {options} controller={language} />
+        {/snippet}
+      </Field>
       <FormActions>
         <Button type="submit">{t("preferences.language.save")}</Button>
       </FormActions>
@@ -78,7 +79,6 @@
   p {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
     line-height: var(--line-height-normal);
   }
 </style>
