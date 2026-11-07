@@ -62,6 +62,10 @@ export default interface Resources {
     "authUi": {
       "account": {
         "closeEditor": "Close dialog",
+        "credentials": {
+          "description": "How you log in to your account.",
+          "title": "Credentials"
+        },
         "devices": {
           "activeNow": "Active now",
           "confirm": {
@@ -183,6 +187,7 @@ export default interface Resources {
           "devices": "Devices",
           "information": "My information",
           "label": "Account sections",
+          "preferences": "Preferences",
           "privacy": "Privacy"
         },
         "title": "Your account",
@@ -280,9 +285,22 @@ export default interface Resources {
       "incompleteLink": "Incomplete link",
       "invalidLink": "Invalid link",
       "passwordReset": "Password reset",
+      "preferences": "Preferences",
       "privacy": "Privacy",
       "resetPassword": "Reset password",
       "withState": "{{title}}: {{status}}"
+    },
+    "preferences": {
+      "device": {
+        "description": "Every Agora app follows these preferences on this device.",
+        "title": "This device"
+      },
+      "language": {
+        "browser": "Browser language",
+        "browserDescription": "Follows the language set in your browser.",
+        "save": "Save",
+        "title": "Language"
+      }
     },
     "privacy": {
       "account": {

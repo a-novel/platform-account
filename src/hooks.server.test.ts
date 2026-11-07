@@ -10,7 +10,7 @@ import type { Handle } from "@sveltejs/kit/hooks";
 const TRACE_ID = "4bf92f3577b34da6a3ce929d0e0e4736";
 const SPAN_ID = "00f067aa0ba902b7";
 
-function event(path: string, language?: string, routeId?: string | null): RequestEvent {
+function event(path: string, language?: string, routeId?: string | null, chosen?: string): RequestEvent {
   const url = new URL(path, "https://account.test");
   const root = trace.wrapSpanContext({ traceId: TRACE_ID, spanId: SPAN_ID, traceFlags: TraceFlags.SAMPLED });
   return {
@@ -18,7 +18,7 @@ function event(path: string, language?: string, routeId?: string | null): Reques
     locals: {},
     request: new Request(url, { headers: language ? { "accept-language": language } : undefined }),
     route: { id: routeId === undefined ? url.pathname : routeId },
-    cookies: { get: () => undefined },
+    cookies: { get: (name: string) => (name === "language" ? chosen : undefined) },
     tracing: { enabled: false, root, current: root },
   } as unknown as RequestEvent;
 }
@@ -38,6 +38,17 @@ describe("request hook", () => {
     expect(french.locals.locale).toBe("fr");
     expect(english.locals.locale).toBe("en");
     expect(french.locals.i18n).not.toBe(english.locals.i18n);
+  });
+
+  it.each([
+    { name: "a chosen language outranks the browser's", chosen: "fr", want: "fr" },
+    { name: "an unsupported choice leaves the browser's", chosen: "de", want: "en" },
+  ])("$name", async ({ chosen, want }) => {
+    const request = event("/", "en-GB,en;q=0.9", undefined, chosen);
+
+    await handle({ event: request, resolve: vi.fn().mockResolvedValue(new Response()) });
+
+    expect(request.locals.locale).toBe(want);
   });
 
   it.each([200, 400, 303, 503])("protects secure-link responses with status %s", async (status) => {

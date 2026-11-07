@@ -17,6 +17,7 @@
     "/(app)/account/(information)": "information",
     "/(app)/account/devices": "devices",
     "/(app)/account/privacy": "privacy",
+    "/(app)/account/preferences": "preferences",
   };
   const currentTab = () => routeTabs[page.route.id ?? ""] ?? null;
 
@@ -28,6 +29,7 @@
       information: resolve("/(app)/account/(information)"),
       devices: resolve("/(app)/account/devices"),
       privacy: resolve("/(app)/account/privacy"),
+      preferences: resolve("/(app)/account/preferences"),
     },
     getCurrentTab: currentTab,
   });
@@ -38,6 +40,7 @@
     information: "pageTitles.account",
     devices: "pageTitles.devices",
     privacy: "pageTitles.privacy",
+    preferences: "pageTitles.preferences",
   } as const;
   // The tab names its section, then the outage that hides the account's details, as the header does.
   const title = $derived.by(() => {

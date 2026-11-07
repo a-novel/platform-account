@@ -532,3 +532,15 @@
     privacy={{ status: "ready", locationConsent: false, feedback: "serviceUnavailable" }}
   />
 </Story>
+
+<Story name="Preferences: browser language" asChild>
+  <StoryHarness {summary} tab="preferences" />
+</Story>
+
+<Story name="Preferences: language chosen" asChild>
+  <StoryHarness {summary} tab="preferences" language="fr" />
+</Story>
+
+<Story name="Preferences: mobile" globals={reviewStoryGlobals.mobile} asChild>
+  <StoryHarness {summary} tab="preferences" language="en" />
+</Story>

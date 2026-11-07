@@ -30,7 +30,12 @@ function controller(state: AccountSummaryState = summary, currentTab: AccountTab
     getSummary: () => state,
     logoutAction: "/auth/logout",
     pictureEditorHref: "/account?edit=picture",
-    tabs: { information: "/account", devices: "/account/devices", privacy: "/account/privacy" },
+    tabs: {
+      information: "/account",
+      devices: "/account/devices",
+      privacy: "/account/privacy",
+      preferences: "/account/preferences",
+    },
     getCurrentTab: () => currentTab,
   });
 }
@@ -88,6 +93,7 @@ describe("account layout screen", () => {
       [tabs.getByRole("link", { name: "Mes informations" }), "/account"],
       [tabs.getByRole("link", { name: "Appareils" }), "/account/devices"],
       [tabs.getByRole("link", { name: "Confidentialité" }), "/account/privacy"],
+      [tabs.getByRole("link", { name: "Préférences" }), "/account/preferences"],
     ] as const;
     for (const [link, href] of links) await expect.element(link).toHaveAttribute("href", href);
 

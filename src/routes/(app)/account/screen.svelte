@@ -34,6 +34,11 @@
     },
     { href: layout.tabs.devices, label: t("authUi.account.tabs.devices"), current: layout.currentTab === "devices" },
     { href: layout.tabs.privacy, label: t("authUi.account.tabs.privacy"), current: layout.currentTab === "privacy" },
+    {
+      href: layout.tabs.preferences,
+      label: t("authUi.account.tabs.preferences"),
+      current: layout.currentTab === "preferences",
+    },
   ]);
 
   const profile = $derived(summary.status === "ready" ? summary.profile : undefined);
@@ -49,6 +54,14 @@
 
   function submitLogout(event: SubmitEvent) {
     if (!controller.submitLogout()) event.preventDefault();
+  }
+
+  /** Scrolls the tab bar to the current tab, which a phone may leave past the bar's end. */
+  function revealCurrentTab(bar: HTMLElement) {
+    $effect(() => {
+      if (!layout.currentTab) return;
+      bar.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
   }
 </script>
 
@@ -118,8 +131,8 @@
     </form>
   </header>
 
-  <nav class="tabs" aria-label={t("authUi.account.tabs.label")}>
-    <NavList orientation="horizontal" items={tabs} />
+  <nav class="tabs" aria-label={t("authUi.account.tabs.label")} {@attach revealCurrentTab}>
+    <NavList class="tab-list" orientation="horizontal" items={tabs} />
   </nav>
 
   <div class="tab">
@@ -226,15 +239,32 @@
     align-self: start;
   }
 
-  /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. The
-     canvas's own fill hides what scrolls under them and leaves them unchanged at rest. */
+  /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. They
+     overhang the column by the hairline ring, so the ring of a card as wide as the column stays under them. */
   .tabs {
     position: sticky;
     z-index: var(--layer-sticky);
+    margin-inline: calc(-1 * var(--border-width-thin));
     inset-block-start: var(--shell-sticky-top, 0);
     border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
     background: var(--fill-canvas);
+    padding-inline: var(--border-width-thin);
     overflow-x: auto;
+  }
+
+  /* One row, which the bar scrolls on a phone: tabs on two rows read as two groups. */
+  .tabs :global(.tab-list) {
+    flex-wrap: nowrap;
+  }
+
+  /* Frosting what scrolls under them leaves them unchanged at rest, lamp included, where a canvas fill
+     would light them from their own corner in a browser that ignores a fixed background, as iOS does. */
+  @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
+    .tabs {
+      -webkit-backdrop-filter: blur(var(--blur-lg));
+      backdrop-filter: blur(var(--blur-lg));
+      background: none;
+    }
   }
 
   /* On a phone logging out moves under the details. */

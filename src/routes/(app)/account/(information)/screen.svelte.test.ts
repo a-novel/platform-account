@@ -84,6 +84,21 @@ describe("my information screen", () => {
   });
 });
 
+describe("credentials card", () => {
+  it("holds each way to log in on a card of its own", async () => {
+    await render(Screen, { controller: controller() }, withLocale("fr"));
+
+    const credentials = page.getByRole("region", { name: "Identifiants", exact: true });
+    await expect
+      .element(credentials)
+      .toMatchTextContent(/^Identifiants\s*Comment vous vous connectez à votre compte\./);
+    await expect
+      .element(credentials.getByRole("heading", { level: 3, name: "Courriel et mot de passe" }))
+      .toBeVisible();
+    await expect.element(credentials.getByRole("region", { name: "Courriel et mot de passe" })).toBeVisible();
+  });
+});
+
 describe("public profile card", () => {
   it("states that the profile is public, above the sign-in details, and opens each editor in place", async () => {
     const information = controller();
