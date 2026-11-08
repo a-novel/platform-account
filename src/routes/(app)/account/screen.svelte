@@ -32,13 +32,13 @@
       label: t("authUi.account.tabs.information"),
       current: layout.currentTab === "information",
     },
-    { href: layout.tabs.devices, label: t("authUi.account.tabs.devices"), current: layout.currentTab === "devices" },
     { href: layout.tabs.privacy, label: t("authUi.account.tabs.privacy"), current: layout.currentTab === "privacy" },
     {
       href: layout.tabs.preferences,
       label: t("authUi.account.tabs.preferences"),
       current: layout.currentTab === "preferences",
     },
+    { href: layout.tabs.devices, label: t("authUi.account.tabs.devices"), current: layout.currentTab === "devices" },
   ]);
 
   const profile = $derived(summary.status === "ready" ? summary.profile : undefined);
@@ -279,10 +279,16 @@
       grid-template-columns: auto minmax(0, 1fr);
     }
 
-    /* The tabs span the phone's whole width, over the page's gutters. */
+    /* The tabs span the phone's whole width, over the page's gutters, and center while they fit. Auto
+       margins drop to nothing once they overflow, so the bar then scrolls from its first tab. */
     .tabs {
       margin-inline: calc(-1 * var(--layout-gutter));
-      padding-inline: var(--layout-gutter);
+      padding-inline: var(--space-1);
+    }
+
+    .tabs :global(.tab-list) {
+      margin-inline: auto;
+      inline-size: max-content;
     }
 
     /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */
