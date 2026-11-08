@@ -128,7 +128,6 @@ authUi:
       current: Votre photo actuelle
       description: Choisissez une image, puis déplacez-la et zoomez pour cadrer votre photo.
       dialogTitle: Modifiez votre photo
-      frameInstructions: Faites glisser l’image ou utilisez les flèches pour la déplacer. Zoomez avec le curseur, les touches + et -, la molette ou en pinçant.
       frameLabel: Cadre de la photo
       none: Aucune photo
       opening: Ouverture de l’image…
@@ -144,7 +143,6 @@ authUi:
       saving: Enregistrement de la photo…
       scriptRequired: Le cadrage d’une photo nécessite JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.
       title: Photo
-      zoom: Zoom
     profile:
       description: Tout le monde sur Agora peut voir ces informations.
       title: Profil public

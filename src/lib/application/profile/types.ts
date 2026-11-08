@@ -1,5 +1,7 @@
 import type { UsernameIssue } from "./username";
 
+import type { PictureCrop, PictureSource } from "@a-novel-kit/uikit";
+
 /** A user's public profile, as the platform shows it. Each part is absent until its owner sets it. */
 export interface ProfileSummary {
   username?: string;
@@ -9,25 +11,6 @@ export interface ProfileSummary {
 
 /** The visitor's public profile, independent of their credentials. */
 export type ProfileState = ({ status: "ready" } & ProfileSummary) | { status: "unavailable" };
-
-/** A decoded image the visitor chose, which the browser shows from `url`. */
-export interface PictureSource {
-  url: string;
-  /** The image's width, in pixels. */
-  width: number;
-  /** The image's height, in pixels. */
-  height: number;
-}
-
-/** The square of a source the picture keeps. */
-export interface PictureCrop {
-  /** 1 fits the source's shorter side in the square; more shows less of the source. */
-  zoom: number;
-  /** The square's left edge, in source pixels. */
-  x: number;
-  /** The square's top edge, in source pixels. */
-  y: number;
-}
 
 /** Why the browser or the profile service refused a picture. */
 export type PictureRefusal = "unreadable" | "format" | "ratio" | "dimensions" | "tooLarge";

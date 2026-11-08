@@ -29,6 +29,7 @@
 
 <script lang="ts">
   import type { AccountEditor } from "#lib/application/auth/types.js";
+  import { profilePicture } from "#lib/application/profile/picture.js";
   import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
   import type { AccountInformationController } from "./(information)/controller.svelte";
@@ -136,15 +137,18 @@
             username: editor("username"),
             picture: editor("picture"),
           },
-          pictureZoom: {
-            state: {
-              value:
-                information.picture.status === "cropping" || information.picture.status === "saving"
-                  ? information.picture.crop.zoom
-                  : 1,
-            },
-            setValue: noop,
-          },
+          pictureFrame:
+            information.picture.status === "cropping" || information.picture.status === "saving"
+              ? {
+                  state: {
+                    source: information.picture.source,
+                    ratio: profilePicture.ratio,
+                    crop: information.picture.crop,
+                  },
+                  pan: noop,
+                  zoom: noop,
+                }
+              : null,
           editorHref: (name) => (name ? `?edit=${name}` : "?"),
           enableScripts: noop,
           submitPassword: () => false,
@@ -152,8 +156,6 @@
           editUsername: noop,
           submitUsername: () => false,
           choosePicture: async () => {},
-          panPicture: noop,
-          zoomPicture: noop,
           savePicture: async () => null,
           submitPictureRemoval: () => false,
         }

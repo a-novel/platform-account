@@ -1,4 +1,4 @@
-import type { PictureSource } from "./types";
+import type { PictureSource } from "@a-novel-kit/uikit";
 
 function svg(width: number, height: number, body: string): string {
   const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${body}</svg>`;
