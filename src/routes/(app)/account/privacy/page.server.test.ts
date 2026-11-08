@@ -108,7 +108,7 @@ describe("location consent action", () => {
 
     await expect(privacyActions.locationConsent(event({ enabled: "on" }))).rejects.toMatchObject({
       status: 303,
-      location: "/?auth=login&returnTo=%2Faccount%2Fprivacy",
+      location: "/account?auth=login&returnTo=%2Faccount%2Fprivacy",
     });
     expect(credentialsUpdateLocationConsent).not.toHaveBeenCalled();
   });

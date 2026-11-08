@@ -17,8 +17,12 @@ export async function requireAuthorization(
   await refuseDuringDowntime();
 
   const { authentication, session } = await authenticate(event);
-  // A load repeats its GET at the login with a 307; a form action's POST becomes a GET with a 303.
-  if (!session) redirect(isRead(event.request) ? 307 : 303, loginHref(event.url.pathname + event.url.search));
+  if (!session) {
+    // A page asked for with an authentication dialog renders locked under it, so the refusal stops there.
+    if (isRead(event.request) && event.url.searchParams.has("auth")) error(401, "Log in to continue");
+    // A load repeats its GET at the login with a 307; a form action's POST becomes a GET with a 303.
+    redirect(isRead(event.request) ? 307 : 303, loginHref(event.url.pathname + event.url.search));
+  }
   if (!when(session)) error(403, "Access denied");
   return { authentication, session };
 }

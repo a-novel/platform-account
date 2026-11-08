@@ -91,7 +91,7 @@ describe("credentials card", () => {
     const credentials = page.getByRole("region", { name: "Identifiants", exact: true });
     await expect
       .element(credentials)
-      .toMatchTextContent(/^Identifiants\s*Comment vous vous connectez à votre compte\./);
+      .toMatchTextContent(/^Identifiants\s*Les informations avec lesquelles vous vous authentifiez\./);
     await expect
       .element(credentials.getByRole("heading", { level: 3, name: "Courriel et mot de passe" }))
       .toBeVisible();

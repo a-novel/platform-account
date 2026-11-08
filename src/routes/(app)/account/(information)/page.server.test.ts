@@ -145,7 +145,7 @@ describe("password action", () => {
 
     await expect(informationActions.password(event("password", passwordFields))).rejects.toMatchObject({
       status: 303,
-      location: "/?auth=login&returnTo=%2Faccount%3Fedit%3Dpassword",
+      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Dpassword",
     });
     expect(credentialsUpdatePassword).not.toHaveBeenCalled();
   });
@@ -236,7 +236,7 @@ describe("email action", () => {
 
     await expect(informationActions.email(event("email", emailFields))).rejects.toMatchObject({
       status: 303,
-      location: "/?auth=login&returnTo=%2Faccount%3Fedit%3Demail",
+      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Demail",
     });
     expect(shortCodeCreateEmailUpdate).not.toHaveBeenCalled();
   });

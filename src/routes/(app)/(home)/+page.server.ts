@@ -103,9 +103,12 @@ async function requestPasswordReset(event: RequestEvent, form: FormData) {
 }
 
 // The account page is the platform's only screen, so a signed-in visitor goes straight to it.
-export const load: PageServerLoad = async ({ parent }) => {
-  const { session } = await parent();
-  if (session.status === "authenticated") redirect(307, "/account");
+/**
+ * The account page is the site's one landing page, so a visit lands there with the dialog it asked for.
+ * A form posted here renders its result over the locked page instead, which a redirect would lose.
+ */
+export const load: PageServerLoad = ({ request, url }) => {
+  if (request.method === "GET" || request.method === "HEAD") redirect(307, `/account${url.search}`);
 };
 
 /** The shell dialog's form action, which serves the journey named in the `auth` parameter. */

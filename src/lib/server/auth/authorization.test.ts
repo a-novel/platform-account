@@ -49,7 +49,15 @@ describe("protected operations", () => {
     const request = new Request(event.url, { method });
     await expect(requireAuthorization({ ...event, request })).rejects.toMatchObject({
       status,
-      location: "/?auth=login&returnTo=%2Faccount%3Fpanel%3Demail",
+      location: "/account?auth=login&returnTo=%2Faccount%3Fpanel%3Demail",
+    });
+  });
+
+  it("locks a page asked for under an authentication dialog instead of redirecting again", async () => {
+    authenticated.mockResolvedValue(null);
+    const url = new URL("https://account.test/account?auth=login&returnTo=%2Faccount");
+    await expect(requireAuthorization({ ...event, url, request: new Request(url) })).rejects.toMatchObject({
+      status: 401,
     });
   });
 

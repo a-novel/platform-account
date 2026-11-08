@@ -35,17 +35,7 @@
     VisuallyHidden,
   } from "@a-novel-kit/uikit";
 
-  import {
-    House,
-    LogIn,
-    LogOut,
-    Menu,
-    PanelLeftClose,
-    PanelLeftOpen,
-    ShieldCheck,
-    UserRoundPlus,
-    X,
-  } from "@lucide/svelte";
+  import { LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRoundPlus, X } from "@lucide/svelte";
 
   let { controller, children }: ShellProps = $props();
 
@@ -110,8 +100,6 @@
   }
 </script>
 
-{#snippet homeIcon()}<House size="var(--icon-size-sm)" />{/snippet}
-
 {#snippet studioIcon()}
   <img class="app-icon" src={studioIcon48} width="24" height="24" alt="" />
 {/snippet}
@@ -137,26 +125,8 @@
   {@render brand(false)}
 {/snippet}
 
-{#snippet primaryNavigation(compact: boolean, onNavigate?: (event: MouseEvent) => void)}
-  <nav aria-label={t("shell.navigation")}>
-    <NavList
-      {compact}
-      onclick={onNavigate}
-      items={[
-        {
-          href: controller.state.homeHref,
-          label: t("shell.home"),
-          current: model.activeNavigation === "home",
-          icon: homeIcon,
-        },
-      ]}
-    />
-  </nav>
-{/snippet}
-
 {#snippet appNavigation(compact: boolean, onNavigate?: (event: MouseEvent) => void)}
   {#if controller.state.apps}
-    <Separator decorative />
     <nav aria-label={t("shell.apps.label")}>
       <NavList
         {compact}
@@ -212,6 +182,7 @@
         square={compact}
         title={name}
         href={controller.state.accountHref}
+        aria-current={model.activeNavigation === "account" ? "page" : undefined}
       >
         <span class="account-action-icon account-picture" aria-hidden="true">
           <Avatar
@@ -344,7 +315,6 @@
 
       <div class="rail-body">
         <div id={desktopNavigationId} class="rail-navigation">
-          {@render primaryNavigation(compactRail)}
           {@render appNavigation(compactRail)}
         </div>
 
@@ -405,7 +375,6 @@
     {/snippet}
     <div class="drawer-content">
       <div class="drawer-navigation">
-        {@render primaryNavigation(false, closeDrawerAfterNavigation)}
         {@render appNavigation(false, closeDrawerAfterNavigation)}
       </div>
       <div class="drawer-account">
@@ -581,13 +550,13 @@
     inline-size: var(--control-height-sm);
   }
 
-  /* The picture stays muted until the pointer or the keyboard reaches its button. */
+  /* The picture stays muted until the pointer or the keyboard reaches its button, or its page is showing. */
   .account-picture {
     filter: saturate(50%) brightness(75%);
     transition: filter var(--duration-fast) var(--easing-standard);
   }
 
-  :global(.shell-account-button:is(:hover, :focus-visible)) .account-picture {
+  :global(.shell-account-button:is(:hover, :focus-visible, [aria-current="page"])) .account-picture {
     filter: none;
   }
 
@@ -652,18 +621,15 @@
     display: none;
   }
 
-  /* A column, so a page can fill the height the workspace leaves it and center itself in it. */
+  /* A column, so a page can fill the height the workspace leaves it and center itself in it. The skip link's
+     target takes focus without a ring, so a click or a scrolling key never outlines the whole page; the next Tab
+     reaches a control, which shows its own. */
   .main-content {
     display: flex;
     flex: 1;
     flex-direction: column;
     outline: none;
     min-inline-size: 0;
-  }
-
-  .main-content:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-focus-ring);
-    outline-offset: calc(var(--focus-ring-offset) * -1);
   }
 
   @container app-shell (max-width: 47.999rem) {

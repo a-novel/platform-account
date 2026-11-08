@@ -69,7 +69,8 @@ export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "loca
     return { authorization: "allowed" as const, summary, credentials, profile };
   } catch (error) {
     // Redirects, refusals and planned downtimes render their own pages. Any other failure keeps the tabs.
-    if (isRedirect(error) || isHttpError(error, 403) || (isHttpError(error, 503) && error.body.downtime)) throw error;
+    if (isRedirect(error) || isHttpError(error, 401) || isHttpError(error, 403)) throw error;
+    if (isHttpError(error, 503) && error.body.downtime) throw error;
 
     const summary: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
     const credentials: AccountCredentialsState = { status: "unavailable" };

@@ -22,6 +22,9 @@
     authorizationRequest?: boolean;
   } = $props();
   const { t } = getI18nContext();
+
+  /** The access state each refusal shows: a missing login locks the page under the login dialog. */
+  const accessStatus: Record<number, "anonymous" | "forbidden"> = { 401: "anonymous", 403: "forbidden" };
 </script>
 
 {#if downtime}
@@ -45,9 +48,9 @@
       {/snippet}
     </StatusState>
   </div>
-{:else if status === 403 || status === 503}
+{:else if status === 401 || status === 403 || status === 503}
   <AccessBoundary
-    controller={{ state: { status: status === 403 ? "forbidden" : "unavailable" } }}
+    controller={{ state: { status: accessStatus[status] ?? "unavailable" } }}
     {loginHref}
     {homeHref}
     {retryHref}

@@ -24,7 +24,7 @@ import "@a-novel-kit/uikit-tokens/tokens.css";
 
 function model(patch: Partial<ShellViewModel> = {}): ShellViewModel {
   return {
-    activeNavigation: "home",
+    activeNavigation: null,
     rail: "expanded",
     drawerOpen: false,
     authView: null,
@@ -112,7 +112,8 @@ describe("account shell screen", () => {
     await expect.element(page.getByRole("complementary", { name: "Agora navigation" })).toBeVisible();
     await expect.element(page.getByRole("main")).toBeVisible();
     await expect.element(page.getByRole("img", { name: "Agora" })).toHaveAttribute("width", "96");
-    await expect.element(page.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    // The account page is the site's landing page, which the account link opens: the rail lists no Home.
+    await expect.element(page.getByRole("link", { name: "Home" })).not.toBeInTheDocument();
     await expect.element(page.getByRole("button", { name: "Log out" })).not.toBeInTheDocument();
 
     const register = page.getByRole("link", { name: "Register" });
@@ -150,7 +151,7 @@ describe("account shell screen", () => {
   it("lists no app while the server cannot read where the apps live", async () => {
     render(Screen, { controller: controller({}, { apps: null }) }, withLocale());
 
-    await expect.element(page.getByRole("link", { name: "Home" })).toBeVisible();
+    await expect.element(page.getByRole("link", { name: "Log in" })).toBeVisible();
     await expect.element(page.getByRole("navigation", { name: "Agora apps" })).not.toBeInTheDocument();
   });
 
@@ -161,7 +162,18 @@ describe("account shell screen", () => {
 
     render(ShellStory, { model: model({ activeNavigation: "privacy" }), collectsTelemetry: true }, withLocale("fr"));
     await expect.element(page.getByRole("link", { name: "Confidentialité" })).toHaveAttribute("aria-current", "page");
-    await expect.element(page.getByRole("link", { name: "Accueil" })).not.toHaveAttribute("aria-current");
+    await expect.element(page.getByRole("link", { name: "Me connecter" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("marks the account link current on the account pages, with its picture in full color", async () => {
+    const maya = { status: "authenticated", displayName: "Maya Chen", initials: "MC" } as const;
+    render(ShellStory, { model: model({ activeNavigation: "account", session: maya }) }, withLocale());
+
+    const account = page.getByRole("link", { name: "Maya Chen" });
+    await expect.element(account).toHaveAttribute("aria-current", "page");
+    const picture = account.element().querySelector(".account-picture");
+    if (!picture) throw new Error("The account link must show the picture");
+    expect(getComputedStyle(picture).filter).toBe("none");
   });
 
   it("leaves Privacy to the account's tab once the visitor is logged in", async () => {
@@ -193,7 +205,6 @@ describe("account shell screen", () => {
   it("keeps the collapsed rail's destinations and account controls named", async () => {
     render(Screen, { controller: controller({ rail: "collapsed" }) }, withLocale("fr"));
 
-    await expect.element(page.getByRole("link", { name: "Accueil" })).toBeVisible();
     await expect.element(page.getByRole("link", { name: "Studio" })).toBeVisible();
     await expect.element(page.getByRole("img", { name: "Agora" })).toHaveAttribute("width", "24");
     await expect
@@ -264,7 +275,7 @@ describe("account shell screen", () => {
         const surface = page.getByRole(width < 768 ? "dialog" : "complementary", { name: /Agora/ });
         await expect.element(surface).toBeVisible();
         await surface.getByRole("img", { name: "Agora" }).hover();
-        const controls = [surface.getByRole("link", { name: "Home" }), surface.getByRole("link", { name: "Studio" })];
+        const controls = [surface.getByRole("link", { name: "Studio" })];
         if (status === "authenticated") {
           controls.push(surface.getByRole("link", { name: "Maya Chen" }));
           controls.push(surface.getByRole("button", { name: "Log out" }));
@@ -279,9 +290,9 @@ describe("account shell screen", () => {
           await control.hover();
           hovered.push(await settledStyle(control.element()));
         }
-        expect(hovered[2]?.background).toBe(hovered[3]?.background);
-        expect(hovered[2]?.background).not.toBe(resting[2]?.background);
-        expect(hovered[2]?.background).not.toBe(getComputedStyle(surface.element()).backgroundColor);
+        expect(hovered[1]?.background).toBe(hovered[2]?.background);
+        expect(hovered[1]?.background).not.toBe(resting[1]?.background);
+        expect(hovered[1]?.background).not.toBe(getComputedStyle(surface.element()).backgroundColor);
         presentations.push({ background: getComputedStyle(surface.element()).backgroundColor, resting, hovered });
         await view.unmount();
       }
@@ -320,8 +331,8 @@ describe("account shell screen", () => {
   });
 
   const drawerLabels = [
-    ["anonymous", ["Accueil", "Studio", "Me connecter", "M’inscrire"]],
-    ["authenticated", ["Accueil", "Studio", "Maya Chen", "Me déconnecter"]],
+    ["anonymous", ["Studio", "Me connecter", "M’inscrire"]],
+    ["authenticated", ["Studio", "Maya Chen", "Me déconnecter"]],
   ] as const;
 
   it.each(drawerLabels)("aligns the mobile drawer labels of an %s visitor at 320px", async (status, labels) => {

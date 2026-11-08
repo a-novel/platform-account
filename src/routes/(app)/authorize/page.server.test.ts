@@ -121,7 +121,8 @@ describe("authorization endpoint", () => {
 
     await expect(outcome(event)).resolves.toEqual({
       status: 303,
-      location: "/?" + new URLSearchParams({ auth: "login", returnTo: `/authorize?${new URLSearchParams(query)}` }),
+      location:
+        "/account?" + new URLSearchParams({ auth: "login", returnTo: `/authorize?${new URLSearchParams(query)}` }),
     });
     expect(sentCalls()).toEqual(["GET /v2/oauth/authorization-request"]);
   });
@@ -135,7 +136,7 @@ describe("authorization endpoint", () => {
 
     await expect(outcome(event)).resolves.toMatchObject({
       status: 303,
-      location: expect.stringMatching(/^\/\?auth=login/),
+      location: expect.stringMatching(/^\/account\?auth=login/),
     });
     expect([...values.keys()]).toEqual([]);
   });

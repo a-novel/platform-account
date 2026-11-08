@@ -50,7 +50,7 @@ authUi:
   account:
     closeEditor: Fermer la fenêtre
     credentials:
-      description: Comment vous vous connectez à votre compte.
+      description: Les informations avec lesquelles vous vous authentifiez.
       title: Identifiants
     devices:
       activeNow: Actif maintenant
@@ -225,9 +225,6 @@ authUi:
       missing:
         description: Ouvrez le lien complet reçu par courriel ou demandez-en un nouveau.
         title: Ce lien est incomplet
-home:
-  description: Connectez-vous pour gérer votre compte.
-  title: Votre compte Agora
 pageTitles:
   account: Paramètres du compte
   accountCreated: Compte créé
@@ -245,7 +242,7 @@ pageTitles:
   withState: "{{title}}: {{status}}"
 preferences:
   device:
-    description: Toutes les applications Agora suivent ces préférences sur cet appareil.
+    description: Paramètres locaux, uniquement pour l’appareil actuel.
     title: Cet appareil
   language:
     browser: Langue du navigateur
@@ -288,7 +285,6 @@ shell:
   closeNavigation: Fermer la navigation
   collapseNavigation: Réduire la navigation
   expandNavigation: Développer la navigation
-  home: Accueil
   logout: Me déconnecter
   navigation: Navigation d’Agora
   openNavigation: Ouvrir la navigation

@@ -11,7 +11,7 @@ import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 
 const shell: ShellViewModel = {
-  activeNavigation: "home",
+  activeNavigation: null,
   rail: "expanded",
   drawerOpen: false,
   authView: "login",

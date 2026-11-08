@@ -18,8 +18,12 @@
 <script lang="ts">
   import { localeNames, supportedLocales } from "#lib/i18n/config.js";
 
+  import Flag from "./flag.svelte";
+
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, Field, FormActions, Select } from "@a-novel-kit/uikit";
+  import { Button, Card, Field, FormActions, Select, type SelectOption } from "@a-novel-kit/uikit";
+
+  import { AppWindow } from "@lucide/svelte";
 
   let { language, languageAction = "?/language" }: AccountPreferencesScreenProps = $props();
 
@@ -33,6 +37,18 @@
   ]);
 </script>
 
+<!-- The browser's language shows a window, a chosen one its flag; each name reads in its own language. -->
+{#snippet languageOption(option: SelectOption<LanguageChoice>)}
+  <span class="language">
+    {#if option.value === "browser"}
+      <AppWindow size="var(--icon-size-md)" aria-hidden="true" />
+    {:else}
+      <Flag locale={option.value} />
+    {/if}
+    <span lang={option.value === "browser" ? undefined : option.value}>{option.label}</span>
+  </span>
+{/snippet}
+
 <section class="group" aria-labelledby={`${componentId}-device`}>
   <div class="heading">
     <h2 id={`${componentId}-device`}>{t("preferences.device.title")}</h2>
@@ -43,7 +59,7 @@
     <form method="POST" action={languageAction}>
       <Field controlId={`${componentId}-language`} label={t("preferences.language.title")}>
         {#snippet children(control)}
-          <Select {...control} name="language" {options} controller={language} />
+          <Select {...control} name="language" {options} controller={language} renderOption={languageOption} />
         {/snippet}
       </Field>
       <FormActions>
@@ -67,6 +83,12 @@
 
   form {
     gap: var(--space-4);
+  }
+
+  .language {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
   }
 
   h2 {

@@ -207,10 +207,10 @@ describe("invitation requests at the request boundary", () => {
 });
 
 describe("account session at the request boundary", () => {
-  it("serves an anonymous home without calling authentication", async () => {
+  it("serves an anonymous visitor without calling authentication", async () => {
     const { event } = request("/");
     await expect(loadShell(event)).resolves.toEqual({
-      activeNavigation: "home",
+      activeNavigation: null,
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "anonymous" },
@@ -225,8 +225,9 @@ describe("account session at the request boundary", () => {
   });
 
   it.each([
-    ["/account/devices", "home"],
-    ["/account/privacy", "home"],
+    ["/account", "account"],
+    ["/account/devices", "account"],
+    ["/account/privacy", "account"],
     ["/privacy", "privacy"],
     ["/authorize", null],
   ] as const)("marks %s with the %s rail destination", async (path, activeNavigation) => {
@@ -237,7 +238,7 @@ describe("account session at the request boundary", () => {
     const { event } = request("/account", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     await expect(loadShell(event)).resolves.toEqual({
-      activeNavigation: "home",
+      activeNavigation: "account",
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "authenticated", displayName: "Maya Chen", initials: "MC" },
@@ -373,7 +374,7 @@ describe("account session at the request boundary", () => {
     env.AUTHENTICATION_SERVICE_URL = "";
     const { event } = request("/", tokenCookies);
     await expect(loadShell(event)).resolves.toEqual({
-      activeNavigation: "home",
+      activeNavigation: null,
       rail: "expanded",
       apps: null,
       session: { status: "error" },
@@ -388,7 +389,7 @@ describe("account session at the request boundary", () => {
       .mockResolvedValueOnce(new Response("expired", { status: 401 }))
       .mockResolvedValueOnce(new Response("private service detail", { status: 503 }));
     await expect(loadShell(event)).resolves.toEqual({
-      activeNavigation: "home",
+      activeNavigation: null,
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "error" },
@@ -706,7 +707,7 @@ describe("account session at the request boundary", () => {
     );
     await expect(action(event)).rejects.toMatchObject({
       status: 303,
-      location: `/?auth=login&returnTo=${encodeURIComponent(path)}`,
+      location: `/account?auth=login&returnTo=${encodeURIComponent(path)}`,
     });
     expect(fetchService).not.toHaveBeenCalled();
     expect(fetchProfile).not.toHaveBeenCalled();
@@ -859,7 +860,7 @@ describe("planned downtime at the request boundary", () => {
     });
 
     await expect(loadShell(event)).resolves.toEqual({
-      activeNavigation: "home",
+      activeNavigation: null,
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
       session: { status: "downtime" },

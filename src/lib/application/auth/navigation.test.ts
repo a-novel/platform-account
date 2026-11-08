@@ -40,7 +40,7 @@ describe("authentication navigation", () => {
     }
   );
 
-  it("opens the existing modal with the safe target encoded once", () => {
-    expect(loginHref("/account?panel=email")).toBe("/?auth=login&returnTo=%2Faccount%3Fpanel%3Demail");
+  it("opens the login dialog over the account page with the safe target encoded once", () => {
+    expect(loginHref("/account?panel=email")).toBe("/account?auth=login&returnTo=%2Faccount%3Fpanel%3Demail");
   });
 });

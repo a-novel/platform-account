@@ -186,7 +186,7 @@ describe("devices load", () => {
 
     await expect(loadDevices(loadEvent(consenting))).rejects.toMatchObject({
       status: 307,
-      location: "/?auth=login&returnTo=%2Faccount%2Fdevices",
+      location: "/account?auth=login&returnTo=%2Faccount%2Fdevices",
     });
     expect(sessionList).not.toHaveBeenCalled();
   });
@@ -275,7 +275,7 @@ describe("device actions", () => {
 
     await expect(devicesActions[action](actionEvent(action, { sessionID: phoneID }))).rejects.toMatchObject({
       status: 303,
-      location: "/?auth=login&returnTo=%2Faccount%2Fdevices",
+      location: "/account?auth=login&returnTo=%2Faccount%2Fdevices",
     });
     expect(change).not.toHaveBeenCalled();
   });

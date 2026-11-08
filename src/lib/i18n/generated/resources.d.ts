@@ -63,7 +63,7 @@ export default interface Resources {
       "account": {
         "closeEditor": "Close dialog",
         "credentials": {
-          "description": "How you log in to your account.",
+          "description": "The information you authenticate with.",
           "title": "Credentials"
         },
         "devices": {
@@ -270,10 +270,6 @@ export default interface Resources {
         }
       }
     },
-    "home": {
-      "description": "Log in to manage your account.",
-      "title": "Your Agora account"
-    },
     "pageTitles": {
       "account": "Account settings",
       "accountCreated": "Account created",
@@ -292,7 +288,7 @@ export default interface Resources {
     },
     "preferences": {
       "device": {
-        "description": "Every Agora app follows these preferences on this device.",
+        "description": "Local settings, only for the current device.",
         "title": "This device"
       },
       "language": {
@@ -346,7 +342,6 @@ export default interface Resources {
       "closeNavigation": "Close navigation",
       "collapseNavigation": "Collapse navigation",
       "expandNavigation": "Expand navigation",
-      "home": "Home",
       "logout": "Log out",
       "navigation": "Agora navigation",
       "openNavigation": "Open navigation",

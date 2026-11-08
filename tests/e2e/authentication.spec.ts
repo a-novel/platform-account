@@ -57,8 +57,9 @@ test("login returns to the protected account, survives reload and logout protect
   await stableScreenshot(page, info, "authenticated-account");
 
   await page.getByRole("button", { name: "Log out", exact: true }).last().click();
-  await expect(page).toHaveURL("/");
-  await expect(page).toHaveTitle("Your Agora account | Agora");
+  // The site has no public landing page: a logged-out visitor finds the account page locked under the login.
+  await expect(page).toHaveURL("/account?auth=login&returnTo=%2Faccount");
+  await expect(page).toHaveTitle("Log in | Agora");
   expect((await context.cookies()).filter((cookie) => cookie.name.startsWith("__Host-account_"))).toEqual([]);
 
   // Logout revoked the refresh token, so the service refuses to renew the session with it.
@@ -180,8 +181,8 @@ test("account forms change the password and confirm an email update", async ({ p
 });
 
 test("dialog history and keyboard dismissal restore the shell focus", async ({ page, isMobile }) => {
-  await page.goto("/");
-  await expect(page).toHaveTitle("Your Agora account | Agora");
+  await page.goto("/privacy");
+  await expect(page).toHaveTitle("Privacy | Agora");
 
   // On a phone, the menu closes as the dialog opens, so its control takes the focus back.
   const trigger = isMobile
@@ -197,12 +198,12 @@ test("dialog history and keyboard dismissal restore the shell focus", async ({ p
   await page.keyboard.press("Tab");
   await expect(page.getByLabel(/^Email address/)).toBeFocused();
   await page.getByRole("link", { name: "Forgot password?" }).click();
-  await expect(page).toHaveURL("/?auth=reset");
+  await expect(page).toHaveURL("/privacy?auth=reset");
   await expect(page).toHaveTitle("Reset password | Agora");
 
   await page.goBack();
-  await expect(page).toHaveURL("/");
-  await expect(page).toHaveTitle("Your Agora account | Agora");
+  await expect(page).toHaveURL("/privacy");
+  await expect(page).toHaveTitle("Privacy | Agora");
   await expect(page.getByRole("dialog", { name: /^(Log in|Reset your password)$/ })).toHaveCount(0);
 
   await page.goForward();
@@ -211,13 +212,13 @@ test("dialog history and keyboard dismissal restore the shell focus", async ({ p
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: /^(Log in|Reset your password)$/ })).toHaveCount(0);
-  await expect(page).toHaveURL("/");
-  await expect(page).toHaveTitle("Your Agora account | Agora");
+  await expect(page).toHaveURL("/privacy");
+  await expect(page).toHaveTitle("Privacy | Agora");
   await expect(trigger).toBeFocused();
 });
 
 test("the navigation opens each Agora app at its sign-in page", async ({ page, isMobile }) => {
-  await page.goto("/");
+  await page.goto("/privacy");
   await openAccountControls(page, isMobile);
   const apps = page.getByRole("navigation", { name: "Agora apps" });
   await expect(apps).toBeVisible();
@@ -228,7 +229,7 @@ test("the navigation opens each Agora app at its sign-in page", async ({ page, i
 });
 
 test("navigation controls keep the rail from the first paint, and the drawer focus", async ({ page, isMobile }) => {
-  await page.goto("/");
+  await page.goto("/privacy");
   if (isMobile) {
     await page.getByRole("link", { name: "Open navigation", exact: true }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -282,7 +283,7 @@ test.describe("native forms without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
   test("shell links open, switch and close usable authentication forms", async ({ page, isMobile }) => {
-    await page.goto("/?returnTo=%2Faccount");
+    await page.goto("/privacy?returnTo=%2Faccount");
 
     await openAccountControls(page, isMobile);
     await accountControls(page, isMobile).getByRole("link", { name: "Log in", exact: true }).click();
@@ -301,9 +302,11 @@ test.describe("native forms without JavaScript", () => {
     await dialog.getByRole("button", { name: "Join the list", exact: true }).click();
     await expect(dialog.getByText("Enter a valid email address.", { exact: true })).toBeVisible();
 
+    // The forms post to the site's root, whose page is the locked account page: closing the dialog there
+    // leaves the visitor on that page, under the login again.
     await dialog.getByRole("link", { name: "Close dialog" }).click();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(page).toHaveURL("/?returnTo=%2Faccount");
+    await expect(page).toHaveURL("/account?auth=login&returnTo=%2Faccount");
+    await expect(page.getByRole("dialog", { name: "Log in", exact: true })).toBeVisible();
   });
 
   test("login validates on the server and returns to the protected destination", async ({ page, account }) => {
