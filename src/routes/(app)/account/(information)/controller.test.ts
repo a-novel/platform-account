@@ -1,12 +1,13 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
 import type { AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
-import type { PictureSource } from "#lib/application/profile/types.js";
 
 import { createInformationModel } from "./account-action";
 import { type AccountInformationControllerOptions, createAccountInformationController } from "./controller.svelte";
 
 import { describe, expect, it, vi } from "vitest";
+
+import type { PictureSource } from "@a-novel-kit/uikit";
 
 const ready = createInformationModel(
   { status: "ready", email: "creator@example.test", locationConsent: false },
@@ -189,11 +190,12 @@ describe("picture editor", () => {
       crop: { zoom: 1, x: 350, y: 0 },
     });
 
-    information.pictureZoom.setValue(2);
-    information.panPicture(0.5, 0);
-    information.zoomPicture(9, 0, 0);
+    expect(information.pictureFrame?.state.ratio).toEqual({ width: 1, height: 1 });
+    information.pictureFrame?.zoom(2);
+    information.pictureFrame?.pan(0.5, 0);
+    information.pictureFrame?.zoom(9, 0, 0);
     expect(information.state.model.picture).toMatchObject({ crop: { zoom: 4, x: 350, y: 225 } });
-    expect(information.pictureZoom.state.value).toBe(4);
+    expect(information.pictureFrame?.state.crop).toEqual({ zoom: 4, x: 350, y: 225 });
   });
 
   it("reports a file the browser cannot open", async () => {
@@ -222,18 +224,21 @@ describe("picture editor", () => {
     expect(pictures.release).toHaveBeenCalledExactlyOnceWith({ url: "blob:first", width: 800, height: 600 });
   });
 
-  it("encodes the framed square once while it saves", async () => {
+  it("encodes the framed square once, under the profile service's rule, and keeps it still while it saves", async () => {
     const pictures = pictureFiles();
     const information = controller({ ...ready, editor: "picture" }, { pictures });
     await information.choosePicture(new Blob(["image"]));
 
     const saving = information.savePicture();
     expect(information.state.model.picture.status).toBe("saving");
+    information.pictureFrame?.pan(0.5, 0);
+    expect(information.pictureFrame?.state.crop).toEqual({ zoom: 1, x: 350, y: 0 });
     await expect(information.savePicture()).resolves.toBeNull();
     await expect(saving).resolves.toEqual(new Blob(["picture"], { type: "image/webp" }));
     expect(pictures.encode).toHaveBeenCalledExactlyOnceWith(
       { url: "blob:landscape", width: 1600, height: 900 },
-      { zoom: 1, x: 350, y: 0 }
+      { zoom: 1, x: 350, y: 0 },
+      { ratio: { width: 1, height: 1 }, maxWidth: 512, maxBytes: 262144 }
     );
   });
 
@@ -245,6 +250,7 @@ describe("picture editor", () => {
     information.editors.picture.close();
     expect(pictures.release).toHaveBeenCalledOnce();
     expect(information.state.model.picture).toEqual({ status: "choosing" });
+    expect(information.pictureFrame).toBeNull();
 
     information.editors.picture.open();
     await information.choosePicture(new Blob(["image"]));

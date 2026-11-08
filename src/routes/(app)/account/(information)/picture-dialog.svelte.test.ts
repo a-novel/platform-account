@@ -7,7 +7,7 @@ import { createInformationModel } from "./account-action";
 import { createAccountInformationController } from "./controller.svelte";
 import PictureDialog from "./picture-dialog.svelte";
 
-import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import { describe, expect, it, onTestFinished } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page, userEvent } from "vitest/browser";
 
@@ -79,10 +79,6 @@ async function save(): Promise<File> {
   return sent() as File;
 }
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
 describe("picture dialog", () => {
   it("says framing needs JavaScript until the page runs its scripts, and still removes a picture", async () => {
     const information = controller({ status: "ready", picture: portraitPicture });
@@ -94,7 +90,7 @@ describe("picture dialog", () => {
     expect((remove.element() as HTMLButtonElement).form?.getAttribute("action")).toBe("?edit=picture&/removePicture");
   });
 
-  it("frames a chosen image with the keyboard, the wheel and the slider", async () => {
+  it("frames a chosen image with the keyboard and the slider", async () => {
     const information = await frame(await landscapeFile());
     expect(information.state.model.picture).toMatchObject({ crop: { zoom: 1, x: 200, y: 0 } });
 
@@ -103,40 +99,11 @@ describe("picture dialog", () => {
     expect(information.state.model.picture).toMatchObject({ crop: { zoom: 1.1 } });
     expect(information.state.model.picture).toMatchObject({ crop: { x: 280 + (800 - 800 / 1.1) / 2 } });
 
-    const stage = page.getByRole("application").element();
-    const box = stage.getBoundingClientRect();
-    stage.dispatchEvent(
-      new WheelEvent("wheel", { deltaY: -500, clientX: box.left, clientY: box.top, cancelable: true })
-    );
-    expect(information.pictureZoom.state.value).toBeCloseTo(1.1 * Math.E);
-
     await page.getByRole("slider", { name: "Zoom" }).fill("1");
-    expect(information.pictureZoom.state.value).toBe(1);
+    expect(information.state.model.picture).toMatchObject({ crop: { zoom: 1 } });
   });
 
-  it("pans with a drag and zooms with a pinch around the fingers", async () => {
-    const information = await frame(await landscapeFile());
-    const stage = page.getByRole("application").element() as HTMLElement;
-    // Synthetic pointers are not active pointers, which the browser refuses to capture.
-    stage.setPointerCapture = () => {};
-    const box = stage.getBoundingClientRect();
-    const pointer = (type: string, pointerId: number, x: number, y: number) =>
-      stage.dispatchEvent(
-        new PointerEvent(type, { pointerId, clientX: box.left + x, clientY: box.top + y, bubbles: true })
-      );
-
-    pointer("pointerdown", 1, 100, 100);
-    pointer("pointermove", 1, 100 + box.width / 10, 100);
-    pointer("pointerup", 1, 100 + box.width / 10, 100);
-    expect(information.state.model.picture).toMatchObject({ crop: { zoom: 1, x: 120 } });
-
-    pointer("pointerdown", 1, 0, 0);
-    pointer("pointerdown", 2, box.width / 2, box.width / 2);
-    pointer("pointermove", 2, box.width, box.width);
-    expect(information.pictureZoom.state.value).toBeCloseTo(2);
-  });
-
-  it("saves a square WebP of at most 512 pixels on an opaque white ground", async () => {
+  it("sends the framed picture as a square WebP of at most 512 pixels and 256 KiB", async () => {
     await frame(await landscapeFile());
 
     const picture = await save();
@@ -146,43 +113,6 @@ describe("picture dialog", () => {
     const bitmap = await createImageBitmap(picture);
     expect([bitmap.width, bitmap.height]).toEqual([512, 512]);
     await expect.element(page.getByRole("button", { name: "Saving picture…" })).toBeDisabled();
-  });
-
-  it("saves a JPEG where the browser cannot encode WebP, as Safari", async () => {
-    const toBlob = HTMLCanvasElement.prototype.toBlob;
-    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (
-      this: HTMLCanvasElement,
-      done,
-      type,
-      quality
-    ) {
-      toBlob.call(this, done, type === "image/webp" ? "image/png" : type, quality);
-    });
-    await frame(await landscapeFile(300, 200));
-
-    const picture = await save();
-
-    expect(picture.type).toBe("image/jpeg");
-    expect((await createImageBitmap(picture)).width).toBe(200);
-  });
-
-  it("lowers the quality until the picture fits 256 KiB", async () => {
-    const toBlob = HTMLCanvasElement.prototype.toBlob;
-    const encode = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(function (
-      this: HTMLCanvasElement,
-      done,
-      type,
-      quality
-    ) {
-      if (quality !== undefined && quality > 0.75) done(new Blob([new Uint8Array(300 * 1024)], { type }));
-      else toBlob.call(this, done, type, quality);
-    });
-    await frame(await landscapeFile());
-
-    const picture = await save();
-
-    expect(picture.size).toBeLessThanOrEqual(256 * 1024);
-    expect(encode.mock.calls.map(([, , quality]) => quality)).toEqual([0.9, 0.8, 0.7]);
   });
 
   it("reports a file the browser cannot open as an image", async () => {

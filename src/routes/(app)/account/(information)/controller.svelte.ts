@@ -5,18 +5,23 @@ import type {
   AccountInformationModel,
   AccountPasswordField,
 } from "#lib/application/auth/types.js";
-import type { PictureCrop, PictureSource } from "#lib/application/profile/types.js";
+import { profilePicture } from "#lib/application/profile/picture.js";
 import { usernameIssue } from "#lib/application/profile/username.js";
 
 import { blankEditors } from "./account-action";
-import { centeredCrop, panCrop, zoomCrop } from "./crop";
-import { type PictureFiles, browserPictureFiles } from "./picture-file";
 
 import {
   type OpenController,
   type PasswordInputController,
-  type SliderController,
+  type PictureCrop,
+  type PictureFiles,
+  type PictureFrameController,
+  type PictureFrameState,
+  browserPictureFiles,
+  centeredCrop,
   createPressedController,
+  panCrop,
+  zoomCrop,
 } from "@a-novel-kit/uikit";
 
 /** State rendered by the "My information" tab. */
@@ -38,8 +43,8 @@ export interface AccountInformationController {
   readonly passwordVisibility: Record<AccountPasswordField | "emailCurrentPassword", PasswordInputController>;
   /** The editing dialogs, open while the URL names them. */
   readonly editors: Record<AccountEditor, OpenController>;
-  /** The zoom of the picture being framed, which the picture dialog's slider shows and sets. */
-  readonly pictureZoom: SliderController;
+  /** The picture being framed, which the picture dialog's frame shows and moves. Null while none is. */
+  readonly pictureFrame: PictureFrameController | null;
   /** Native navigation destination that opens an editor, or closes it for null. */
   editorHref(editor: AccountEditor | null): string;
   /** Records that the page runs its scripts, once it has hydrated. */
@@ -54,10 +59,6 @@ export interface AccountInformationController {
   submitUsername(form: FormData): boolean;
   /** Opens an image file for framing, or reports that the browser cannot open it. */
   choosePicture(file: Blob): Promise<void>;
-  /** Moves the image under the frame by a distance given in fractions of the frame's side. */
-  panPicture(dx: number, dy: number): void;
-  /** Zooms the image around a focus point given in fractions of the frame's side, the center by default. */
-  zoomPicture(zoom: number, focusX?: number, focusY?: number): void;
   /** Encodes the framed picture for its form, or returns null when the browser cannot. */
   savePicture(): Promise<Blob | null>;
   /** Starts removing the picture and reports whether native submission may continue. */
@@ -135,12 +136,23 @@ export function createAccountInformationController({
     };
   }
 
-  /** Applies a change of framing while the picture is being framed. */
-  function reframe(change: (source: PictureSource, crop: PictureCrop) => PictureCrop) {
+  /** Applies a change of framing while the picture is being framed, and refuses it while it saves. */
+  function reframe(change: (frame: PictureFrameState) => PictureCrop) {
     const picture = forms.picture;
     if (picture.status !== "cropping") return;
-    forms = { ...forms, picture: { ...picture, crop: change(picture.source, picture.crop) } };
+    const crop = change({ source: picture.source, ratio: profilePicture.ratio, crop: picture.crop });
+    forms = { ...forms, picture: { ...picture, crop } };
   }
+
+  const pictureFrame: PictureFrameController | null = $derived.by(() => {
+    const picture = forms.picture;
+    if (picture.status !== "cropping" && picture.status !== "saving") return null;
+    return {
+      state: { source: picture.source, ratio: profilePicture.ratio, crop: picture.crop },
+      pan: (dx, dy) => reframe((frame) => panCrop(frame, dx, dy)),
+      zoom: (zoom, focusX, focusY) => reframe((frame) => zoomCrop(frame, zoom, focusX, focusY)),
+    };
+  });
 
   return {
     get state() {
@@ -158,12 +170,8 @@ export function createAccountInformationController({
       username: editorController("username"),
       picture: editorController("picture"),
     },
-    pictureZoom: {
-      get state() {
-        const picture = forms.picture;
-        return { value: picture.status === "cropping" || picture.status === "saving" ? picture.crop.zoom : 1 };
-      },
-      setValue: (zoom) => reframe((source, crop) => zoomCrop(source, crop, zoom)),
+    get pictureFrame() {
+      return pictureFrame;
     },
     editorHref: editorUrl,
     enableScripts() {
@@ -208,17 +216,11 @@ export function createAccountInformationController({
       try {
         const source = await pictures.open(file);
         if (choice !== choices || forms.picture.status !== "opening") return pictures.release(source);
-        forms = { ...forms, picture: { status: "cropping", source, crop: centeredCrop(source) } };
+        forms = { ...forms, picture: { status: "cropping", source, crop: centeredCrop(source, profilePicture.ratio) } };
       } catch {
         if (choice !== choices || forms.picture.status !== "opening") return;
         forms = { ...forms, picture: { status: "choosing", refusal: "unreadable" } };
       }
-    },
-    panPicture(dx, dy) {
-      reframe((source, crop) => panCrop(source, crop, dx, dy));
-    },
-    zoomPicture(zoom, focusX, focusY) {
-      reframe((source, crop) => zoomCrop(source, crop, zoom, focusX, focusY));
     },
     async savePicture() {
       const picture = forms.picture;
@@ -226,7 +228,7 @@ export function createAccountInformationController({
       forms = { ...forms, picture: { ...picture, status: "saving" } };
 
       try {
-        return await pictures.encode(picture.source, picture.crop);
+        return await pictures.encode(picture.source, picture.crop, profilePicture);
       } catch {
         pictures.release(picture.source);
         forms = { ...forms, picture: { status: "choosing", refusal: "unreadable" } };

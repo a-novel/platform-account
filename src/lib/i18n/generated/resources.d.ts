@@ -150,7 +150,6 @@ export default interface Resources {
           "current": "Your current picture",
           "description": "Choose an image, then move and zoom it to frame your picture.",
           "dialogTitle": "Change your picture",
-          "frameInstructions": "Drag the image or use the arrow keys to move it. Zoom with the slider, the + and - keys, the mouse wheel or a pinch.",
           "frameLabel": "Picture frame",
           "none": "No picture",
           "opening": "Opening the image…",
@@ -166,8 +165,7 @@ export default interface Resources {
           "save": "Save picture",
           "saving": "Saving picture…",
           "scriptRequired": "Framing a picture needs JavaScript. Turn it on in your browser, then reload this page.",
-          "title": "Picture",
-          "zoom": "Zoom"
+          "title": "Picture"
         },
         "profile": {
           "description": "Anyone on Agora can see this information.",
