@@ -49,7 +49,7 @@ test("a client signs a visitor in through the account platform, then again witho
 }, info) => {
   const first = authorizationRequest();
   await page.goto(first.href);
-  await expect(page).toHaveURL(/^[^?]+\/\?auth=login&returnTo=%2Fauthorize%3F/);
+  await expect(page).toHaveURL(/^[^?]+\/account\?auth=login&returnTo=%2Fauthorize%3F/);
 
   const dialog = page.getByRole("dialog", { name: "Log in" });
   await expect(dialog).toHaveAccessibleDescription(

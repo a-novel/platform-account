@@ -21,7 +21,7 @@ const links = {
 };
 
 const anonymous: ShellData = {
-  activeNavigation: "home",
+  activeNavigation: null,
   rail: "expanded",
   session: { status: "anonymous" },
   apps: { studio: "https://studio.example.test" },
@@ -148,7 +148,7 @@ describe("createShellController", () => {
     const controller = shell({ getData: () => data, allowNativeLogout: false, getUrl: () => url });
 
     expect(controller.state.model).toEqual({
-      activeNavigation: "home",
+      activeNavigation: null,
       rail: "collapsed",
       drawerOpen: true,
       authView: null,

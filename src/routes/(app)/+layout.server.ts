@@ -24,15 +24,14 @@ const shellAuthorization = {
 } as const satisfies Record<ShellSession["status"], AuthorizationStatus>;
 
 /**
- * The rail destination each page belongs to. The account pages are where a signed-in visitor's home leads, and
- * privacy is one of their tabs. The public Privacy page serves logged-out visitors.
+ * The rail destination each page belongs to. The account pages are the site's landing page, which the rail's account
+ * link opens; the public Privacy page serves logged-out visitors.
  */
 const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
-  "/": "home",
-  "/account": "home",
-  "/account/devices": "home",
-  "/account/privacy": "home",
-  "/account/preferences": "home",
+  "/account": "account",
+  "/account/devices": "account",
+  "/account/privacy": "account",
+  "/account/preferences": "account",
   "/privacy": "privacy",
 };
 

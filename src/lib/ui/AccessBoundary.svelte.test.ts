@@ -10,7 +10,11 @@ import { page } from "vitest/browser";
 
 import type { AuthorizationStatus } from "@a-novel-kit/uikit/authorization";
 
-const links = { loginHref: "/?auth=login&returnTo=%2Faccount", homeHref: "/", retryHref: "/account?panel=email" };
+const links = {
+  loginHref: "/account?auth=login&returnTo=%2Faccount",
+  homeHref: "/",
+  retryHref: "/account?panel=email",
+};
 const children = createRawSnippet(() => ({ render: () => "<p>Private content</p>" }));
 const unavailable = createRawSnippet(() => ({ render: () => "<p>Blank public form</p>" }));
 

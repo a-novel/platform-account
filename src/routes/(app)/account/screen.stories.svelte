@@ -541,6 +541,10 @@
   <StoryHarness {summary} tab="preferences" language="fr" />
 </Story>
 
+<Story name="Preferences: language list" asChild>
+  <StoryHarness {summary} tab="preferences" language="fr" languageOpen />
+</Story>
+
 <Story name="Preferences: mobile" globals={reviewStoryGlobals.mobile} asChild>
   <StoryHarness {summary} tab="preferences" language="en" />
 </Story>

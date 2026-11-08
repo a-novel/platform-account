@@ -56,6 +56,8 @@ export function errorPageTitle(t: TFunction<"common">, status: number, downtime 
   if (authorizationRequest) return t("access.authorizationRequest.title");
 
   switch (status) {
+    case 401:
+      return t("access.anonymous.title");
     case 404:
       return t("access.notFound.title");
     case 403:

@@ -13,7 +13,7 @@ test.describe("scheduled maintenance", () => {
   test.use({ baseURL: platformOrigin("scheduled"), timezoneId: "Europe/Paris" });
 
   test("announces the expected window in the visitor's time zone and keeps sign-in open", async ({ page }, info) => {
-    await page.goto("/");
+    await page.goto("/privacy");
     // Published as 06:00 to 08:30 UTC, an hour later in Paris in January. No-break spaces keep the
     // time frame on one line.
     await expect(banner(page, "Scheduled maintenance")).toContainText(/Jan\s12,\s2099,\s7:00\s–\s9:30\sAM\sGMT\+1/);
@@ -25,7 +25,7 @@ test.describe("scheduled maintenance", () => {
 
   test("turns into maintenance in progress when the start passes", async ({ page }) => {
     await page.clock.install({ time: new Date("2099-01-12T05:59:00Z") });
-    await page.goto("/");
+    await page.goto("/privacy");
     await expect(banner(page, "Scheduled maintenance")).toBeVisible();
     await page.clock.fastForward("01:00");
     await expect(banner(page, "Maintenance in progress")).toBeVisible();
@@ -36,7 +36,7 @@ test.describe("maintenance in progress", () => {
   test.use({ baseURL: platformOrigin("started") });
 
   test("locks sign-in, the account and emailed links until operators clear it", async ({ page }, info) => {
-    await page.goto("/");
+    await page.goto("/privacy");
     await expect(banner(page, "Maintenance in progress")).toContainText("Jan 12, 2099");
 
     await page.goto("/?auth=login");

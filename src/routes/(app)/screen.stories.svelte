@@ -15,7 +15,7 @@
   import { expect, userEvent, within } from "storybook/test";
 
   const anonymous: ShellViewModel = {
-    activeNavigation: "home",
+    activeNavigation: null,
     rail: "expanded",
     drawerOpen: false,
     authView: null,
@@ -23,6 +23,7 @@
   };
   const authenticated: ShellViewModel = {
     ...anonymous,
+    activeNavigation: "account",
     session: {
       status: "authenticated",
       displayName: "Maya Chen",
@@ -31,6 +32,7 @@
   };
   const withPicture: ShellViewModel = {
     ...anonymous,
+    activeNavigation: "account",
     // A profile with a username and a picture: the username names the account, the handle keeps the initials.
     session: { status: "authenticated", displayName: "Moonlit Maya 🌊", initials: "MC", picture: portraitPicture },
   };
@@ -78,7 +80,6 @@
   async function verifyAnonymousAuthentication({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("link", { name: t("shell.home") })).toHaveAttribute("aria-current", "page");
     await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
     await expect(canvas.getByRole("link", { name: t("shell.register") })).toHaveAttribute("href", "#register");
     await expect(canvas.queryByRole("button", { name: t("shell.logout") })).not.toBeInTheDocument();
@@ -146,6 +147,7 @@
     const t = createStorybookTranslator(globals);
     const account = canvas.getByRole("link", { name: "Maya Chen" });
     await expect(account).toHaveAttribute("href", "#account");
+    await expect(account).toHaveAttribute("aria-current", "page");
     // This platform serves the account page, so the link stays in the tab.
     await expect(account).not.toHaveAttribute("target");
     await expect(canvas.getByRole("button", { name: t("shell.logout") })).toBeVisible();
@@ -163,7 +165,6 @@
     const t = createStorybookTranslator(globals);
     const navigation = canvas.getByRole("dialog", { name: t("shell.brand") });
     const labelStarts = [
-      within(navigation).getByText(t("shell.home")).getBoundingClientRect().left,
       within(navigation).getByText(t("shell.apps.studio")).getBoundingClientRect().left,
       within(navigation).getByText("Maya Chen").getBoundingClientRect().left,
       within(navigation).getByText(t("shell.logout")).getBoundingClientRect().left,

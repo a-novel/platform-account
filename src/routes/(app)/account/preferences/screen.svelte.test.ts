@@ -22,9 +22,7 @@ describe("account preferences screen", () => {
 
     const select = page.getByRole("combobox", { name: "Langue" });
     await expect.element(select).toHaveTextContent("Français");
-    await expect
-      .element(page.getByText("Toutes les applications Agora suivent ces préférences sur cet appareil."))
-      .toBeVisible();
+    await expect.element(page.getByText("Paramètres locaux, uniquement pour l’appareil actuel.")).toBeVisible();
 
     await select.click();
     const options = page.getByRole("option");

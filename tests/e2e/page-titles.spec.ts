@@ -8,7 +8,7 @@ const locales = [
   {
     locale: "en-US",
     routes: [
-      ["/", "Your Agora account"],
+      ["/", "Log in"],
       ["/?auth=login", "Log in"],
       ["/?auth=register", "Join the Agora invitation list"],
       ["/?auth=reset", "Reset password"],
@@ -16,7 +16,7 @@ const locales = [
       ["/account/devices", "Log in"],
       ["/account/privacy", "Log in"],
       ["/privacy", "Privacy"],
-      ["/?auth=unknown&email=private@example.test", "Your Agora account"],
+      ["/?auth=unknown&email=private@example.test", "Agora account required"],
       ["/ext/account/create", "Create account: Incomplete link"],
       ["/ext/password/reset", "Reset password: Incomplete link"],
       ["/ext/email/validate", "Confirm email: Incomplete link"],
@@ -27,7 +27,7 @@ const locales = [
   {
     locale: "fr-FR",
     routes: [
-      ["/", "Votre compte Agora"],
+      ["/", "Connectez-vous"],
       ["/?auth=login", "Connectez-vous"],
       ["/?auth=register", "Rejoignez la liste d’invitation Agora"],
       ["/?auth=reset", "Réinitialiser mon mot de passe"],
@@ -35,7 +35,7 @@ const locales = [
       ["/account/devices", "Connectez-vous"],
       ["/account/privacy", "Connectez-vous"],
       ["/privacy", "Confidentialité"],
-      ["/?auth=unknown&email=private@example.test", "Votre compte Agora"],
+      ["/?auth=unknown&email=private@example.test", "Compte Agora requis"],
       ["/ext/account/create", "Créer mon compte: Lien incomplet"],
       ["/ext/password/reset", "Réinitialiser mon mot de passe: Lien incomplet"],
       ["/ext/email/validate", "Confirmer mon courriel: Lien incomplet"],
@@ -47,7 +47,6 @@ const locales = [
 
 /** Fixed checkpoint names, so a copy change shows as a reviewable diff. */
 const checkpoints: Partial<Record<string, string>> = {
-  "/": "welcome",
   "/?auth=login": "login",
   "/?auth=register": "join-the-agora-invitation-list",
   "/?auth=reset": "reset-password",

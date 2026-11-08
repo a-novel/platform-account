@@ -24,7 +24,7 @@
 
 <Screen
   status={page.status}
-  loginHref={loginHref(currentPath)}
+  loginHref={loginHref(page.url.searchParams.get("returnTo") ?? currentPath)}
   homeHref={resolve("")}
   retryHref={currentPath}
   {downtime}

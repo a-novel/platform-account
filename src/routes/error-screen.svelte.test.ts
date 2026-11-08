@@ -7,7 +7,11 @@ import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page } from "vitest/browser";
 
-const links = { loginHref: "/?auth=login&returnTo=%2Faccount", homeHref: "/", retryHref: "/account?panel=email" };
+const links = {
+  loginHref: "/account?auth=login&returnTo=%2Faccount",
+  homeHref: "/",
+  retryHref: "/account?panel=email",
+};
 
 describe("error page presentation", () => {
   const failureTitles = [
@@ -20,6 +24,13 @@ describe("error page presentation", () => {
   it.each(failureTitles)("localizes HTTP %s without showing internal error details", async (status, title) => {
     render(ErrorPage, { ...links, status }, withLocale("fr"));
     await expect.element(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
+  });
+
+  it("locks a page that needs a login behind the login link", async () => {
+    render(ErrorPage, { ...links, status: 401 }, withLocale());
+
+    await expect.element(page.getByRole("heading", { name: "Agora account required", level: 1 })).toBeVisible();
+    await expect.element(page.getByRole("link", { name: "Log in" })).toHaveAttribute("href", links.loginHref);
   });
 
   it.each(["en", "fr"] as const)(

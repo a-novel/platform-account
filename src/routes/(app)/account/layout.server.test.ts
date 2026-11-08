@@ -69,7 +69,7 @@ describe("account layout", () => {
 
     await expect(loadAccount(event("/account/devices?confirm=others"))).rejects.toMatchObject({
       status: 307,
-      location: "/?auth=login&returnTo=%2Faccount%2Fdevices%3Fconfirm%3Dothers",
+      location: "/account?auth=login&returnTo=%2Faccount%2Fdevices%3Fconfirm%3Dothers",
     });
     expect(credentialsGetSelf).not.toHaveBeenCalled();
   });

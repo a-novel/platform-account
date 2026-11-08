@@ -18,6 +18,8 @@
     privacy?: PrivacyAccountState;
     /** The language chosen on the Preferences tab. */
     language?: LanguageChoice;
+    /** Whether the language select shows its list. */
+    languageOpen?: boolean;
     /** Whether the password fields show their text. */
     passwordsShown?: boolean;
     /** Whether the page runs its scripts, which framing a picture needs. Defaults to true. */
@@ -211,7 +213,7 @@
     {:else if tab === "preferences"}
       <PreferencesScreen
         language={{
-          state: { open: false, value: props.language ?? "browser" },
+          state: { open: props.languageOpen ?? false, value: props.language ?? "browser" },
           open: noop,
           close: noop,
           toggle: noop,

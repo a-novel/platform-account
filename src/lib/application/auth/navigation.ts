@@ -33,7 +33,10 @@ export function returnsToAuthorization(returnTo: string | null | undefined): boo
   return new URL(safeReturnTo(returnTo), placeholderOrigin).pathname === "/authorize";
 }
 
-/** Opens the shell's existing login modal and returns to a safe page after authentication. */
+/**
+ * Opens the shell's login dialog over the account page, the site's one landing page, and returns to a
+ * safe page after authentication.
+ */
 export function loginHref(returnTo: string): string {
-  return "/?" + new URLSearchParams({ auth: "login", returnTo: safeReturnTo(returnTo) });
+  return "/account?" + new URLSearchParams({ auth: "login", returnTo: safeReturnTo(returnTo) });
 }

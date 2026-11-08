@@ -2,7 +2,8 @@ import { stubAuthenticationContext } from "#lib/server/auth/context.fixture.js";
 import { getAuthenticationContext } from "#lib/server/auth/context.js";
 import { AuthenticationSession } from "#lib/server/auth/session.js";
 
-import { actions as authenticationActions } from "./+page.server";
+import type { PageServerLoadEvent } from "./$types";
+import { actions as authenticationActions, load as loadHome } from "./+page.server";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -35,6 +36,25 @@ function event(
   vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
   return request;
 }
+
+describe("landing page", () => {
+  it.each([
+    { name: "sends a visit to the account page", path: "/", want: "/account" },
+    { name: "keeps the dialog a link asked for", path: "/?auth=register", want: "/account?auth=register" },
+  ])("$name", ({ path, want }) => {
+    const url = new URL(path, "https://account.test");
+    const visit = { url, request: new Request(url) } as unknown as PageServerLoadEvent;
+
+    expect(() => loadHome(visit)).toThrow(expect.objectContaining({ status: 307, location: want }));
+  });
+
+  it("renders a form result posted without JavaScript in place", () => {
+    const url = new URL("https://account.test/?auth=login");
+    const submission = { url, request: new Request(url, { method: "POST" }) } as unknown as PageServerLoadEvent;
+
+    expect(loadHome(submission)).toBeUndefined();
+  });
+});
 
 describe("authentication outcomes", () => {
   beforeEach(() => vi.clearAllMocks());

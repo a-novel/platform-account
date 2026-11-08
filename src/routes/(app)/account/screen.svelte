@@ -240,16 +240,23 @@
   }
 
   /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. They
-     overhang the column by the hairline ring, so the ring of a card as wide as the column stays under them. */
+     overhang the column by the hairline ring, so the ring of a card as wide as the column stays under them. The
+     canvas's own color, without its lamp, keeps them apart from what scrolls under them. A finger or a wheel scrolls
+     them, so they show no scrollbar. */
   .tabs {
     position: sticky;
     z-index: var(--layer-sticky);
     margin-inline: calc(-1 * var(--border-width-thin));
     inset-block-start: var(--shell-sticky-top, 0);
     border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
-    background: var(--fill-canvas);
+    background: var(--color-surface-canvas);
     padding-inline: var(--border-width-thin);
     overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
   }
 
   /* One row, which the bar scrolls on a phone: tabs on two rows read as two groups. */
@@ -257,13 +264,12 @@
     flex-wrap: nowrap;
   }
 
-  /* Frosting what scrolls under them leaves them unchanged at rest, lamp included, where a canvas fill
-     would light them from their own corner in a browser that ignores a fixed background, as iOS does. */
+  /* Where the browser blurs a backdrop, the canvas color turns to frosted glass of it. */
   @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
     .tabs {
       -webkit-backdrop-filter: blur(var(--blur-lg));
       backdrop-filter: blur(var(--blur-lg));
-      background: none;
+      background: color-mix(in oklab, var(--color-surface-canvas) var(--color-mix-12), transparent);
     }
   }
 
@@ -271,6 +277,12 @@
   @container (max-width: 34rem) {
     .account-header {
       grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    /* The tabs span the phone's whole width, over the page's gutters. */
+    .tabs {
+      margin-inline: calc(-1 * var(--layout-gutter));
+      padding-inline: var(--layout-gutter);
     }
 
     /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */

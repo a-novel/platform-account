@@ -54,8 +54,9 @@
     getUrl: () => new URL(currentHref),
   });
 
+  // A page locked for a missing login still titles the dialog that opens over it.
   setAuthenticationTitle(() =>
-    !page.error && controller.state.model.authView
+    (!page.error || page.status === 401) && controller.state.model.authView
       ? authenticationPageTitle(t, controller.authentication.state.model)
       : undefined
   );
