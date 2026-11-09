@@ -100,6 +100,9 @@ const sessionFeedback = [
   [1280, "error"],
 ] as const;
 
+// Chrome 158 reports `justify-content: flex-start` as flow-start.
+const startAligned = /^(flex|flow)-start$/;
+
 describe("account shell screen", () => {
   beforeEach(async () => {
     await page.viewport(1280, 800);
@@ -118,11 +121,11 @@ describe("account shell screen", () => {
 
     const register = page.getByRole("link", { name: "Register" });
     await expect.element(register).toHaveAttribute("href", "/?auth=register");
-    expect(getComputedStyle(register.element()).justifyContent).toBe("flex-start");
+    expect(getComputedStyle(register.element()).justifyContent).toMatch(startAligned);
 
     const login = page.getByRole("link", { name: "Log in" });
     await expect.element(login).toHaveAttribute("href", "/?auth=login");
-    expect(getComputedStyle(login.element()).justifyContent).toBe("flex-start");
+    expect(getComputedStyle(login.element()).justifyContent).toMatch(startAligned);
     await login.click();
 
     expect(shell.state.model.authView).toBe("login");
