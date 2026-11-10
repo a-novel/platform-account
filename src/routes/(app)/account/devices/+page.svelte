@@ -30,16 +30,16 @@
   // The address bar, which shallow routing changes without a navigation that page.url would follow.
   let currentHref = $state(page.url.href);
   // A list may stay missing, so it stops asking after a few tries and says so.
-  let retriesSpent = $state(false);
-  retryWhile(
+  const listRetries = retryWhile(
     () => data.devices.status === "unavailable",
     () => invalidate(devicesData),
-    { initialDelay: 1_000, maxRetries: 3, onExhausted: () => (retriesSpent = true) }
+    { maxRetries: 5 }
   );
 
   const controller = createAccountDevicesController({
     getModel: () => ({
-      devices: data.devices.status === "unavailable" && !retriesSpent ? { status: "loading" as const } : data.devices,
+      devices:
+        data.devices.status === "unavailable" && !listRetries.exhausted ? { status: "loading" as const } : data.devices,
       pages: readPages(new URL(currentHref).searchParams),
       locationConsent: data.locationConsent,
       action: (form as DevicesActionData | null)?.devicesAction ?? { status: "ready" as const },
