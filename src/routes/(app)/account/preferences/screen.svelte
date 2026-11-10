@@ -18,10 +18,8 @@
 <script lang="ts">
   import { localeNames, supportedLocales } from "#lib/i18n/config.js";
 
-  import Flag from "./flag.svelte";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, Field, FormActions, Select, type SelectOption } from "@a-novel-kit/uikit";
+  import { Button, Card, Field, Flag, FormActions, Select, type SelectOption } from "@a-novel-kit/uikit";
 
   import { AppWindow } from "@lucide/svelte";
 
