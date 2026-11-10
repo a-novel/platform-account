@@ -32,7 +32,7 @@ describe("createAccountLayoutController", () => {
       currentTab: "information",
     });
 
-    const unavailable: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
+    const unavailable: AccountSummaryState = { status: "loading" };
     current = unavailable;
     tab = "devices";
     expect(controller.state).toMatchObject({ summary: unavailable, currentTab: "devices" });

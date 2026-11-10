@@ -25,6 +25,7 @@
     roles: ["auth:user"],
     email: "maya.chen@example.test",
     loggedInUntil: "2026-11-10T18:40:00Z",
+    profile: {},
   } satisfies AccountSummaryState;
 
   const credentials = { status: "ready", email: summary.email, locationConsent: false } as const;
@@ -158,7 +159,7 @@
 
 <Story name="Header unavailable" asChild>
   <StoryHarness
-    summary={{ status: "error", feedback: "sessionUnavailable" }}
+    summary={{ status: "loading" }}
     tab="information"
     information={{ ...information, credentials: { status: "unavailable" } }}
   />

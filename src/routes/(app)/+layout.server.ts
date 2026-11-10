@@ -1,25 +1,24 @@
 import type { ProfileSummary } from "#lib/application/profile/types.js";
 import type { ShellApps, ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
 import { type AuthenticationEvent, getAuthenticationContext } from "#lib/server/auth/context.js";
-import type { ResolvedSession } from "#lib/server/auth/session.js";
+import { type ResolvedSession, hasAccountSession } from "#lib/server/auth/session.js";
 import { readPlatformDowntime } from "#lib/server/downtime.js";
 import { getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 import { getRuntimeConfig } from "#lib/server/runtime-config.server.js";
 
 import { type AccountDisplay, accountDisplayFromHandle } from "./account-display";
+import { shellSessionData } from "./dependencies";
 
 import { NAVIGATION_RAIL_COOKIE, parseNavigationRail } from "@a-novel-kit/nodelib-browser/preferences";
 import { isDowntimeStarted } from "@a-novel-kit/nodelib-server";
 import type { AuthorizationStatus } from "@a-novel-kit/uikit/authorization";
 
-import type { RequestEvent } from "@sveltejs/kit";
+import type { ServerLoadEvent } from "@sveltejs/kit";
 
 /** The page authorization each shell session grants. */
 const shellAuthorization = {
   anonymous: "anonymous",
-  loading: "anonymous",
-  error: "unavailable",
-  downtime: "unavailable",
+  loading: "unavailable",
   authenticated: "allowed",
 } as const satisfies Record<ShellSession["status"], AuthorizationStatus>;
 
@@ -35,10 +34,11 @@ const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
   "/privacy": "privacy",
 };
 
-type ShellEvent = AuthenticationEvent & Pick<RequestEvent, "locals">;
+type ShellEvent = AuthenticationEvent & Pick<ServerLoadEvent, "locals" | "depends">;
 
 /** Loads the shell's navigation state, app list, session display and page authorization. */
 export const load = async (event: ShellEvent) => {
+  event.depends(shellSessionData);
   const session = await readShellSession(event);
 
   return {
@@ -66,14 +66,18 @@ function readApps(): ShellApps | null {
 /** Resolves the session the shell shows, exposing only a display identity to the browser. */
 async function readShellSession(event: ShellEvent): Promise<ShellSession> {
   // A started downtime stops Authentication, so the shell doesn't ask it for the session.
-  if (isDowntimeStarted(await readPlatformDowntime())) return { status: "downtime" };
+  const resolved = isDowntimeStarted(await readPlatformDowntime()) ? null : await currentSession(event);
 
-  const resolved = await currentSession(event);
-  if (resolved.status === "downtime") return { status: "downtime" };
-  if (resolved.status === "unavailable") return { status: "error" };
+  // While Authentication can't answer, only the cookies tell an account from a visitor.
+  if (!resolved || resolved.status === "downtime" || resolved.status === "unavailable") {
+    return hasAccountSession(event.cookies) ? { status: "loading" } : { status: "anonymous" };
+  }
   if (resolved.status === "none" || !resolved.claims.userID) return { status: "anonymous" };
 
-  const { username, picture } = await readProfile(event, resolved.accessToken);
+  const profile = await readProfile(event, resolved.accessToken);
+  if (!profile) return { status: "loading" };
+
+  const { username, picture } = profile;
   const display = resolved.identityHandle
     ? accountDisplayFromHandle(resolved.identityHandle, username)
     : fallbackDisplay(event, username);
@@ -86,15 +90,12 @@ function fallbackDisplay(event: ShellEvent, username?: string): AccountDisplay {
   return { displayName: username ?? t("shell.accountFallback"), initials: "A" };
 }
 
-/**
- * Reads the visitor's public profile. Without the profile service, the shell names the account by its email
- * handle and shows initials.
- */
-async function readProfile(event: ShellEvent, accessToken: string): Promise<ProfileSummary> {
+/** Reads the visitor's public profile, or null while the profile service can't answer. */
+async function readProfile(event: ShellEvent, accessToken: string): Promise<ProfileSummary | null> {
   try {
     return summarizeProfile(await getProfileContext(event).self(accessToken));
   } catch {
-    return {};
+    return null;
   }
 }
 

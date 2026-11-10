@@ -9,7 +9,6 @@
     tags: ["!autodocs"],
     parameters: { layout: "fullscreen" },
     args: {
-      loginHref: "/account?auth=login&returnTo=%2Faccount",
       homeHref: "/",
       retryHref: "/account",
     },

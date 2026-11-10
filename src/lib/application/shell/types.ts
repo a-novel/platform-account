@@ -6,9 +6,8 @@ export type AuthDialogView = AuthenticationJourney;
 /** Session states the shell can render without owning session logic. */
 export type ShellSession =
   | { status: "anonymous" }
+  /** A session whose account could not be read yet. The shell shows a placeholder and asks again. */
   | { status: "loading" }
-  | { status: "error" }
-  | { status: "downtime" }
   | {
       status: "authenticated";
       displayName: string;
@@ -31,4 +30,6 @@ export interface ShellViewModel {
   session: ShellSession;
   /** Set while the dialog logs the visitor in for another Agora app's authorization request. */
   authorizationRequest?: boolean;
+  /** Set on a page that needs a login, whose dialog stays open. */
+  authLocked?: boolean;
 }

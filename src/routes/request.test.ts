@@ -18,7 +18,10 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 
 import { Role } from "@a-novel/service-authentication-rest";
 
-import type { Cookies, RequestEvent } from "@sveltejs/kit";
+import type { Cookies, RequestEvent as KitRequestEvent, ServerLoadEvent } from "@sveltejs/kit";
+
+/** A request as a load receives it, which the tests hand the forms and endpoints too. */
+type RequestEvent = KitRequestEvent & Pick<ServerLoadEvent, "depends">;
 
 const env = vi.hoisted(() => ({
   AUTHENTICATION_SERVICE_URL: "https://authentication.test",
@@ -103,6 +106,7 @@ function request(
     url,
     locals: { locale: "fr", i18n: createI18n("fr") },
     request: new Request(url, fields ? { method: "POST", body: new URLSearchParams(fields), headers } : { headers }),
+    depends: () => {},
   } as unknown as RequestEvent;
   return { event, cookies, values };
 }
@@ -192,7 +196,11 @@ describe("invitation requests at the request boundary", () => {
     await expect(authenticationActions.default(event)).resolves.toEqual({
       status: 503,
       data: {
-        authentication: { journey: "register", state: { status: "service-error", feedback: "serviceUnavailable" } },
+        authentication: {
+          journey: "register",
+          email,
+          state: { status: "service-error", feedback: "serviceUnavailable" },
+        },
       },
     });
     expect(fetchService).toHaveBeenCalledTimes(2);
@@ -341,7 +349,7 @@ describe("account session at the request boundary", () => {
     });
   });
 
-  it("keeps the session and shows initials while the profile service is unreachable", async () => {
+  it("holds the account's place while the profile service is unreachable", async () => {
     const { event } = request("/account", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen" });
     const answers: Record<string, unknown> = { "/v2/session": identity, "/v2/credentials/self": credentials };
     fetchService.mockImplementation(async (url) => Response.json(answers[new URL(String(url)).pathname]));
@@ -349,7 +357,7 @@ describe("account session at the request boundary", () => {
 
     const [shell, account] = await Promise.all([loadShell(event), loadAccount(event)]);
 
-    expect(shell.session).toEqual({ status: "authenticated", displayName: "Maya Chen", initials: "MC" });
+    expect(shell.session).toEqual({ status: "loading" });
     expect(account).toMatchObject({ authorization: "allowed", profile: { status: "unavailable" } });
   });
 
@@ -370,14 +378,14 @@ describe("account session at the request boundary", () => {
     });
   });
 
-  it("renders an unavailable session when runtime configuration is missing", async () => {
+  it("holds an account's place when runtime configuration is missing", async () => {
     env.AUTHENTICATION_SERVICE_URL = "";
     const { event } = request("/", tokenCookies);
     await expect(loadShell(event)).resolves.toEqual({
       activeNavigation: null,
       rail: "expanded",
       apps: null,
-      session: { status: "error" },
+      session: { status: "loading" },
       authorization: "unavailable",
     });
     expect(fetchService).not.toHaveBeenCalled();
@@ -392,7 +400,7 @@ describe("account session at the request boundary", () => {
       activeNavigation: null,
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
-      session: { status: "error" },
+      session: { status: "loading" },
       authorization: "unavailable",
     });
     expect(sentRequest()).toEqual({
@@ -852,7 +860,7 @@ describe("planned downtime at the request boundary", () => {
   });
   const downtimeRefusal = { status: 503, body: { message: "Planned downtime", downtime: true } };
 
-  it("shows a maintenance session without calling authentication once a downtime has started", async () => {
+  it("holds an account's place without calling authentication once a downtime has started", async () => {
     published.downtime = started();
     const { event } = request("/", {
       "__Host-account_access_token": "access",
@@ -863,8 +871,19 @@ describe("planned downtime at the request boundary", () => {
       activeNavigation: null,
       rail: "expanded",
       apps: { studio: "https://studio.test/auth/sign-in" },
-      session: { status: "downtime" },
+      session: { status: "loading" },
       authorization: "unavailable",
+    });
+    expect(fetchService).not.toHaveBeenCalled();
+  });
+
+  it("keeps the sign-in links for a visitor without an account during a downtime", async () => {
+    published.downtime = started();
+    const { event } = request("/", { "__Host-account_access_token": "anonymous-access" });
+
+    await expect(loadShell(event)).resolves.toMatchObject({
+      session: { status: "anonymous" },
+      authorization: "anonymous",
     });
     expect(fetchService).not.toHaveBeenCalled();
   });
@@ -915,7 +934,7 @@ describe("planned downtime at the request boundary", () => {
       loadShell(
         request("/", { "__Host-account_access_token": "access", "__Host-account_refresh_token": "refresh" }).event
       )
-    ).resolves.toMatchObject({ session: { status: "downtime" }, authorization: "unavailable" });
+    ).resolves.toMatchObject({ session: { status: "loading" }, authorization: "unavailable" });
     await expect(
       loadAccount(request("/account", { "__Host-account_access_token": "access" }).event)
     ).rejects.toMatchObject(downtimeRefusal);

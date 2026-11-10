@@ -54,11 +54,10 @@ describe("account privacy screen", () => {
     await expect.element(page.getByRole("alert")).toMatchTextContent(/Too many attempts/);
   });
 
-  it("says so when the account's settings cannot be shown, and keeps this device's", async () => {
+  it("holds the place of the account's settings it cannot read yet, and keeps this device's", async () => {
     await screen({ status: "unavailable" }, null);
 
-    const account = page.getByRole("region", { name: "Your account" });
-    await expect.element(account).toMatchTextContent(/Your account settings can’t be shown right now\./);
+    await expect.element(page.getByRole("alert")).not.toBeInTheDocument();
     await expect.element(page.getByRole("switch")).not.toBeInTheDocument();
     await expect
       .element(page.getByRole("region", { name: "This device" }))

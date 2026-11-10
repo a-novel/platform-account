@@ -1,13 +1,16 @@
 <script lang="ts">
   import type { AccountDeviceConfirmation } from "#lib/application/auth/types.js";
-  import { afterNavigate, goto } from "$app/navigation";
+  import { retryWhile } from "#lib/client/retry.svelte.js";
+  import { afterNavigate, goto, invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
+  import { devicesData } from "../../dependencies";
   import { addressBar, dialogUrl, localHref } from "../url-state";
   import type { DevicesActionData } from "./+page.server";
   import { confirmationParameter, confirmationValue, readConfirmation } from "./confirmation-state";
   import { createAccountDevicesController } from "./controller.svelte";
+  import { devicePageUrl, readPages } from "./device-pages";
   import Screen from "./screen.svelte";
 
   import { onMount } from "svelte";
@@ -26,9 +29,18 @@
 
   // The address bar, which shallow routing changes without a navigation that page.url would follow.
   let currentHref = $state(page.url.href);
+  // A list may stay missing, so it stops asking after a few tries and says so.
+  const listRetries = retryWhile(
+    () => data.devices.status === "unavailable",
+    () => invalidate(devicesData),
+    { maxRetries: 5 }
+  );
+
   const controller = createAccountDevicesController({
     getModel: () => ({
-      devices: data.devices,
+      devices:
+        data.devices.status === "unavailable" && !listRetries.exhausted ? { status: "loading" as const } : data.devices,
+      pages: readPages(new URL(currentHref).searchParams),
       locationConsent: data.locationConsent,
       action: (form as DevicesActionData | null)?.devicesAction ?? { status: "ready" as const },
     }),
@@ -37,6 +49,7 @@
     privacyHref: resolve("/(app)/account/privacy"),
     onConfirmationChange: showConfirmation,
     confirmationUrl: (confirmation) => localHref(confirmationUrl(confirmation)),
+    pageUrl: (list, number) => localHref(devicePageUrl(addressBar(page.url), list, number)),
   });
 
   /** Asks about a logout in the URL. Asking adds a history entry, so Back cancels. Cancelling replaces the entry. */

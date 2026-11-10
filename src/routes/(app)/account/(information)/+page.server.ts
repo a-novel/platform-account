@@ -11,9 +11,8 @@ import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import { emailLanguage } from "#lib/server/auth/context.js";
 import { getProfileContext } from "#lib/server/profile/context.js";
 
-import { dialogUrl, localHref } from "../url-state";
+import { dialogUrl, editorParameter, localHref } from "../url-state";
 import type { AccountActionData } from "./account-action";
-import { editorParameter } from "./editor-state";
 
 import { isHttpStatusError, isHttpError as isServiceError } from "@a-novel-kit/nodelib-browser/http";
 import { credentialsUpdatePassword, shortCodeCreateEmailUpdate } from "@a-novel/service-authentication-rest";
@@ -31,8 +30,8 @@ function passwordAction(state: AccountInformationModel["passwordState"]): Accoun
   return { accountAction: { kind: "password", state } };
 }
 
-function emailAction(state: AccountInformationModel["emailState"]): AccountActionData {
-  return { accountAction: { kind: "email", state } };
+function emailAction(state: AccountInformationModel["emailState"], email?: string): AccountActionData {
+  return { accountAction: { kind: "email", state, email } };
 }
 
 async function changePassword(event: RequestEvent) {
@@ -73,15 +72,15 @@ async function requestEmailUpdate(event: RequestEvent) {
     // The service checks the current password: a wrong one answers 403, a missing one 422.
     if (isHttpStatusError(error, 403)) {
       const issues = [{ field: "currentPassword", feedback: "invalidCurrentPassword" }] as const;
-      return fail(403, emailAction({ status: "validation-error", issues }));
+      return fail(403, emailAction({ status: "validation-error", issues }, input.value.email));
     }
     if (isHttpStatusError(error, 422)) {
       const issues = [{ field: "currentPassword", feedback: "currentPassword" }] as const;
-      return fail(400, emailAction({ status: "validation-error", issues }));
+      return fail(400, emailAction({ status: "validation-error", issues }, input.value.email));
     }
     return isHttpStatusError(error, 429)
-      ? fail(429, emailAction({ status: "service-error", feedback: "tooManyAttempts" }))
-      : fail(503, emailAction({ status: "service-error", feedback: "serviceUnavailable" }));
+      ? fail(429, emailAction({ status: "service-error", feedback: "tooManyAttempts" }, input.value.email))
+      : fail(503, emailAction({ status: "service-error", feedback: "serviceUnavailable" }, input.value.email));
   }
 
   return emailAction({ status: "pending-email" });

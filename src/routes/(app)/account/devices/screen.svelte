@@ -12,10 +12,11 @@
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
 
   import { followInPlace } from "../../link-transition";
+  import { type DeviceList, pageOf } from "./device-pages";
   import LogoutDialog from "./logout-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Badge, Button, Card, Link } from "@a-novel-kit/uikit";
+  import { Alert, Badge, Button, Card, Link, Pagination, Skeleton } from "@a-novel-kit/uikit";
 
   import { Monitor, Smartphone, Tablet } from "@lucide/svelte";
 
@@ -31,6 +32,8 @@
   const active = $derived(devices.filter((device) => !device.loggedOut));
   const loggedOut = $derived(devices.filter((device) => device.loggedOut));
   const hasOthers = $derived(active.some((device) => !device.current));
+  const activePage = $derived(pageOf(active, model.pages?.active ?? 1));
+  const loggedOutPage = $derived(pageOf(loggedOut, model.pages?.loggedOut ?? 1));
   // The device a confirmation names, among those it may name: the active ones other than this one.
   const confirming = $derived.by(() => {
     const confirmation = model.confirmation;
@@ -97,24 +100,24 @@
   </div>
 {/snippet}
 
+{#snippet pagination(list: DeviceList, current: { page: number; totalPages: number }, label: string)}
+  {#if current.totalPages > 1}
+    <Pagination
+      data-sveltekit-noscroll
+      currentPage={current.page}
+      totalPages={current.totalPages}
+      getHref={(page) => controller.pageHref(list, page)}
+      {label}
+    />
+  {/if}
+{/snippet}
+
 <div class="devices-tab">
   {#if model.locationConsent === false}
     <Alert tone="info" role="note" title={t("authUi.account.devices.locationTip.title")}>
       {t("authUi.account.devices.locationTip.body")}
       <Link href={controller.state.privacyHref}>{t("authUi.account.devices.locationTip.link")}</Link>
     </Alert>
-  {/if}
-
-  {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
-    {@const title =
-      model.action.status === "logged-out"
-        ? t("authUi.account.devices.loggedOut")
-        : t("authUi.account.devices.loggedOutOthers")}
-    <Alert tone="success" {title} />
-  {:else if model.action.status === "removed"}
-    <Alert tone="success" title={t("authUi.account.devices.removed")} />
-  {:else if model.action.status === "service-error"}
-    <AuthenticationError feedback={model.action.feedback} />
   {/if}
 
   <Card surface="raised">
@@ -124,11 +127,31 @@
         <p class="secondary">{t("authUi.account.devices.description")}</p>
       </header>
 
+      <!-- A change's outcome sits with the list it changed, under the title that names it. -->
+      {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
+        {@const title =
+          model.action.status === "logged-out"
+            ? t("authUi.account.devices.loggedOut")
+            : t("authUi.account.devices.loggedOutOthers")}
+        <Alert tone="success" {title} />
+      {:else if model.action.status === "removed"}
+        <Alert tone="success" title={t("authUi.account.devices.removed")} />
+      {:else if model.action.status === "service-error"}
+        <AuthenticationError feedback={model.action.feedback} />
+      {/if}
+
       {#if model.devices.status === "unavailable"}
-        <p class="secondary">{t("authUi.account.devices.unavailable")}</p>
+        <Alert tone="error" title={t("authUi.account.devices.unavailable")} />
+      {:else if model.devices.status === "loading"}
+        <!-- Without scripts no retry runs, so the failure shows at once. -->
+        <noscript><Alert tone="error" title={t("authUi.account.devices.unavailable")} /></noscript>
+        <div class="loading">
+          <Skeleton shape="rectangle" />
+          <Skeleton shape="rectangle" />
+        </div>
       {:else}
         <ul>
-          {#each active as device (device.id)}
+          {#each activePage.items as device (device.id)}
             {@const name = deviceName(device)}
             <li>
               {@render deviceRow(device, name)}
@@ -148,6 +171,7 @@
             </li>
           {/each}
         </ul>
+        {@render pagination("active", activePage, t("authUi.account.devices.pagination.active"))}
       {/if}
 
       {#if hasOthers}
@@ -167,7 +191,7 @@
           <p class="hint">{t("authUi.account.devices.lossDelay")}</p>
         </header>
         <ul>
-          {#each loggedOut as device (device.id)}
+          {#each loggedOutPage.items as device (device.id)}
             {@const name = deviceName(device)}
             <li class="logged-out">
               {@render deviceRow(device, name)}
@@ -180,6 +204,7 @@
             </li>
           {/each}
         </ul>
+        {@render pagination("loggedOut", loggedOutPage, t("authUi.account.devices.pagination.loggedOut"))}
       </section>
     </Card>
   {/if}
@@ -226,6 +251,11 @@
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-normal);
+  }
+
+  .loading {
+    display: grid;
+    gap: var(--space-3);
   }
 
   ul {

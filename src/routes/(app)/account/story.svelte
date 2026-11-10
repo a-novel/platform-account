@@ -183,6 +183,7 @@
           },
           confirmationHref: (confirmation) =>
             confirmation ? `?confirm=${confirmation.kind === "others" ? "others" : confirmation.id}` : "?",
+          pageHref: (list, page) => `?${list}=${page}`,
           openConfirmation: noop,
           submitChange: () => false,
         }

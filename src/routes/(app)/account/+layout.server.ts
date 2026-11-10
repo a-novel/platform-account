@@ -5,9 +5,11 @@ import type { AuthenticationEvent } from "#lib/server/auth/context.js";
 import { readTokenExpiry } from "#lib/server/auth/session.js";
 import { type ProfileEvent, getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 
+import { accountData } from "../dependencies";
+
 import { type AuthenticationApi, credentialsGetSelf } from "@a-novel/service-authentication-rest";
 
-import type { RequestEvent } from "@sveltejs/kit";
+import type { ServerLoadEvent } from "@sveltejs/kit";
 import { isHttpError, isRedirect } from "@sveltejs/kit";
 
 /** Reads the account's email, its pending change and its location consent. A failure hides only them. */
@@ -44,7 +46,8 @@ async function loadProfile(event: ProfileEvent, accessToken: string): Promise<Pr
  * Loads the header, the credentials and the public profile every account tab reads. An authentication
  * outage still renders the tabs.
  */
-export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "locals">) => {
+export const load = async (event: AuthenticationEvent & Pick<ServerLoadEvent, "locals" | "depends">) => {
+  event.depends(accountData);
   const dates = new Intl.DateTimeFormat(event.locals.locale, { dateStyle: "medium", timeStyle: "short" });
 
   try {
@@ -72,7 +75,7 @@ export const load = async (event: AuthenticationEvent & Pick<RequestEvent, "loca
     if (isRedirect(error) || isHttpError(error, 401) || isHttpError(error, 403)) throw error;
     if (isHttpError(error, 503) && error.body.downtime) throw error;
 
-    const summary: AccountSummaryState = { status: "error", feedback: "sessionUnavailable" };
+    const summary: AccountSummaryState = { status: "loading" };
     const credentials: AccountCredentialsState = { status: "unavailable" };
     const profile: ProfileState = { status: "unavailable" };
     return { authorization: "unavailable" as const, summary, credentials, profile };

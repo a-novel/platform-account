@@ -4,10 +4,10 @@
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
-  import { addressBar, dialogUrl, localHref } from "../url-state";
+  import { addressBar, dialogUrl, editorParameter, localHref } from "../url-state";
   import { createInformationModel, mergeAccountAction } from "./account-action";
   import { createAccountInformationController } from "./controller.svelte";
-  import { editorParameter, readEditor } from "./editor-state";
+  import { readEditor } from "./editor-state";
   import Screen from "./screen.svelte";
 
   import { onMount } from "svelte";

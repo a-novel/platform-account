@@ -65,6 +65,8 @@ export interface ShellControllerOptions extends Omit<ShellControllerState, "mode
    * view and the authorization request.
    */
   getUrl?: () => URL;
+  /** Tells whether the page needs a login, which keeps the dialog open over it. */
+  getAuthLocked?: () => boolean;
 }
 
 /** Creates a reactive controller for the account application shell. */
@@ -81,13 +83,14 @@ export function createShellController({
   onRailChange,
   onDrawerChange,
   getUrl = () => new SvelteURL(homeHref, "https://account.invalid"),
+  getAuthLocked = () => false,
 }: ShellControllerOptions): ShellController {
   // The rail the server read from the visitor's cookie, until they toggle it.
   let rail = $derived(getData().rail);
   // The URL owns the menu and the dialog: a transition changes them at once, and the next URL, such as Back's,
   // decides again.
   let drawerOpen = $derived(readNavigationOpen(getUrl().searchParams));
-  let authView = $derived(readAuthView(getUrl().searchParams));
+  let authView = $derived(readAuthView(getUrl().searchParams) ?? (getAuthLocked() ? "login" : null));
   // A logout the browser does not submit signs the shell out until the next load.
   let session = $derived(getData().session);
 
@@ -95,7 +98,15 @@ export function createShellController({
     const { activeNavigation, apps } = getData();
     const authorizationRequest = returnsToAuthorization(getUrl().searchParams.get("returnTo"));
     return {
-      model: { activeNavigation, rail, drawerOpen, authView, session, authorizationRequest },
+      model: {
+        activeNavigation,
+        rail,
+        drawerOpen,
+        authView,
+        session,
+        authorizationRequest,
+        authLocked: getAuthLocked(),
+      },
       homeHref,
       accountHref,
       privacyHref,
@@ -112,7 +123,7 @@ export function createShellController({
   }
 
   function setAuthentication(view: AuthDialogView | null) {
-    if (authView === view) return;
+    if (authView === view || (view === null && getAuthLocked())) return;
     authView = view;
     onAuthViewChange?.(view);
   }
@@ -157,7 +168,7 @@ export function createShellController({
       onRailChange?.(rail);
     },
     logout() {
-      if (session.status !== "authenticated") return false;
+      if (session.status === "anonymous") return false;
       if (!allowNativeLogout) session = { status: "anonymous" };
       return allowNativeLogout;
     },
@@ -182,6 +193,8 @@ const lockedStatuses = new Set(["submitting", "pending-email", "recorded"]);
 export interface AuthenticationPanelControllerState {
   model: AuthenticationPanelModel;
   action: string;
+  /** Set while a planned downtime stops the service these forms need. */
+  maintenance?: boolean;
 }
 
 /** Pure authentication-form state and transitions. */
@@ -208,7 +221,7 @@ export function createAuthenticationPanelController({
 }: AuthenticationPanelControllerOptions): AuthenticationPanelController {
   // A submission edits the form until the route shows another one, which also masks the password again.
   let form = $derived({ ...getState(), passwordShown: false });
-  const state = $derived({ model: form.model, action: form.action });
+  const state = $derived({ model: form.model, action: form.action, maintenance: form.maintenance });
 
   function setStatus(status: AuthenticationPanelModel["state"]) {
     form = { ...form, model: { ...form.model, state: status } as AuthenticationPanelModel };
@@ -226,7 +239,7 @@ export function createAuthenticationPanelController({
       toggle: () => (form = { ...form, passwordShown: !form.passwordShown }),
     },
     submit(data) {
-      if (lockedStatuses.has(form.model.state.status)) return false;
+      if (form.maintenance || lockedStatuses.has(form.model.state.status)) return false;
 
       const result = validators[form.model.journey](data);
       if (!result.success) {

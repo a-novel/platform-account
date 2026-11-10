@@ -8,7 +8,6 @@ export type AuthenticationFeedback =
   | "passwordReset"
   | "registrationCompleted"
   | "serviceUnavailable"
-  | "sessionUnavailable"
   | "tooManyAttempts";
 
 /** Stable validation categories translated only at the rendering boundary. */
@@ -44,20 +43,26 @@ export interface PendingEmailState {
   targetHint: string;
 }
 
+/** What every shell authentication form keeps across a submission the server refused. */
+interface AuthenticationPanelDraft {
+  /** The address the visitor typed. Passwords are never sent back. */
+  email?: string;
+}
+
 /** Pure login form state. */
-export interface LoginPanelModel {
+export interface LoginPanelModel extends AuthenticationPanelDraft {
   journey: "login";
   state: Exclude<FormState<AuthenticationField>, { status: "success" }>;
 }
 
 /** Pure password-recovery request state. */
-export interface EmailRequestPanelModel {
+export interface EmailRequestPanelModel extends AuthenticationPanelDraft {
   journey: "reset";
   state: Exclude<FormState<"email">, { status: "success" }> | PendingEmailState;
 }
 
 /** Invitation requests acknowledge list membership without implying email delivery. */
-export interface InvitationRequestPanelModel {
+export interface InvitationRequestPanelModel extends AuthenticationPanelDraft {
   journey: "register";
   state: Exclude<FormState<"email">, { status: "success" }> | { status: "recorded"; email: string };
 }
@@ -83,8 +88,7 @@ export interface AccountSummary {
 }
 
 /** The header's state, independent of the tabs below it. */
-export type AccountSummaryState =
-  ({ status: "ready" } & AccountSummary) | { status: "error"; feedback: AuthenticationFeedback };
+export type AccountSummaryState = ({ status: "ready" } & AccountSummary) | { status: "loading" };
 
 /** The account's email, its change awaiting confirmation and its location consent, as Authentication reports them. */
 export interface AccountCredentialsSummary {
@@ -109,6 +113,8 @@ export interface AccountInformationModel {
   passwordState: FormState<AccountPasswordField>;
   /** A sent link carries no address: the pending email comes from `credentials` once the page reloads. */
   emailState: Exclude<FormState<AccountEmailField>, { status: "success" }> | { status: "pending-email" };
+  /** The address a submission the server refused keeps in its field. Passwords are never sent back. */
+  emailDraft: string;
   username: UsernameEditor;
   picture: PictureEditor;
 }
@@ -149,7 +155,10 @@ export type AccountDeviceConfirmation = { kind: "device"; id: string } | { kind:
 
 /** The devices tab: the account's devices and the outcome of the latest change. */
 export interface AccountDevicesModel {
-  devices: { status: "ready"; devices: AccountDevice[] } | { status: "unavailable" };
+  /** Loading while retries run after a failed read, and unavailable once they run out. */
+  devices: { status: "ready"; devices: AccountDevice[] } | { status: "loading" } | { status: "unavailable" };
+  /** The page each list shows, which the URL owns. The first without one. */
+  pages?: { active: number; loggedOut: number };
   /** Whether the account records locations, or null when Authentication cannot tell. */
   locationConsent: boolean | null;
   /** The logout the open confirmation dialog asks about, which the URL owns. */

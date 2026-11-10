@@ -74,12 +74,10 @@ describe("my information screen", () => {
     expect(getComputedStyle(note.element()).backgroundColor).toBe(getComputedStyle(reference).backgroundColor);
   });
 
-  it("shows an email it cannot read in an error box, and still offers to change it", async () => {
+  it("holds the place of an email it cannot read yet, and still offers to change it", async () => {
     await render(Screen, { controller: controller({ credentials: { status: "unavailable" } }) }, withLocale("fr"));
 
-    await expect
-      .element(page.getByRole("alert"))
-      .toMatchTextContent("Votre courriel actuel ne peut pas être affiché pour le moment.");
+    await expect.element(page.getByRole("alert")).not.toBeInTheDocument();
     await expect.element(page.getByRole("link", { name: "Modifier mon courriel" })).toBeVisible();
   });
 });
@@ -128,10 +126,10 @@ describe("public profile card", () => {
       .toHaveAttribute("src", portraitPicture);
   });
 
-  it("shows a profile it cannot read in an error box, and still offers to change it", async () => {
+  it("holds the place of a profile it cannot read yet, and still offers to change it", async () => {
     await render(Screen, { controller: controller({ profile: { status: "unavailable" } }) }, withLocale());
 
-    await expect.element(page.getByRole("alert")).toMatchTextContent("Your public profile can’t be shown right now.");
+    await expect.element(page.getByRole("alert")).not.toBeInTheDocument();
     await expect.element(page.getByRole("link", { name: "Change username" })).toBeVisible();
   });
 });

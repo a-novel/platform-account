@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { loginHref } from "#lib/application/auth/navigation.js";
+  import { retryWhile } from "#lib/client/retry.svelte.js";
   import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
   import PageTitle from "#lib/ui/PageTitle.svelte";
+  import { invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
+  import { accountData } from "../dependencies";
   import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
   import Screen from "./screen.svelte";
+  import { addressBar, editorParameter } from "./url-state";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 
@@ -42,24 +45,24 @@
     privacy: "pageTitles.privacy",
     preferences: "pageTitles.preferences",
   } as const;
-  // The tab names its section, then the outage that hides the account's details, as the header does.
-  const title = $derived.by(() => {
-    const section = t(tabTitles[currentTab() ?? "information"]);
-    if (data.summary.status !== "error") return section;
-    return t("pageTitles.withState", { title: section, status: t("authUi.account.loadErrorTitle") });
-  });
+  /** Asks for the account's details again. New details reset an open editor's form, so a retry waits for it to close. */
+  async function reloadDetails() {
+    if (!addressBar(page.url).searchParams.has(editorParameter)) await invalidate(accountData);
+  }
+
+  retryWhile(
+    () =>
+      data.summary.status === "loading" ||
+      data.credentials.status === "unavailable" ||
+      data.profile.status === "unavailable",
+    reloadDetails
+  );
 </script>
 
-<PageTitle {title} />
+<PageTitle title={t(tabTitles[currentTab() ?? "information"])} />
 
 {#snippet frame()}
   <Screen {controller}>{@render children()}</Screen>
 {/snippet}
 
-<AccessBoundary
-  loginHref={loginHref(currentPath)}
-  homeHref={resolve("")}
-  retryHref={currentPath}
-  children={frame}
-  unavailable={frame}
-/>
+<AccessBoundary homeHref={resolve("")} retryHref={currentPath} children={frame} unavailable={frame} />

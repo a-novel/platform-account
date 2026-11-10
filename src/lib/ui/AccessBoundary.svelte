@@ -15,12 +15,11 @@
     /** Content safe to display without verified account information. */
     unavailable?: Snippet;
     /** Local, sanitized destinations supplied by the route. */
-    loginHref: string;
     homeHref: string;
     retryHref: string;
   }
 
-  let { controller, when, children, unavailable, loginHref, homeHref, retryHref }: Props = $props();
+  let { controller, when, children, unavailable, homeHref, retryHref }: Props = $props();
   const { t } = getI18nContext();
 </script>
 
@@ -28,20 +27,11 @@
   {#snippet fallback(status)}
     {#if status === "unavailable" && unavailable}
       {@render unavailable()}
-    {:else}
+    {:else if status !== "anonymous"}
+      <!-- A visitor without an account meets the login dialog, which leaves nothing to show here. -->
       <div class="access-page">
         {#if status === "pending"}
           <StatusState tone="loading" title={t("access.pending.title")} headingLevel={1} />
-        {:else if status === "anonymous"}
-          <StatusState
-            title={t("access.anonymous.title")}
-            description={t("access.anonymous.description")}
-            headingLevel={1}
-          >
-            {#snippet actions()}
-              <Link href={loginHref}>{t("shell.signIn")}</Link>
-            {/snippet}
-          </StatusState>
         {:else if status === "forbidden"}
           <StatusState
             tone="error"

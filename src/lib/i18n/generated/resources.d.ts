@@ -2,10 +2,6 @@
 export default interface Resources {
   "common": {
     "access": {
-      "anonymous": {
-        "description": "Log in to view this page.",
-        "title": "Agora account required"
-      },
       "authorizationRequest": {
         "description": "The app that sent you here made a request Agora doesn’t recognize. Go back to that app and try again.",
         "title": "This request to log in can’t be accepted"
@@ -44,7 +40,6 @@ export default interface Resources {
         "passwordReset": "Your password was reset.",
         "registrationCompleted": "Your account is ready.",
         "serviceUnavailable": "Please try again in a few minutes.",
-        "sessionUnavailable": "We couldn’t verify your session. Please reload the page in a few minutes.",
         "tooManyAttempts": "Too many attempts. Please wait a few minutes before trying again."
       },
       "validation": {
@@ -92,6 +87,10 @@ export default interface Resources {
           "lossDelay": "It can take up to 15 minutes for a logged-out device to lose access.",
           "name": "{{browser}} on {{system}}",
           "nameUnknownBrowser": "Browser on {{system}}",
+          "pagination": {
+            "active": "Pages of your active devices",
+            "loggedOut": "Pages of your logged-out devices"
+          },
           "remove": "Remove",
           "removeLabel": "Remove {{device}}",
           "removed": "Device removed",
@@ -116,11 +115,9 @@ export default interface Resources {
             "sent": "If no other account uses {{email}}, a confirmation link should arrive there shortly.",
             "title": "Check your inbox"
           },
-          "title": "Email",
-          "unavailable": "Your current email can’t be shown right now."
+          "title": "Email"
         },
         "gotIt": "Got it",
-        "loadErrorTitle": "Account details unavailable",
         "loggedInUntil": "Logged in until",
         "logout": {
           "submit": "Log out",
@@ -169,8 +166,7 @@ export default interface Resources {
         },
         "profile": {
           "description": "Anyone on Agora can see this information.",
-          "title": "Public profile",
-          "unavailable": "Your public profile can’t be shown right now."
+          "title": "Public profile"
         },
         "roles": {
           "admin": "Admin",
@@ -300,8 +296,7 @@ export default interface Resources {
         "locationDescription": "Show the IP address and approximate location of each device logged in to your account, on your account page.",
         "locationTitle": "Record where my devices log in",
         "save": "Save",
-        "title": "Your account",
-        "unavailable": "Your account settings can’t be shown right now."
+        "title": "Your account"
       },
       "description": "Choose what we collect on this device, in every Agora app.",
       "device": {
@@ -324,6 +319,7 @@ export default interface Resources {
           "authorizationDescription": "Log in with your Agora account to return to the app you came from.",
           "title": "Log in"
         },
+        "maintenance": "We’ve paused account access until it ends. Please try again afterward.",
         "noAccount": "No account yet?",
         "register": {
           "description": "Access is currently by invitation. We’ll contact you when yours is available.",
@@ -345,9 +341,6 @@ export default interface Resources {
       "openNavigation": "Open navigation",
       "privacy": "Privacy",
       "register": "Register",
-      "sessionDowntime": "Account unavailable during maintenance.",
-      "sessionLoading": "Loading account",
-      "sessionUnavailable": "Account details are unavailable.",
       "signIn": "Log in",
       "skipToContent": "Skip to content"
     },
