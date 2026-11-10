@@ -18,7 +18,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page, userEvent } from "vitest/browser";
 
-import { Alert } from "@a-novel-kit/uikit";
 import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 
@@ -43,7 +42,7 @@ function shellUrl({ drawerOpen, authView, authorizationRequest }: ShellViewModel
 /** A shell whose transitions change its URL, as the layout's do. */
 function controller(
   patch: Partial<ShellViewModel> = {},
-  options: { authenticationModel?: AuthenticationPanelModel; apps?: ShellApps | null } = {}
+  options: { authenticationModel?: AuthenticationPanelModel; apps?: ShellApps | null; privacyHref?: string } = {}
 ) {
   const shellModel = model(patch);
   let url = $state(shellUrl(shellModel));
@@ -64,13 +63,14 @@ function controller(
     }),
     homeHref: "/",
     accountHref: "/account",
-    privacyHref: null,
+    privacyHref: options.privacyHref ?? null,
     logoutAction: "/auth/logout",
     authentication,
     allowNativeLogout: false,
     onAuthViewChange: (view) => (url = withAuthView(url, view)),
     onDrawerChange: (open) => (url = withNavigationOpen(url, open)),
     getUrl: () => url,
+    getAuthLocked: () => shellModel.authLocked ?? false,
   });
   return shell;
 }
@@ -92,13 +92,6 @@ async function settledStyle(element: Element) {
 }
 
 const maya = { status: "authenticated", displayName: "Maya Chen", initials: "MC" } as const;
-
-const sessionFeedback = [
-  [320, "loading"],
-  [320, "error"],
-  [1280, "loading"],
-  [1280, "error"],
-] as const;
 
 // Chrome 158 reports `justify-content: flex-start` as flow-start.
 const startAligned = /^(flex|flow)-start$/;
@@ -501,42 +494,39 @@ describe("account shell screen", () => {
     await expect.element(registrationDialog.getByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
-  it.each([
-    ["loading", "status", "Loading account"],
-    ["error", "alert", "Account details are unavailable."],
-    ["downtime", "status", "Account unavailable during maintenance."],
-  ] as const)("names the %s session in the rail instead of the account controls", async (status, role, message) => {
-    render(Screen, { controller: controller({ session: { status } }) }, withLocale());
+  it("keeps the account link and the logout while the account's details load", async () => {
+    render(Screen, { controller: controller({ session: { status: "loading" } }) }, withLocale());
+    const rail = page.getByRole("complementary");
 
-    await expect.element(page.getByRole("complementary").getByRole(role)).toMatchTextContent(message);
-    await expect.element(page.getByRole("button", { name: "Log out" })).not.toBeInTheDocument();
-    await expect.element(page.getByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    await expect.element(rail.getByRole("link", { name: "Account" })).toBeVisible();
+    await expect.element(rail.getByRole("button", { name: "Log out" })).toBeEnabled();
+    await expect.element(rail.getByRole("alert")).not.toBeInTheDocument();
+    await expect.element(rail.getByRole("status")).not.toBeInTheDocument();
+    await expect.element(rail.getByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
-  it.each(sessionFeedback)("uses the shared section message for %s px %s feedback", async (width, status) => {
-    await page.viewport(width, 800);
-    render(Screen, { controller: controller({ session: { status }, drawerOpen: width < 768 }) }, withLocale());
-    const role = status === "error" ? "alert" : "status";
-    const message = page.getByRole(role);
-    await expect.element(message).toBeVisible();
-    const actual = getComputedStyle(message.element());
-    render(Alert, { tone: status, title: "Reference", "aria-label": "Reference" });
-    const reference = getComputedStyle(page.getByRole(role, { name: "Reference" }).element());
+  it("names the account link in the collapsed rail while the account's details load", async () => {
+    render(Screen, { controller: controller({ session: { status: "loading" }, rail: "collapsed" }) }, withLocale());
 
-    for (const property of ["background-color", "border-width", "padding", "border-radius", "gap"]) {
-      expect(actual.getPropertyValue(property)).toBe(reference.getPropertyValue(property));
-    }
+    await expect.element(page.getByRole("complementary").getByRole("link", { name: "Account" })).toBeVisible();
   });
 
-  it.each(["loading", "error"] as const)("keeps collapsed %s feedback named without a custom box", async (status) => {
-    render(Screen, { controller: controller({ session: { status }, rail: "collapsed" }) }, withLocale());
-    const message = page.getByRole(status === "error" ? "alert" : "status", {
-      name: status === "error" ? "Account details are unavailable." : "Loading account",
-    });
-    await expect.element(message).toBeVisible();
-    const wrapper = message.element().parentElement;
-    if (!wrapper) throw new Error("Missing compact feedback layout");
-    expect(getComputedStyle(wrapper).borderWidth).toBe("0px");
-    expect(getComputedStyle(wrapper).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  it("keeps the login dialog open on a page that needs a login, with the public links it covers", async () => {
+    const shell = controller(
+      { session: { status: "anonymous" }, authView: "login", authLocked: true },
+      { privacyHref: "/privacy" }
+    );
+    render(Screen, { controller: shell }, withLocale());
+    const dialog = page.getByRole("dialog");
+
+    await expect.element(dialog.getByRole("heading", { name: "Log in" })).toBeVisible();
+    await expect.element(dialog.getByRole("link", { name: "Close dialog" })).not.toBeInTheDocument();
+    await expect.element(dialog.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+  });
+
+  it("offers to close the login dialog on a page that does not need a login", async () => {
+    render(Screen, { controller: controller({ session: { status: "anonymous" }, authView: "login" }) }, withLocale());
+
+    await expect.element(page.getByRole("dialog").getByRole("link", { name: "Close dialog" })).toBeVisible();
   });
 });

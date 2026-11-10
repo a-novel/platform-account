@@ -21,16 +21,14 @@
   import studioIcon48 from "@a-novel-kit/ui-images/files/icon/48x48/studio-icon.png";
   import agoraIcon96 from "@a-novel-kit/ui-images/files/icon/96x96/agora-icon.png";
   import {
-    Alert,
     Avatar,
     Button,
     Dialog,
     DowntimeBanner,
-    DowntimeState,
     IconButton,
-    InlineMessage,
     NavList,
     Separator,
+    Skeleton,
     SkipLink,
     VisuallyHidden,
   } from "@a-novel-kit/uikit";
@@ -40,7 +38,6 @@
   let { controller, children }: ShellProps = $props();
 
   const platformDowntime = $derived(controller.state.platformDowntime);
-  const stoppedUntil = $derived(platformDowntime?.started ? platformDowntime.downtime?.end : undefined);
 
   const model = $derived(controller.state.model);
   const privacyHref = $derived(controller.state.privacyHref);
@@ -57,13 +54,6 @@
   const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
-  /** The account widget's notice while the session is loading, unavailable or stopped for maintenance. */
-  const sessionNotice = $derived.by(() => {
-    if (model.session.status === "loading") return { tone: "loading", message: t("shell.sessionLoading") } as const;
-    if (model.session.status === "error") return { tone: "error", message: t("shell.sessionUnavailable") } as const;
-    if (model.session.status === "downtime") return { tone: "warning", message: t("shell.sessionDowntime") } as const;
-    return null;
-  });
   const authDialogTitle = $derived.by(() => {
     if (authenticationState === "pending-email") return t("authUi.authentication.pendingTitle");
     if (authenticationState === "recorded") return t("authUi.authentication.journeys.register.recordedTitle");
@@ -161,42 +151,38 @@
      on the other. -->
 {#snippet accountWidget(compact: boolean)}
   <div class="account-widget" data-session={model.session.status}>
-    {#if sessionNotice}
-      {#if compact}
-        <div class="compact-status" title={sessionNotice.message}>
-          <InlineMessage tone={sessionNotice.tone} aria-label={sessionNotice.message} />
-        </div>
-      {:else}
-        <!-- A title crowds the narrow rail, so the alert has none. -->
-        <Alert tone={sessionNotice.tone}>{sessionNotice.message}</Alert>
-      {/if}
-      {#if privacyHref}{@render privacyLink(compact, privacyHref)}{/if}
-    {:else if authenticatedSession}
-      {@const name = authenticatedSession.displayName}
-      <!-- This platform serves the account page, so it opens in place. -->
+    {#if model.session.status !== "anonymous"}
+      {@const name = authenticatedSession?.displayName}
+      {@const label = name ?? t("shell.accountFallback")}
+      <!-- This platform serves the account page, so it opens in place, even while the account's details load. -->
       <Button
         class="shell-account-button {compact ? 'compact-control' : ''}"
         variant="ghost"
         tone="neutral"
         size="sm"
         square={compact}
-        title={name}
+        title={label}
         href={controller.state.accountHref}
         aria-current={model.activeNavigation === "account" ? "page" : undefined}
       >
         <span class="account-action-icon account-picture" aria-hidden="true">
-          <Avatar
-            label={name}
-            initials={authenticatedSession.initials}
-            src={authenticatedSession.picture}
-            size="sm"
-            shape="square"
-          />
+          {#if authenticatedSession}
+            <Avatar
+              {label}
+              initials={authenticatedSession.initials}
+              src={authenticatedSession.picture}
+              size="sm"
+              shape="square"
+            />
+          {:else}
+            <Skeleton class="account-picture-skeleton" shape="rectangle" />
+          {/if}
         </span>
-        {#if compact}
-          <VisuallyHidden>{name}</VisuallyHidden>
-        {:else}
+        {#if name && !compact}
           <span class="account-label">{name}</span>
+        {:else}
+          <VisuallyHidden>{label}</VisuallyHidden>
+          {#if !compact}<Skeleton class="account-label-skeleton" />{/if}
         {/if}
       </Button>
       <Separator decorative />
@@ -287,6 +273,19 @@
       {@render authLink("login", t("shell.signIn"))}
     {/if}
   </p>
+{/snippet}
+
+{#snippet closeAuthentication()}
+  <IconButton
+    label={t("shell.closeAuthentication")}
+    variant="ghost"
+    tone="neutral"
+    size="sm"
+    href={controller.authenticationHref(null)}
+    onclick={(event: MouseEvent) => navigate(event, () => controller.authenticationDialog.close())}
+  >
+    <X size="var(--icon-size-sm)" aria-hidden="true" />
+  </IconButton>
 {/snippet}
 
 <div class="shell-viewport">
@@ -389,24 +388,17 @@
     title={authDialogTitle}
     description={authDialogDescription}
     size="sm"
+    headerActions={model.authLocked ? undefined : closeAuthentication}
   >
-    {#snippet headerActions()}
-      <IconButton
-        label={t("shell.closeAuthentication")}
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        href={controller.authenticationHref(null)}
-        onclick={(event: MouseEvent) => navigate(event, () => controller.authenticationDialog.close())}
-      >
-        <X size="var(--icon-size-sm)" aria-hidden="true" />
-      </IconButton>
-    {/snippet}
-    {#if stoppedUntil && model.authView}
-      <DowntimeState end={stoppedUntil} timeZone={platformDowntime?.timeZone} headingLevel={3} />
-    {:else if model.authView}
+    {#if model.authView}
       <AuthenticationPanel controller={controller.authentication} {forgotPassword} />
-      {#if authActionsVisible}{@render authSwitch()}{/if}
+      {#if authActionsVisible || model.authLocked}{@render authSwitch()}{/if}
+      <!-- The dialog covers the rail for good on a page that needs a login, so it carries the rail's public link. -->
+      {#if model.authLocked && privacyHref}
+        <p class="auth-privacy">
+          <Button variant="text" tone="neutral" size="sm" href={privacyHref}>{t("shell.privacy")}</Button>
+        </p>
+      {/if}
     {/if}
   </Dialog>
 </div>
@@ -568,11 +560,15 @@
     white-space: nowrap;
   }
 
-  .compact-status {
-    display: grid;
-    place-items: center;
+  .account-action-icon :global(.account-picture-skeleton) {
     inline-size: var(--control-height-sm);
     block-size: var(--control-height-sm);
+    min-block-size: 0;
+  }
+
+  :global(.shell-account-button) > :global(.account-label-skeleton) {
+    flex: 1;
+    min-inline-size: 0;
   }
 
   :global(.shell-account-button) {
@@ -597,6 +593,11 @@
     padding-block-start: var(--space-4);
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
+    text-align: center;
+  }
+
+  .auth-privacy {
+    margin: var(--space-2) 0 0;
     text-align: center;
   }
 

@@ -17,7 +17,7 @@
   import UsernameDialog from "./username-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Avatar, Card, IconButton } from "@a-novel-kit/uikit";
+  import { Alert, Avatar, Card, IconButton, Skeleton } from "@a-novel-kit/uikit";
 
   import { Hourglass, Pencil } from "@lucide/svelte";
 
@@ -52,9 +52,6 @@
         <h2 id={`${componentId}-profile-title`}>{t("authUi.account.profile.title")}</h2>
         <p class="secondary">{t("authUi.account.profile.description")}</p>
       </div>
-      {#if profile.status === "unavailable"}
-        <Alert tone="error" title={t("authUi.account.profile.unavailable")} />
-      {/if}
       <dl>
         <div>
           <dt>{t("authUi.account.username.title")}</dt>
@@ -64,6 +61,8 @@
                 <bdi class="value">{profile.username}</bdi>
               {:else if profile.status === "ready"}
                 <span class="secondary">{t("authUi.account.username.none")}</span>
+              {:else}
+                <Skeleton class="value-skeleton" />
               {/if}
               {@render changeButton("username", t("authUi.account.username.changeLabel"))}
             </div>
@@ -77,6 +76,8 @@
                 <Avatar src={profile.picture} label={t("authUi.account.picture.current")} size="lg" />
               {:else if profile.status === "ready"}
                 <span class="secondary">{t("authUi.account.picture.none")}</span>
+              {:else}
+                <Skeleton shape="circle" />
               {/if}
               {@render changeButton("picture", t("authUi.account.picture.changeLabel"))}
             </div>
@@ -103,12 +104,12 @@
                 <div class="row">
                   {#if credentials.status === "ready"}
                     <span class="value">{credentials.email}</span>
+                  {:else}
+                    <Skeleton class="value-skeleton" />
                   {/if}
                   {@render changeButton("email", t("authUi.account.email.changeLabel"))}
                 </div>
-                {#if credentials.status === "unavailable"}
-                  <Alert tone="error" title={t("authUi.account.email.unavailable")} />
-                {:else if credentials.pendingEmail}
+                {#if credentials.status === "ready" && credentials.pendingEmail}
                   {@const pending = credentials.pendingEmail}
                   <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
                     {#snippet icon()}
@@ -209,6 +210,10 @@
     align-items: center;
     gap: var(--space-3);
     min-inline-size: 0;
+  }
+
+  .row :global(.value-skeleton) {
+    inline-size: 50%;
   }
 
   .value {

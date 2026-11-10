@@ -67,7 +67,7 @@ function requestEvent(path: string, fields?: Record<string, string>) {
 
 function loadEvent(credentials: AccountCredentialsState): PageServerLoadEvent {
   const parent = async () => ({ credentials });
-  return { ...requestEvent("/account/devices"), parent } as unknown as PageServerLoadEvent;
+  return { ...requestEvent("/account/devices"), parent, depends: () => {} } as unknown as PageServerLoadEvent;
 }
 
 function actionEvent(action: string, fields: Record<string, string> = {}): RequestEvent {

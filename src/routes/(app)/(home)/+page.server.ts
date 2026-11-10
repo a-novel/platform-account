@@ -27,17 +27,17 @@ function failValidation(journey: AuthenticationJourney, issues: readonly FormIss
 }
 
 /** Fails the action with the service outcome the dialog shows above its submit button. */
-function failService(status: number, journey: AuthenticationJourney, feedback: AuthenticationFeedback) {
+function failService(status: number, journey: AuthenticationJourney, feedback: AuthenticationFeedback, email?: string) {
   return fail(status, {
-    authentication: { journey, state: { status: "service-error", feedback } } as AuthenticationPanelModel,
+    authentication: { journey, email, state: { status: "service-error", feedback } } as AuthenticationPanelModel,
   });
 }
 
 /** Fails the action as unavailable, or as rate-limited when authentication refused the caller. */
-function failUnavailable(journey: AuthenticationJourney, error: unknown) {
+function failUnavailable(journey: AuthenticationJourney, error: unknown, email: string) {
   return isHttpStatusError(error, 429)
-    ? failService(429, journey, "tooManyAttempts")
-    : failService(503, journey, "serviceUnavailable");
+    ? failService(429, journey, "tooManyAttempts", email)
+    : failService(503, journey, "serviceUnavailable", email);
 }
 
 async function login(event: RequestEvent, form: FormData) {
@@ -47,8 +47,8 @@ async function login(event: RequestEvent, form: FormData) {
   try {
     await getAuthenticationContext(event).session.login(input.value.email, input.value.password);
   } catch (error) {
-    if (isHttpStatusError(error, 401)) return failService(401, "login", "invalidCredentials");
-    return failUnavailable("login", error);
+    if (isHttpStatusError(error, 401)) return failService(401, "login", "invalidCredentials", input.value.email);
+    return failUnavailable("login", error, input.value.email);
   }
 
   redirect(303, safeReturnTo(event.url.searchParams.get("returnTo")));
@@ -68,7 +68,7 @@ async function requestInvitation(event: RequestEvent, form: FormData) {
   } catch (error) {
     // A service older than v2.24.0 answers 409 for a listed or registered address, which gets the same
     // answer as a new one, so the confirmation reveals no membership.
-    if (!isHttpStatusError(error, 409)) return failUnavailable("register", error);
+    if (!isHttpStatusError(error, 409)) return failUnavailable("register", error, input.value.email);
   }
 
   return {
@@ -91,7 +91,7 @@ async function requestPasswordReset(event: RequestEvent, form: FormData) {
       lang: emailLanguage(event.locals.locale),
     });
   } catch (error) {
-    return failUnavailable("reset", error);
+    return failUnavailable("reset", error, input.value.email);
   }
 
   return {

@@ -11,7 +11,6 @@ import { page } from "vitest/browser";
 import type { AuthorizationStatus } from "@a-novel-kit/uikit/authorization";
 
 const links = {
-  loginHref: "/account?auth=login&returnTo=%2Faccount",
   homeHref: "/",
   retryHref: "/account?panel=email",
 };
@@ -19,22 +18,25 @@ const children = createRawSnippet(() => ({ render: () => "<p>Private content</p>
 const unavailable = createRawSnippet(() => ({ render: () => "<p>Blank public form</p>" }));
 
 describe("protected page presentation", () => {
-  it.each<AuthorizationStatus>(["pending", "anonymous", "forbidden", "unavailable"])(
+  it.each<AuthorizationStatus>(["pending", "forbidden", "unavailable"])(
     "withholds private content for %s",
     async (status) => {
       render(AccessBoundary, { ...links, controller: { state: { status } }, children }, withLocale());
       await expect.element(page.getByText("Private content")).not.toBeInTheDocument();
       await expect.element(page.getByRole("heading", { level: 1 })).toBeVisible();
-      if (status === "anonymous")
-        await expect
-          .element(page.getByRole("link", { name: "Log in", exact: true }))
-          .toHaveAttribute("href", links.loginHref);
       if (status === "unavailable")
         await expect
           .element(page.getByRole("link", { name: "Reload page" }))
           .toHaveAttribute("data-sveltekit-reload", "true");
     }
   );
+
+  it("shows nothing to a visitor without an account, whom the login dialog covers", async () => {
+    render(AccessBoundary, { ...links, controller: { state: { status: "anonymous" } }, children }, withLocale());
+
+    await expect.element(page.getByText("Private content")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("heading")).not.toBeInTheDocument();
+  });
 
   it("renders authorized content without a status page", async () => {
     render(AccessBoundary, { ...links, controller: { state: { status: "allowed" } }, children }, withLocale());

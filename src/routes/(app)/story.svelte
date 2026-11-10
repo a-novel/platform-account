@@ -59,6 +59,7 @@
         return {
           model: authenticationModel ?? readyAuthenticationModel(model.authView ?? "login"),
           action: "#auth",
+          maintenance: downtime !== undefined && started,
         };
       },
       passwordVisibility: {

@@ -16,7 +16,7 @@ import { HttpError } from "@a-novel-kit/nodelib-browser/http";
 import { AuthenticationApi, Role, credentialsGetSelf } from "@a-novel/service-authentication-rest";
 import { type Profile, ProfileApi } from "@a-novel/service-profile-rest";
 
-import type { RequestEvent } from "@sveltejs/kit";
+import type { RequestEvent, ServerLoadEvent } from "@sveltejs/kit";
 
 vi.mock("#lib/server/auth/context.js", { spy: true });
 vi.mock("#lib/server/profile/context.js", { spy: true });
@@ -45,14 +45,15 @@ function signedIn(patch: Partial<AuthenticatedSession> = {}): AuthenticatedSessi
   };
 }
 
-function event(path = "/account"): RequestEvent {
+function event(path = "/account"): RequestEvent & Pick<ServerLoadEvent, "depends"> {
   const url = new URL(path, "https://account.test");
   const request = {
     url,
     locals: { locale: "en" },
     cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
     request: new Request(url),
-  } as unknown as RequestEvent;
+    depends: () => {},
+  } as unknown as RequestEvent & Pick<ServerLoadEvent, "depends">;
   vi.mocked(getAuthenticationContext).mockReturnValue(stubAuthenticationContext(request.cookies));
   vi.mocked(getProfileContext).mockReturnValue({ api: new ProfileApi("https://profile.test"), self: readProfile });
   return request;
@@ -185,7 +186,7 @@ describe("account layout", () => {
 
     await expect(loadAccount(event())).resolves.toEqual({
       authorization: "unavailable",
-      summary: { status: "error", feedback: "sessionUnavailable" },
+      summary: { status: "loading" },
       credentials: { status: "unavailable" },
       profile: { status: "unavailable" },
     });

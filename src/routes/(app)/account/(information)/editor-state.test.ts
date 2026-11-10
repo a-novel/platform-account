@@ -1,4 +1,5 @@
-import { editorParameter, readEditor } from "./editor-state";
+import { editorParameter } from "../url-state";
+import { readEditor } from "./editor-state";
 
 import { describe, expect, it } from "vitest";
 

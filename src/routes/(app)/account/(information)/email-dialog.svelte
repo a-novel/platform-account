@@ -97,6 +97,7 @@
           <Input
             {...control}
             name="email"
+            value={model.emailDraft}
             type="email"
             autocomplete="email"
             autocapitalize="none"

@@ -204,6 +204,7 @@ describe("email action", () => {
         data: {
           accountAction: {
             kind: "email",
+            email: emailFields.email,
             state: { status: "validation-error", issues: [{ field: "currentPassword", feedback }] },
           },
         },
@@ -226,7 +227,9 @@ describe("email action", () => {
 
     expect(result).toEqual({
       status,
-      data: { accountAction: { kind: "email", state: { status: "service-error", feedback } } },
+      data: {
+        accountAction: { kind: "email", email: emailFields.email, state: { status: "service-error", feedback } },
+      },
     });
     expect(JSON.stringify(result)).not.toContain("private service detail");
   });

@@ -64,6 +64,34 @@ describe("authentication panel", () => {
     await expect.element(page.getByLabelText(/Password/)).toHaveAttribute("type", "password");
   });
 
+  it.each(["login", "register", "reset"] as const)("stops the %s form during maintenance", async (journey) => {
+    const controller = createAuthenticationPanelController({
+      getState: () => ({
+        model: { journey, state: { status: "ready" } } as AuthenticationPanelModel,
+        action: "/auth",
+        maintenance: true,
+      }),
+      allowNativeSubmission: false,
+    });
+    render(AuthenticationPanel, { controller }, withLocale());
+
+    await expect.element(page.getByRole("status")).toMatchTextContent(/^Maintenance in progress/);
+    await expect.element(page.getByRole("button", { name: /Log in|Join|Send/ })).toBeDisabled();
+    expect(controller.submit(new FormData())).toBe(false);
+  });
+
+  it("keeps the address of a submission the server refused", async () => {
+    const controller = authenticationController({
+      journey: "login",
+      email: "creator@example.test",
+      state: { status: "service-error", feedback: "invalidCredentials" },
+    });
+    render(AuthenticationPanel, { controller }, withLocale());
+
+    await expect.element(page.getByLabelText(/Email address/)).toHaveValue("creator@example.test");
+    await expect.element(page.getByLabelText(/Password/)).toHaveValue("");
+  });
+
   it("locks an in-flight login at the pure view boundary", async () => {
     render(
       AuthenticationPanel,

@@ -8,7 +8,6 @@ import { render } from "vitest-browser-svelte";
 import { page } from "vitest/browser";
 
 const links = {
-  loginHref: "/account?auth=login&returnTo=%2Faccount",
   homeHref: "/",
   retryHref: "/account?panel=email",
 };
@@ -26,11 +25,11 @@ describe("error page presentation", () => {
     await expect.element(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
   });
 
-  it("locks a page that needs a login behind the login link", async () => {
+  it("leaves a page that needs a login to the login dialog", async () => {
     render(ErrorPage, { ...links, status: 401 }, withLocale());
 
-    await expect.element(page.getByRole("heading", { name: "Agora account required", level: 1 })).toBeVisible();
-    await expect.element(page.getByRole("link", { name: "Log in" })).toHaveAttribute("href", links.loginHref);
+    await expect.element(page.getByRole("heading")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("link")).not.toBeInTheDocument();
   });
 
   it.each(["en", "fr"] as const)(

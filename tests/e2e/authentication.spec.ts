@@ -265,8 +265,8 @@ test("an authentication outage preserves the session and recovers after reload",
   try {
     await compose("stop", "authentication");
     await page.reload();
-    await expect(page.getByText("Account details unavailable", { exact: true })).toBeVisible();
-    await expect(page).toHaveTitle("Account settings: Account details unavailable | Agora");
+    await expect(page.getByRole("heading", { level: 1, name: "Your account" })).toBeVisible();
+    await expect(page).toHaveTitle("Account settings | Agora");
     expect(await context.cookies()).toEqual(cookies);
     await screenshot(page, info, "recoverable-service-outage");
   } finally {
@@ -302,11 +302,8 @@ test.describe("native forms without JavaScript", () => {
     await dialog.getByRole("button", { name: "Join the list", exact: true }).click();
     await expect(dialog.getByText("Enter a valid email address.", { exact: true })).toBeVisible();
 
-    // The forms post to the site's root, whose page is the locked account page: closing the dialog there
-    // leaves the visitor on that page, under the login again.
-    await dialog.getByRole("link", { name: "Close dialog" }).click();
-    await expect(page).toHaveURL("/account?auth=login&returnTo=%2Faccount");
-    await expect(page.getByRole("dialog", { name: "Log in", exact: true })).toBeVisible();
+    // The forms post to the site's root, whose page is the locked account page, so the dialog stays open there.
+    await expect(dialog.getByRole("link", { name: "Close dialog" })).toHaveCount(0);
   });
 
   test("login validates on the server and returns to the protected destination", async ({ page, account }) => {

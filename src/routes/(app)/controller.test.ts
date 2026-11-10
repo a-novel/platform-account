@@ -77,11 +77,24 @@ describe("createShellController", () => {
     expect(controller.state.model.authView).toBe("login");
     expect(onAuthViewChange.mock.calls).toEqual([[null], ["login"], [null], ["login"]]);
 
-    for (const session of [{ status: "anonymous" }, { status: "loading" }, { status: "error" }] as const) {
-      data = { ...data, session };
-      expect(controller.logout()).toBe(false);
-      expect(controller.state.model.session).toEqual(session);
-    }
+    data = { ...data, session: { status: "anonymous" } };
+    expect(controller.logout()).toBe(false);
+    expect(controller.state.model.session).toEqual({ status: "anonymous" });
+  });
+
+  it("keeps the login dialog open on a page that needs a login", () => {
+    const onAuthViewChange = vi.fn();
+    const controller = shell({ onAuthViewChange, getAuthLocked: () => true });
+
+    expect(controller.state.model).toMatchObject({ authView: "login", authLocked: true });
+
+    controller.authenticationDialog.close();
+    controller.authenticationDialog.toggle();
+    expect(controller.state.model.authView).toBe("login");
+    expect(onAuthViewChange).not.toHaveBeenCalled();
+
+    controller.openAuthentication("register");
+    expect(controller.state.model.authView).toBe("register");
   });
 
   it("toggles the rail and the mobile menu", () => {
@@ -154,6 +167,7 @@ describe("createShellController", () => {
       authView: null,
       session: { status: "anonymous" },
       authorizationRequest: false,
+      authLocked: false,
     });
 
     data = {
@@ -171,6 +185,7 @@ describe("createShellController", () => {
         authView: "reset",
         session: { status: "authenticated", displayName: "Maya Chen" },
         authorizationRequest: true,
+        authLocked: false,
       },
       ...links,
       apps: null,

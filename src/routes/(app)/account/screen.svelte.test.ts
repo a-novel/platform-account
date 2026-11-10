@@ -22,6 +22,7 @@ const summary: AccountSummaryState = {
   status: "ready",
   roles: ["auth:user"],
   email: "maya.chen@example.test",
+  profile: {},
   loggedInUntil: "Nov 10, 2026, 6:40 PM",
 };
 
@@ -120,15 +121,11 @@ describe("account layout screen", () => {
     expect(new Set(colors).size).toBe(tones.length);
   });
 
-  it("shows a header it cannot read in an error box, and keeps the tabs and the logout", async () => {
-    await render(
-      Screen,
-      { controller: controller({ status: "error", feedback: "sessionUnavailable" }), children },
-      withLocale()
-    );
+  it("holds the place of a header it cannot read yet, and keeps the tabs and the logout", async () => {
+    await render(Screen, { controller: controller({ status: "loading" }), children }, withLocale());
 
     await expect.element(page.getByRole("heading", { level: 1, name: "Your account" })).toBeVisible();
-    await expect.element(page.getByRole("alert")).toMatchTextContent(/^Account details unavailable/);
+    await expect.element(page.getByRole("alert")).not.toBeInTheDocument();
     await expect.element(page.getByRole("list", { name: "Roles" })).not.toBeInTheDocument();
     await expect.element(page.getByText(/Logged in until/)).not.toBeInTheDocument();
     await expect.element(page.getByRole("link", { name: "Devices" })).toBeVisible();

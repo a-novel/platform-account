@@ -1,5 +1,8 @@
 import { withParameter } from "../auth-dialog-state";
 
+/** The URL parameter naming the open account editor. */
+export const editorParameter = "edit";
+
 /** The address bar's URL in the browser, and the request's while the server renders. */
 export function addressBar(requestUrl: Pick<URL, "href">): URL {
   return new URL(typeof window === "undefined" ? requestUrl.href : window.location.href);

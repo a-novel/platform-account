@@ -1,6 +1,7 @@
 import type { AccountDevice, AccountDevicesModel } from "#lib/application/auth/types.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 
+import { devicesData } from "../../dependencies";
 import type { PageServerLoadEvent } from "./$types";
 import { readDeviceName } from "./user-agent";
 
@@ -40,6 +41,7 @@ function readDevice(session: Session, dates: Intl.DateTimeFormat, regions: Intl.
 
 /** Lists the account's devices. A failure hides only the list: the tab still renders. */
 export const load = async (event: PageServerLoadEvent) => {
+  event.depends(devicesData);
   const { locale } = event.locals;
   const dates = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   const regions = new Intl.DisplayNames(locale, { type: "region" });

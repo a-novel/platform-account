@@ -18,12 +18,13 @@
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
+  import { Alert, Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
 
   let { controller, forgotPassword }: AuthenticationPanelProps = $props();
 
   const model = $derived(controller.state.model);
   const action = $derived(controller.state.action);
+  const maintenance = $derived(controller.state.maintenance);
 
   const { t } = getI18nContext();
   const componentId = $props.id();
@@ -53,6 +54,7 @@
         <Input
           {...control}
           name="email"
+          value={model.email}
           type="email"
           autocomplete={model.journey === "login" ? "username" : "email"}
           autocapitalize="none"
@@ -84,11 +86,13 @@
 
     <FormActions align="stretch">
       {#snippet feedback()}
-        {#if model.state.status === "service-error"}
+        {#if maintenance}
+          <Alert tone="warning" title={t("access.downtime.title")}>{t("shell.auth.maintenance")}</Alert>
+        {:else if model.state.status === "service-error"}
           <AuthenticationError feedback={model.state.feedback} />
         {/if}
       {/snippet}
-      <Button type="submit" disabled={submitting}>
+      <Button type="submit" disabled={submitting || maintenance}>
         {#if model.journey === "register"}
           {submitting
             ? t("authUi.authentication.journeys.register.submitting")

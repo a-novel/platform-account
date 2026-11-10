@@ -6,14 +6,12 @@
 
   let {
     status,
-    loginHref,
     homeHref,
     retryHref,
     downtime,
     authorizationRequest = false,
   }: {
     status: number;
-    loginHref: string;
     homeHref: string;
     retryHref: string;
     /** Set when a planned downtime stopped the services the page needs. */
@@ -22,9 +20,6 @@
     authorizationRequest?: boolean;
   } = $props();
   const { t } = getI18nContext();
-
-  /** The access state each refusal shows: a missing login locks the page under the login dialog. */
-  const accessStatus: Record<number, "anonymous" | "forbidden"> = { 401: "anonymous", 403: "forbidden" };
 </script>
 
 {#if downtime}
@@ -48,14 +43,13 @@
       {/snippet}
     </StatusState>
   </div>
-{:else if status === 401 || status === 403 || status === 503}
+{:else if status === 403 || status === 503}
   <AccessBoundary
-    controller={{ state: { status: accessStatus[status] ?? "unavailable" } }}
-    {loginHref}
+    controller={{ state: { status: status === 403 ? "forbidden" : "unavailable" } }}
     {homeHref}
     {retryHref}
   />
-{:else}
+{:else if status !== 401}
   <div class="error-page">
     <StatusState
       tone="error"
@@ -69,6 +63,8 @@
     </StatusState>
   </div>
 {/if}
+
+<!-- A page that needs a login shows nothing of its own: the shell's login dialog covers it. -->
 
 <style>
   .error-page {

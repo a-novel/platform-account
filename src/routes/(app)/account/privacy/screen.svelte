@@ -6,7 +6,7 @@
   import type { LocationConsentController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, Switch } from "@a-novel-kit/uikit";
+  import { Button, Card, Skeleton, Switch } from "@a-novel-kit/uikit";
 
   let {
     telemetry,
@@ -52,7 +52,10 @@
           </noscript>
         </form>
       {:else}
-        <p>{t("privacy.account.unavailable")}</p>
+        <div class="setting-skeleton">
+          <Skeleton class="setting-skeleton-title" />
+          <Skeleton />
+        </div>
       {/if}
     </Card>
   </section>
@@ -88,9 +91,12 @@
     font-family: var(--font-family-display);
   }
 
-  p {
-    margin: 0;
-    color: var(--color-text-secondary);
-    line-height: var(--line-height-normal);
+  .setting-skeleton {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .setting-skeleton :global(.setting-skeleton-title) {
+    inline-size: 40%;
   }
 </style>

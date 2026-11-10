@@ -170,6 +170,52 @@ describe("devices screen", () => {
     await expect.element(page.getByRole("link", { name: "Log out Safari on iOS" })).toBeVisible();
   });
 
+  it("holds the list's place while it retries", async () => {
+    await render(Screen, { controller: controller({ devices: { status: "loading" } }) }, withLocale());
+
+    await expect.element(page.getByRole("alert")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("list")).not.toBeInTheDocument();
+  });
+
+  it("shows a change's failure inside the list it changed", async () => {
+    await render(
+      Screen,
+      { controller: controller({ action: { status: "service-error", feedback: "tooManyAttempts" } }) },
+      withLocale()
+    );
+
+    await expect
+      .element(page.getByRole("region", { name: "Devices" }).getByRole("alert"))
+      .toMatchTextContent(/Too many attempts/);
+  });
+
+  it("lists ten devices per page, each list on its own pages", async () => {
+    const others = Array.from({ length: 12 }, (_, index) => ({ ...phone, id: `active-${index}` }));
+    const gone = Array.from({ length: 11 }, (_, index) => ({ ...oldTablet, id: `gone-${index}` }));
+    await render(
+      Screen,
+      {
+        controller: controller({
+          devices: { status: "ready", devices: [thisDevice, ...others, ...gone] },
+          pages: { active: 2, loggedOut: 1 },
+        }),
+      },
+      withLocale()
+    );
+
+    const active = page.getByRole("region", { name: "Devices" });
+    await expect.element(active.getByRole("listitem").first()).toBeVisible();
+    await expect.element(active.getByRole("navigation", { name: "Pages of your active devices" })).toBeVisible();
+    await expect.element(active.getByRole("link", { name: "1", exact: true })).toHaveAttribute("href", "?page=1");
+    await expect.element(page.getByRole("navigation", { name: "Pages of your logged-out devices" })).toBeVisible();
+  });
+
+  it("shows no page controls for a list that fits", async () => {
+    await render(Screen, { controller: controller() }, withLocale());
+
+    await expect.element(page.getByRole("navigation")).not.toBeInTheDocument();
+  });
+
   it("says so when the devices cannot be shown", async () => {
     await render(Screen, { controller: controller({ devices: { status: "unavailable" } }) }, withLocale("fr"));
 

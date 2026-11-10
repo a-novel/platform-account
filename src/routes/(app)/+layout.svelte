@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { AuthDialogView } from "#lib/application/shell/types.js";
+  import { retryWhile } from "#lib/client/retry.svelte.js";
   import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { setAuthenticationTitle } from "#lib/ui/PageTitle.svelte";
   import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
   import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
   import { PUBLIC_PLATFORM_DOMAIN } from "$app/env/public";
-  import { afterNavigate, goto } from "$app/navigation";
+  import { afterNavigate, goto, invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
@@ -17,6 +18,7 @@
     createShellController,
     readyAuthenticationModel,
   } from "./controller.svelte";
+  import { shellSessionData } from "./dependencies";
   import { withNavigationOpen } from "./navigation-state";
   import Screen from "./screen.svelte";
 
@@ -33,10 +35,14 @@
     getStatus: () => page.data.authorization ?? data.authorization,
   });
 
+  const platformDowntime = getPlatformDowntime();
   let currentHref = $state(page.url.href);
   const authentication = createAuthenticationPanelController({
     // The dialog's journey, or a blank login form while the dialog is closed.
-    getState: () => authenticationState(readAuthView(new URL(currentHref).searchParams) ?? "login"),
+    getState: () => ({
+      ...authenticationState(readAuthView(new URL(currentHref).searchParams) ?? "login"),
+      maintenance: platformDowntime.started,
+    }),
   });
   const controller = createShellController({
     getData: () => data,
@@ -45,14 +51,21 @@
     logoutAction: resolve("auth/logout"),
     // Only a platform that collects browser telemetry asks for consent, so only it offers to change the answer.
     privacyHref: hasTelemetryPreference() ? resolve("privacy") : null,
-    platformDowntime: getPlatformDowntime(),
+    platformDowntime,
     authentication,
     onAuthViewChange: changeAuthView,
     onDrawerChange: (open) => showShallow(withNavigationOpen(new URL(currentHref), open)),
     // Every Agora app under the shared domain opens with the rail the visitor left.
     onRailChange: (rail) => saveNavigationRail(rail, { domain: PUBLIC_PLATFORM_DOMAIN }),
     getUrl: () => new URL(currentHref),
+    // The home route only renders a posted form's result over the locked account page.
+    getAuthLocked: () => page.status === 401 || page.route.id === "/(app)/(home)",
   });
+
+  retryWhile(
+    () => data.session.status === "loading",
+    () => invalidate(shellSessionData)
+  );
 
   // A page locked for a missing login still titles the dialog that opens over it.
   setAuthenticationTitle(() =>

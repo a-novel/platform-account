@@ -35,13 +35,15 @@ test.describe("scheduled maintenance", () => {
 test.describe("maintenance in progress", () => {
   test.use({ baseURL: platformOrigin("started") });
 
-  test("locks sign-in, the account and emailed links until operators clear it", async ({ page }, info) => {
+  test("locks sign-in, the account and emailed links until operators clear it", async ({ page, isMobile }, info) => {
     await page.goto("/privacy");
     await expect(banner(page, "Maintenance in progress")).toContainText("Jan 12, 2099");
 
     await page.goto("/?auth=login");
-    await expect(page.getByRole("dialog").getByRole("heading", { name: "Temporarily unavailable" })).toBeVisible();
-    await expect(page.getByLabel(/^Email address/)).toHaveCount(0);
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("status")).toContainText("Maintenance in progress");
+    await expect(dialog.getByLabel(/^Email address/)).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Log in" })).toBeDisabled();
     await screenshot(page, info, "maintenance-sign-in");
 
     for (const route of ["/account", "/ext/account/create"]) {
@@ -51,6 +53,11 @@ test.describe("maintenance in progress", () => {
         await expect(page).toHaveTitle("Maintenance in progress | Agora");
         await expect(page.getByRole("heading", { level: 1, name: "Temporarily unavailable" })).toBeVisible();
       });
+    }
+    if (!isMobile) {
+      await page.goto("/account");
+      await expect(page.getByRole("complementary").getByRole("link", { name: "Log in" })).toBeVisible();
+      await expect(page.getByRole("complementary").getByRole("link", { name: "Register" })).toBeVisible();
     }
     await screenshot(page, info, "maintenance-page");
   });

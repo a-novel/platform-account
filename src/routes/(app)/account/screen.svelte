@@ -11,10 +11,8 @@
 </script>
 
 <script lang="ts">
-  import { translateAuthenticationFeedback } from "#lib/i18n/auth-feedback.js";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Avatar, Badge, Button, NavList, VisuallyHidden } from "@a-novel-kit/uikit";
+  import { Avatar, Badge, Button, NavList, Skeleton, VisuallyHidden } from "@a-novel-kit/uikit";
   import { Role } from "@a-novel/service-authentication-rest";
 
   import { Camera, LogOut } from "@lucide/svelte";
@@ -42,9 +40,12 @@
   ]);
 
   const profile = $derived(summary.status === "ready" ? summary.profile : undefined);
+  const email = $derived(summary.status === "ready" ? summary.email : undefined);
+  // The username leads and the email stands in for it, so either one waits for the profile to tell.
+  const name = $derived(profile?.username || (profile && email));
   // An account without a picture shows initials: two from a dotted or dashed handle.
   const initials = $derived.by(() => {
-    const handle = (summary.status === "ready" && summary.email?.split("@")[0]) || "";
+    const handle = email?.split("@")[0] ?? "";
     const words = handle.split(/[._-]+/).filter(Boolean);
     return words
       .slice(0, 2)
@@ -72,28 +73,28 @@
     <a class="picture" href={layout.pictureEditorHref}>
       <VisuallyHidden>{t("authUi.account.picture.changeLabel")}</VisuallyHidden>
       <Avatar
-        label={profile?.username || (summary.status === "ready" && summary.email) || t("authUi.account.title")}
+        label={name || t("authUi.account.title")}
         src={profile?.picture}
         {initials}
         size="xl"
         aria-hidden="true"
       />
+      {#if !profile?.picture && !name}<Skeleton class="picture-skeleton" shape="circle" />{/if}
       <span class="badge" aria-hidden="true"><Camera size="var(--icon-size-sm)" /></span>
     </a>
 
     <div class="identity">
       <h1 id={`${componentId}-title`}>
-        {#if profile?.username}
-          <bdi>{profile.username}</bdi>
+        {#if name}
+          <bdi>{name}</bdi>
         {:else}
-          {summary.status === "ready" && summary.email ? summary.email : t("authUi.account.title")}
+          <VisuallyHidden>{t("authUi.account.title")}</VisuallyHidden>
+          <Skeleton class="title-skeleton" />
         {/if}
       </h1>
 
-      {#if summary.status === "error"}
-        <Alert tone="error" title={t("authUi.account.loadErrorTitle")}>
-          {translateAuthenticationFeedback(t, summary.feedback)}
-        </Alert>
+      {#if summary.status === "loading"}
+        <Skeleton class="details-skeleton" />
       {:else}
         <!-- Each role keeps one color, so a privileged account reads as such at a glance. -->
         <ul class="roles" aria-label={t("authUi.account.roles.label")}>
@@ -173,6 +174,13 @@
     text-decoration: none;
   }
 
+  .picture :global(.picture-skeleton) {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
   .picture:hover .badge {
     background: var(--color-surface-hover);
   }
@@ -206,6 +214,15 @@
   p,
   ul {
     margin: 0;
+  }
+
+  h1 :global(.title-skeleton) {
+    inline-size: 60%;
+    block-size: var(--font-size-2xl);
+  }
+
+  .identity :global(.details-skeleton) {
+    inline-size: 40%;
   }
 
   h1 {
@@ -289,6 +306,14 @@
     .tabs :global(.tab-list) {
       margin-inline: auto;
       inline-size: max-content;
+    }
+
+    /* The picture shrinks on a phone, so the badge shrinks too and straddles its edge, clear of the initials. */
+    .badge {
+      inset-block-end: calc(-1 * var(--space-1));
+      inset-inline-end: calc(-1 * var(--space-1));
+      inline-size: var(--space-6);
+      block-size: var(--space-6);
     }
 
     /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */

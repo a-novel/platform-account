@@ -4,6 +4,8 @@ import type {
   AccountDevicesModel,
 } from "#lib/application/auth/types.js";
 
+import type { DeviceList } from "./device-pages";
+
 import type { OpenController } from "@a-novel-kit/uikit";
 
 /** State rendered by the devices tab. */
@@ -21,6 +23,8 @@ export interface AccountDevicesController {
   readonly confirmation: OpenController;
   /** Native navigation destination that asks to confirm a logout, or closes the dialog for null. */
   confirmationHref(confirmation: AccountDeviceConfirmation | null): string;
+  /** Native navigation destination that shows one page of a list. */
+  pageHref(list: DeviceList, page: number): string;
   /** Asks to confirm a logout in place of following its link. */
   openConfirmation(confirmation: AccountDeviceConfirmation): void;
   /** Starts a device change and reports whether native submission may continue. */
@@ -39,6 +43,8 @@ export interface AccountDevicesControllerOptions extends Omit<AccountDevicesCont
   onConfirmationChange?: (confirmation: AccountDeviceConfirmation | null) => void;
   /** Builds the URL of a confirmation change, from the current route. */
   confirmationUrl?: (confirmation: AccountDeviceConfirmation | null) => string;
+  /** Builds the URL of one page of a list, from the current route. */
+  pageUrl?: (list: DeviceList, page: number) => string;
 }
 
 /** Creates a reactive controller for the devices tab. */
@@ -51,6 +57,7 @@ export function createAccountDevicesController({
   onConfirmationChange,
   confirmationUrl = (confirmation) =>
     confirmation ? `?confirm=${confirmation.kind === "others" ? "others" : confirmation.id}` : "?",
+  pageUrl = (list, page) => `?${list === "active" ? "page" : "loggedOutPage"}=${page}`,
 }: AccountDevicesControllerOptions): AccountDevicesController {
   // A transition opens or closes the confirmation at once, and the next URL, such as Back's, decides again.
   let confirmation = $derived(getConfirmation());
@@ -76,6 +83,7 @@ export function createAccountDevicesController({
       toggle: () => setConfirmation(null),
     },
     confirmationHref: confirmationUrl,
+    pageHref: pageUrl,
     openConfirmation: setConfirmation,
     submitChange() {
       if (action.status === "submitting") return false;

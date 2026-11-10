@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { loginHref } from "#lib/application/auth/navigation.js";
   import { errorPageTitle } from "#lib/i18n/page-titles.js";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
@@ -24,7 +23,6 @@
 
 <Screen
   status={page.status}
-  loginHref={loginHref(page.url.searchParams.get("returnTo") ?? currentPath)}
   homeHref={resolve("")}
   retryHref={currentPath}
   {downtime}
