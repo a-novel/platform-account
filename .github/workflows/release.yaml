@@ -37,7 +37,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: a-novel-kit/workflows/publish-actions/release-core@v1.84.0
+      - uses: a-novel-kit/workflows/publish-actions/release-core@v1.84.1
         with:
           # renovate: datasource=go depName=github.com/a-novel-kit/stack/cli
           cli_version: "1.42.4"
@@ -51,7 +51,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: a-novel-kit/workflows/publish-actions/release-core@v1.84.0
+      - uses: a-novel-kit/workflows/publish-actions/release-core@v1.84.1
         with:
           # renovate: datasource=go depName=github.com/a-novel-kit/stack/cli
           cli_version: "1.42.4"
@@ -72,7 +72,7 @@ jobs:
       id-token: write
       packages: write
     steps:
-      - uses: a-novel-kit/workflows/build-actions/docker@v1.84.0
+      - uses: a-novel-kit/workflows/build-actions/docker@v1.84.1
         with:
           file: Dockerfile
           image_name: ${{ github.repository }}
@@ -96,7 +96,7 @@ jobs:
       deployment: false
     permissions: {}
     steps:
-      - uses: a-novel-kit/workflows/publish-actions/deploy-release@v1.84.0
+      - uses: a-novel-kit/workflows/publish-actions/deploy-release@v1.84.1
         with:
           client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
           app_private_key: ${{ secrets.AGENT_BOT_PRIVATE_KEY }}
@@ -113,7 +113,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: a-novel-kit/workflows/generic-actions/archive-board-items@v1.84.0
+      - uses: a-novel-kit/workflows/generic-actions/archive-board-items@v1.84.1
         with:
           client_id: ${{ vars.AGENT_BOT_CLIENT_ID }}
           app_private_key: ${{ secrets.AGENT_BOT_PRIVATE_KEY }}
