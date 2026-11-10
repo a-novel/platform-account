@@ -12,7 +12,7 @@
 
 <script lang="ts">
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Avatar, Badge, Button, NavList, Skeleton, VisuallyHidden } from "@a-novel-kit/uikit";
+  import { Avatar, Badge, Button, NavList, Skeleton, StickyBar, VisuallyHidden } from "@a-novel-kit/uikit";
   import { Role } from "@a-novel/service-authentication-rest";
 
   import { Camera, LogOut } from "@lucide/svelte";
@@ -132,9 +132,9 @@
     </form>
   </header>
 
-  <nav class="tabs" aria-label={t("authUi.account.tabs.label")} {@attach revealCurrentTab}>
+  <StickyBar as="nav" edge="start" class="tabs" aria-label={t("authUi.account.tabs.label")} {@attach revealCurrentTab}>
     <NavList class="tab-list" orientation="horizontal" items={tabs} />
-  </nav>
+  </StickyBar>
 
   <div class="tab">
     {@render children()}
@@ -257,37 +257,22 @@
   }
 
   /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. They
-     overhang the column by the hairline ring, so the ring of a card as wide as the column stays under them. The
-     canvas's own color, without its lamp, keeps them apart from what scrolls under them. A finger or a wheel scrolls
-     them, so they show no scrollbar. */
-  .tabs {
-    position: sticky;
-    z-index: var(--layer-sticky);
+     overhang the column by the hairline ring, so the ring of a card as wide as the column stays under them. A finger
+     or a wheel scrolls them, so they show no scrollbar. */
+  .account-layout :global(.tabs) {
     margin-inline: calc(-1 * var(--border-width-thin));
-    inset-block-start: var(--shell-sticky-top, 0);
-    border-block-end: var(--border-width-thin) solid var(--color-border-subtle);
-    background: var(--color-surface-canvas);
     padding-inline: var(--border-width-thin);
     overflow-x: auto;
     scrollbar-width: none;
   }
 
-  .tabs::-webkit-scrollbar {
+  .account-layout :global(.tabs)::-webkit-scrollbar {
     display: none;
   }
 
   /* One row, which the bar scrolls on a phone: tabs on two rows read as two groups. */
-  .tabs :global(.tab-list) {
+  .account-layout :global(.tabs .tab-list) {
     flex-wrap: nowrap;
-  }
-
-  /* Where the browser blurs a backdrop, the canvas color turns to frosted glass of it. */
-  @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
-    .tabs {
-      -webkit-backdrop-filter: blur(var(--blur-lg));
-      backdrop-filter: blur(var(--blur-lg));
-      background: color-mix(in oklab, var(--color-surface-canvas) var(--color-mix-12), transparent);
-    }
   }
 
   /* On a phone logging out moves under the details. */
@@ -298,12 +283,12 @@
 
     /* The tabs span the phone's whole width, over the page's gutters, and center while they fit. Auto
        margins drop to nothing once they overflow, so the bar then scrolls from its first tab. */
-    .tabs {
+    .account-layout :global(.tabs) {
       margin-inline: calc(-1 * var(--layout-gutter));
       padding-inline: var(--space-1);
     }
 
-    .tabs :global(.tab-list) {
+    .account-layout :global(.tabs .tab-list) {
       margin-inline: auto;
       inline-size: max-content;
     }
