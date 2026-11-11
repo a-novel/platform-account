@@ -58,7 +58,9 @@ export interface AccountInformationController {
   /** Checks the username against the service's rule and reports whether native submission may continue. */
   submitUsername(form: FormData): boolean;
   /** Opens an image file for framing, or reports that the browser cannot open it. */
-  choosePicture(file: Blob): Promise<void>;
+  choosePicture(file: File): Promise<void>;
+  /** Drops the image being framed, so another can be chosen. */
+  discardPicture(): void;
   /** Encodes the framed picture for its form, or returns null when the browser cannot. */
   savePicture(): Promise<Blob | null>;
   /** Starts removing the picture and reports whether native submission may continue. */
@@ -216,11 +218,17 @@ export function createAccountInformationController({
       try {
         const source = await pictures.open(file);
         if (choice !== choices || forms.picture.status !== "opening") return pictures.release(source);
-        forms = { ...forms, picture: { status: "cropping", source, crop: centeredCrop(source, profilePicture.ratio) } };
+        const crop = centeredCrop(source, profilePicture.ratio);
+        forms = { ...forms, picture: { status: "cropping", name: file.name, source, crop } };
       } catch {
         if (choice !== choices || forms.picture.status !== "opening") return;
         forms = { ...forms, picture: { status: "choosing", refusal: "unreadable" } };
       }
+    },
+    discardPicture() {
+      if (forms.picture.status !== "cropping") return;
+      releasePicture();
+      forms = { ...forms, picture: { status: "choosing" } };
     },
     async savePicture() {
       const picture = forms.picture;

@@ -143,9 +143,7 @@ export default interface Resources {
         "picture": {
           "changeLabel": "Change picture",
           "choose": "Choose an image",
-          "chooseAnother": "Choose another image",
           "current": "Your current picture",
-          "description": "Choose an image, then move and zoom it to frame your picture.",
           "dialogTitle": "Change your picture",
           "frameLabel": "Picture frame",
           "none": "No picture",

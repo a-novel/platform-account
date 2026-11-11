@@ -65,7 +65,7 @@
     <p class="secondary">{t("authUi.account.devices.lossDelay")}</p>
     {#if device}<input type="hidden" name="sessionID" value={device.id} />{/if}
 
-    <FormActions align="end">
+    <FormActions>
       <Button href={controller.confirmationHref(null)} variant="outline" tone="neutral" onclick={close}>
         {t("authUi.account.devices.confirm.cancel")}
       </Button>

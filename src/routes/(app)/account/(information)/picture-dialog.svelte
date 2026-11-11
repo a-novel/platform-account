@@ -7,7 +7,16 @@
   import type { AccountInformationController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Button, Dialog, Field, FileInput, IconButton, PictureFrame } from "@a-novel-kit/uikit";
+  import {
+    Alert,
+    Button,
+    Dialog,
+    Field,
+    FileInput,
+    type FileInputController,
+    IconButton,
+    PictureFrame,
+  } from "@a-novel-kit/uikit";
 
   import { X } from "@lucide/svelte";
 
@@ -17,12 +26,21 @@
   const picture = $derived(model.picture);
   const frame = $derived(controller.pictureFrame);
   const busy = $derived(picture.status === "opening" || picture.status === "saving" || picture.status === "removing");
+  const framing = $derived(picture.status === "cropping" || picture.status === "saving" ? picture : undefined);
   const hasPicture = $derived(model.profile.status === "ready" && model.profile.picture !== undefined);
   const componentId = $props.id();
   const { t } = getI18nContext();
 
   const close = (event: MouseEvent) => followInPlace(event, controller.editors.picture.close);
   const remove = (event: SubmitEvent) => submitThrough(event, () => controller.submitPictureRemoval());
+
+  // The field names the file being framed, since the input empties itself after each choice.
+  const files: FileInputController = {
+    get state() {
+      return { value: framing ? [framing.name] : [] };
+    },
+    setValue: () => {},
+  };
 
   function refusalMessage(refusal: PictureRefusal): string {
     switch (refusal) {
@@ -66,12 +84,7 @@
   }
 </script>
 
-<Dialog
-  controller={controller.editors.picture}
-  title={t("authUi.account.picture.dialogTitle")}
-  description={controller.state.scripted ? t("authUi.account.picture.description") : undefined}
-  size="sm"
->
+<Dialog controller={controller.editors.picture} title={t("authUi.account.picture.dialogTitle")} size="sm">
   {#snippet headerActions()}
     <IconButton
       label={t("authUi.account.closeEditor")}
@@ -98,14 +111,22 @@
         />
       {/if}
 
+      <!-- The frame above shows what was chosen, so the field needs no visible label. -->
       <Field
         controlId={`${componentId}-file`}
-        label={frame ? t("authUi.account.picture.chooseAnother") : t("authUi.account.picture.choose")}
         hint={picture.status === "opening" ? t("authUi.account.picture.opening") : undefined}
         error={picture.status === "choosing" && picture.refusal ? refusalMessage(picture.refusal) : undefined}
       >
         {#snippet children(control)}
-          <FileInput {...control} accept="image/*" disabled={busy} onchange={choose} />
+          <FileInput
+            {...control}
+            aria-label={t("authUi.account.picture.choose")}
+            accept="image/*"
+            disabled={busy}
+            controller={files}
+            onchange={choose}
+            onclear={framing ? controller.discardPicture : undefined}
+          />
         {/snippet}
       </Field>
     {/if}

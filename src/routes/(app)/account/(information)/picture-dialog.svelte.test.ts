@@ -103,6 +103,16 @@ describe("picture dialog", () => {
     expect(information.state.model.picture).toMatchObject({ crop: { zoom: 1 } });
   });
 
+  it("names the file being framed, and drops it with the field's cross", async () => {
+    const information = await frame(await landscapeFile());
+    await expect.element(page.getByText("landscape.png")).toBeVisible();
+
+    await page.getByRole("button", { name: "Remove the file" }).click();
+
+    await expect.element(page.getByRole("application", { name: "Picture frame" })).not.toBeInTheDocument();
+    expect(information.state.model.picture).toEqual({ status: "choosing" });
+  });
+
   it("sends the framed picture as a square WebP of at most 512 pixels and 256 KiB", async () => {
     await frame(await landscapeFile());
 

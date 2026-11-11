@@ -418,7 +418,9 @@ describe("account shell screen", () => {
     expect(close.right).toBeCloseTo(form.right);
     expect(forgot.right).toBeCloseTo(form.right);
     expect(forgot.bottom).toBeLessThanOrEqual(password.top);
-    expect(action.left).toBeCloseTo(form.left);
+    // The action ends the line: across it on a phone, at its own width elsewhere, as every form's and dialog's do.
+    if (width < 560) expect(action.width).toBeCloseTo(form.width);
+    else expect(action.width).toBeLessThan(form.width);
     expect(action.right).toBeCloseTo(form.right);
     expect(register.top - action.bottom).toBeGreaterThanOrEqual(24);
     expect(register.left).toBeGreaterThanOrEqual(form.left);

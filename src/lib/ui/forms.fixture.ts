@@ -14,11 +14,11 @@ export async function submitForm(buttonName: string): Promise<HTMLFormElement> {
 }
 
 /**
- * Checks a form's action layout at phone and desktop widths. The submit button starts at the form's
- * edge and spans it on a phone, or at every width when stretched. Its feedback sits right above it.
- * Both keep twice the field gap from the last field.
+ * Checks a form's action layout at phone and desktop widths. The submit button ends at the form's edge: it spans
+ * the form on a phone, and keeps its natural width elsewhere. Its feedback sits right above it. Both keep twice the
+ * field gap from the last field.
  */
-export async function expectFormActionLayout(form: HTMLFormElement, { stretch = false } = {}) {
+export async function expectFormActionLayout(form: HTMLFormElement) {
   const button = form.querySelector('button[type="submit"]');
   expect(button).not.toBeNull();
   if (!button) return;
@@ -27,7 +27,7 @@ export async function expectFormActionLayout(form: HTMLFormElement, { stretch = 
   try {
     for (const width of [320, 390, 1280]) {
       await page.viewport(width, 844);
-      expectActionLayout(form, button, stretch || width < 560);
+      expectActionLayout(form, button, width < 560);
     }
   } finally {
     await page.viewport(originalViewport.width, originalViewport.height);
@@ -38,7 +38,7 @@ export async function expectFormActionLayout(form: HTMLFormElement, { stretch = 
 function expectActionLayout(form: HTMLFormElement, button: Element, spans: boolean) {
   const bounds = button.getBoundingClientRect();
   const formBounds = form.getBoundingClientRect();
-  expect(bounds.left).toBeCloseTo(formBounds.left);
+  expect(bounds.right).toBeCloseTo(formBounds.right);
   if (spans) expect(bounds.width).toBeCloseTo(formBounds.width);
   else expect(bounds.width).toBeLessThan(formBounds.width);
 

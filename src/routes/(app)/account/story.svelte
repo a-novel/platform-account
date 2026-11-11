@@ -156,6 +156,7 @@
           editUsername: noop,
           submitUsername: () => false,
           choosePicture: async () => {},
+          discardPicture: noop,
           savePicture: async () => null,
           submitPictureRemoval: () => false,
         }
