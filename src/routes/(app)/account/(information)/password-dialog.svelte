@@ -59,7 +59,7 @@
         {t("authUi.account.password.success.devices")}
         <Link href={controller.state.devicesHref}>{t("authUi.account.password.success.review")}</Link>
       </p>
-      <FormActions align="end">
+      <FormActions>
         <!-- Logging every device out asks for confirmation on the devices tab, as it does there. -->
         <Button href={controller.state.logoutOthersHref} variant="outline" tone="neutral">
           {t("authUi.account.devices.logoutOthers")}
@@ -118,7 +118,7 @@
           />
         {/snippet}
       </Field>
-      <FormActions align="stretch">
+      <FormActions>
         {#snippet feedback()}
           {#if model.passwordState.status === "service-error"}
             <AuthenticationError feedback={model.passwordState.feedback} />

@@ -84,7 +84,7 @@
       </Field>
     {/if}
 
-    <FormActions align="stretch">
+    <FormActions>
       {#snippet feedback()}
         {#if maintenance}
           <Alert tone="warning" title={t("access.downtime.title")}>{t("shell.auth.maintenance")}</Alert>
