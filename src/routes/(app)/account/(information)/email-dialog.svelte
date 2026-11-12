@@ -122,7 +122,7 @@
           />
         {/snippet}
       </Field>
-      <FormActions align="stretch">
+      <FormActions>
         {#snippet feedback()}
           {#if model.emailState.status === "service-error"}
             <AuthenticationError feedback={model.emailState.feedback} />

@@ -81,7 +81,7 @@
         />
       {/snippet}
     </Field>
-    <FormActions align="stretch">
+    <FormActions>
       {#snippet feedback()}
         {#if editor.state.status === "service-error"}
           <AuthenticationError feedback={editor.state.feedback} />
