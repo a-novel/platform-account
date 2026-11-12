@@ -107,7 +107,7 @@ describe("picture dialog", () => {
     const information = await frame(await landscapeFile());
     await expect.element(page.getByText("landscape.png")).toBeVisible();
 
-    await page.getByRole("button", { name: "Remove the file" }).click();
+    await page.getByRole("button", { name: "Remove landscape.png" }).click();
 
     await expect.element(page.getByRole("application", { name: "Picture frame" })).not.toBeInTheDocument();
     expect(information.state.model.picture).toEqual({ status: "choosing" });

@@ -125,7 +125,7 @@
             disabled={busy}
             controller={files}
             onchange={choose}
-            onclear={framing ? controller.discardPicture : undefined}
+            onClear={framing ? controller.discardPicture : undefined}
           />
         {/snippet}
       </Field>

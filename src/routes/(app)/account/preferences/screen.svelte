@@ -31,7 +31,7 @@
   // Each language reads in its own words, so a reader lost in another one still finds theirs.
   const options = $derived([
     { value: "browser" as const, label: t("preferences.language.browser") },
-    ...supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale] })),
+    ...supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale], lang: locale })),
   ]);
 </script>
 
