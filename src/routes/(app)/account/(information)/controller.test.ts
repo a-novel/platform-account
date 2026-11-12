@@ -183,9 +183,10 @@ describe("picture editor", () => {
     const pictures = pictureFiles();
     const information = controller({ ...ready, editor: "picture" }, { pictures });
 
-    await information.choosePicture(new Blob(["image"]));
+    await information.choosePicture(new File(["image"], "landscape.png"));
     expect(information.state.model.picture).toEqual({
       status: "cropping",
+      name: "landscape.png",
       source: { url: "blob:landscape", width: 1600, height: 900 },
       crop: { zoom: 1, x: 350, y: 0 },
     });
@@ -202,7 +203,7 @@ describe("picture editor", () => {
     const pictures = { ...pictureFiles(), open: vi.fn(async () => Promise.reject(new Error("not an image"))) };
     const information = controller({ ...ready, editor: "picture" }, { pictures });
 
-    await information.choosePicture(new Blob(["text"]));
+    await information.choosePicture(new File(["text"], "notes.txt"));
 
     expect(information.state.model.picture).toEqual({ status: "choosing", refusal: "unreadable" });
   });
@@ -215,8 +216,8 @@ describe("picture editor", () => {
       .mockImplementationOnce(async () => ({ url: "blob:second", width: 400, height: 400 }));
     const information = controller({ ...ready, editor: "picture" }, { pictures });
 
-    const first = information.choosePicture(new Blob(["first"]));
-    await information.choosePicture(new Blob(["second"]));
+    const first = information.choosePicture(new File(["first"], "first.png"));
+    await information.choosePicture(new File(["second"], "second.png"));
     finishFirst({ url: "blob:first", width: 800, height: 600 });
     await first;
 
@@ -227,7 +228,7 @@ describe("picture editor", () => {
   it("encodes the framed square once, under the profile service's rule, and keeps it still while it saves", async () => {
     const pictures = pictureFiles();
     const information = controller({ ...ready, editor: "picture" }, { pictures });
-    await information.choosePicture(new Blob(["image"]));
+    await information.choosePicture(new File(["image"], "landscape.png"));
 
     const saving = information.savePicture();
     expect(information.state.model.picture.status).toBe("saving");
@@ -242,10 +243,27 @@ describe("picture editor", () => {
     );
   });
 
+  it("drops the framed image for another, but keeps the one it saves", async () => {
+    const pictures = pictureFiles();
+    const information = controller({ ...ready, editor: "picture" }, { pictures });
+    await information.choosePicture(new File(["image"], "landscape.png"));
+
+    information.discardPicture();
+    expect(information.state.model.picture).toEqual({ status: "choosing" });
+    expect(information.pictureFrame).toBeNull();
+    expect(pictures.release).toHaveBeenCalledOnce();
+
+    await information.choosePicture(new File(["image"], "landscape.png"));
+    const saving = information.savePicture();
+    information.discardPicture();
+    expect(information.state.model.picture.status).toBe("saving");
+    await saving;
+  });
+
   it("frees the framed image when the dialog closes or the picture is removed", async () => {
     const pictures = pictureFiles();
     const information = controller({ ...ready, editor: "picture" }, { pictures });
-    await information.choosePicture(new Blob(["image"]));
+    await information.choosePicture(new File(["image"], "landscape.png"));
 
     information.editors.picture.close();
     expect(pictures.release).toHaveBeenCalledOnce();
@@ -253,7 +271,7 @@ describe("picture editor", () => {
     expect(information.pictureFrame).toBeNull();
 
     information.editors.picture.open();
-    await information.choosePicture(new Blob(["image"]));
+    await information.choosePicture(new File(["image"], "landscape.png"));
     expect(information.submitPictureRemoval()).toBe(true);
     expect(information.submitPictureRemoval()).toBe(false);
     expect(pictures.release).toHaveBeenCalledTimes(2);

@@ -121,9 +121,7 @@ authUi:
     picture:
       changeLabel: Modifier ma photo
       choose: Choisir une image
-      chooseAnother: Choisir une autre image
       current: Votre photo actuelle
-      description: Choisissez une image, puis déplacez-la et zoomez pour cadrer votre photo.
       dialogTitle: Modifiez votre photo
       frameLabel: Cadre de la photo
       none: Aucune photo

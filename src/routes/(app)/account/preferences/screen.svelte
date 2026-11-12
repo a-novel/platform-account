@@ -19,7 +19,7 @@
   import { localeNames, supportedLocales } from "#lib/i18n/config.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, Field, Flag, FormActions, Select, type SelectOption } from "@a-novel-kit/uikit";
+  import { Button, Card, Field, FormActions, LanguageName, Select, type SelectOption } from "@a-novel-kit/uikit";
 
   import { AppWindow } from "@lucide/svelte";
 
@@ -31,20 +31,20 @@
   // Each language reads in its own words, so a reader lost in another one still finds theirs.
   const options = $derived([
     { value: "browser" as const, label: t("preferences.language.browser") },
-    ...supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale] })),
+    ...supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale], lang: locale })),
   ]);
 </script>
 
 <!-- The browser's language shows a window, a chosen one its flag; each name reads in its own language. -->
 {#snippet languageOption(option: SelectOption<LanguageChoice>)}
-  <span class="language">
-    {#if option.value === "browser"}
+  {#if option.value === "browser"}
+    <span class="browser">
       <AppWindow size="var(--icon-size-md)" aria-hidden="true" />
-    {:else}
-      <Flag locale={option.value} />
-    {/if}
-    <span lang={option.value === "browser" ? undefined : option.value}>{option.label}</span>
-  </span>
+      {option.label}
+    </span>
+  {:else}
+    <LanguageName locale={option.value} name={option.label} />
+  {/if}
 {/snippet}
 
 <section class="group" aria-labelledby={`${componentId}-device`}>
@@ -83,7 +83,8 @@
     gap: var(--space-4);
   }
 
-  .language {
+  /* As a language's name beside its flag. */
+  .browser {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);

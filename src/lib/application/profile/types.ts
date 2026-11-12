@@ -27,10 +27,13 @@ export interface UsernameEditor {
     | { status: "service-error"; feedback: ProfileServiceFeedback };
 }
 
-/** The picture dialog's step. Choosing shows the latest refusal of a picture, if any. */
+/**
+ * The picture dialog's step. Choosing shows the latest refusal of a picture, if any; framing names the file the
+ * picture came from.
+ */
 export type PictureEditor =
   | { status: "choosing"; refusal?: PictureRefusal }
   | { status: "opening" }
-  | { status: "cropping" | "saving"; source: PictureSource; crop: PictureCrop }
+  | { status: "cropping" | "saving"; name: string; source: PictureSource; crop: PictureCrop }
   | { status: "removing" }
   | { status: "service-error"; feedback: ProfileServiceFeedback };

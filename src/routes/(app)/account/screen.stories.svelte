@@ -44,7 +44,12 @@
   }
 
   /** The landscape framed around its sun, a little closer than the whole height. */
-  const framed = { status: "cropping", source: landscapeSource, crop: { zoom: 1.4, x: 719, y: 59 } } as const;
+  const framed = {
+    status: "cropping",
+    name: "harbor-sunset.jpg",
+    source: landscapeSource,
+    crop: { zoom: 1.4, x: 719, y: 59 },
+  } as const;
 
   const pendingCredentials = {
     ...credentials,
