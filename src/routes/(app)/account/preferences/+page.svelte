@@ -10,4 +10,4 @@
   const language = createSelectController({ initialValue: untrack(() => data.language) });
 </script>
 
-<Screen {language} />
+<Screen {language} savedLanguage={data.language} />

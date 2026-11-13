@@ -547,6 +547,10 @@
   <StoryHarness {summary} tab="preferences" language="fr" />
 </Story>
 
+<Story name="Preferences: language changed" asChild>
+  <StoryHarness {summary} tab="preferences" language="fr" savedLanguage="browser" />
+</Story>
+
 <Story name="Preferences: language list" asChild>
   <StoryHarness {summary} tab="preferences" language="fr" languageOpen />
 </Story>

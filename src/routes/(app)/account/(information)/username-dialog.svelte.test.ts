@@ -62,6 +62,31 @@ describe("username dialog", () => {
     expect(information.state.model.username.state).toEqual({ status: "validation-error", issue: "length" });
   });
 
+  it("saves only a valid name other than the current one, and says why it refuses one as it is typed", async () => {
+    const information = controller();
+    information.enableScripts();
+    await render(UsernameDialog, { controller: information }, withLocale());
+    const dialog = page.getByRole("dialog", { name: "Choose your username" });
+    const field = dialog.getByLabelText("Username");
+    const save = dialog.getByRole("button", { name: "Save username" });
+
+    await expect.element(save).toBeDisabled();
+    await field.fill(" Maya ");
+    await expect.element(save).toBeDisabled();
+    await field.fill("Maya Chen");
+    await expect.element(save).toBeEnabled();
+    await field.fill("x".repeat(33));
+    await expect.element(save).toBeDisabled();
+    await expect.element(field).toHaveAttribute("aria-invalid", "true");
+    await expect.element(field).toHaveAccessibleDescription(/Use 32 characters or fewer\.$/);
+  });
+
+  it("keeps the save on without scripts, where the field reports no typing and the service checks the name", async () => {
+    await render(UsernameDialog, { controller: controller() }, withLocale());
+
+    await expect.element(page.getByRole("button", { name: "Save username" })).toBeEnabled();
+  });
+
   it("posts an empty name, which removes the username", async () => {
     const information = controller();
     await render(UsernameDialog, { controller: information }, withLocale());

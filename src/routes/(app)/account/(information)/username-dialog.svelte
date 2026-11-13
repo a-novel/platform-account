@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { countGlyphs, usernameGlyphsMax } from "#lib/application/profile/username.js";
+  import { countGlyphs, trimUsername, usernameGlyphsMax, usernameIssue } from "#lib/application/profile/username.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
@@ -14,12 +14,21 @@
   let { controller }: { controller: AccountInformationController } = $props();
 
   const editor = $derived(controller.state.model.username);
+  const profile = $derived(controller.state.model.profile);
   const componentId = $props.id();
   const { t } = getI18nContext();
 
   const glyphs = $derived(countGlyphs(editor.draft));
   const submitting = $derived(editor.state.status === "submitting");
-  const issue = $derived(editor.state.status === "validation-error" ? editor.state.issue : null);
+  // A name that breaks the rule shows why as it is typed, since its save waits for a valid one; the service's own
+  // refusal stays until the next try.
+  const issue = $derived(editor.state.status === "validation-error" ? editor.state.issue : usernameIssue(editor.draft));
+  const current = $derived(profile.status === "ready" ? (profile.username ?? "") : "");
+  // Saving waits for a valid name other than the current one. Without scripts, the field reports no typing, so the
+  // button stays on and the service checks the name.
+  const idle = $derived(
+    controller.state.scripted && (trimUsername(editor.draft) === trimUsername(current) || issue !== null)
+  );
   const submit = (event: SubmitEvent) => submitThrough(event, (form) => controller.submitUsername(form));
   const close = (event: MouseEvent) => followInPlace(event, controller.editors.username.close);
   const edit = (event: Event & { currentTarget: HTMLInputElement }) =>
@@ -87,7 +96,7 @@
           <AuthenticationError feedback={editor.state.feedback} />
         {/if}
       {/snippet}
-      <Button type="submit" disabled={submitting}>
+      <Button type="submit" disabled={submitting || idle}>
         {submitting ? t("authUi.account.username.submitting") : t("authUi.account.username.submit")}
       </Button>
     </FormActions>

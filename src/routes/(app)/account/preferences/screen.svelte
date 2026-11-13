@@ -10,6 +10,8 @@
   export interface AccountPreferencesScreenProps {
     /** The language chosen in the form, which saving keeps for this device. */
     language: SelectController<LanguageChoice>;
+    /** The language this device keeps now; saving waits for another choice. */
+    savedLanguage: LanguageChoice;
     /** Where the language form posts. */
     languageAction?: string;
   }
@@ -23,7 +25,7 @@
 
   import { AppWindow } from "@lucide/svelte";
 
-  let { language, languageAction = "?/language" }: AccountPreferencesScreenProps = $props();
+  let { language, savedLanguage, languageAction = "?/language" }: AccountPreferencesScreenProps = $props();
 
   const componentId = $props.id();
   const { t } = getI18nContext();
@@ -61,7 +63,8 @@
         {/snippet}
       </Field>
       <FormActions>
-        <Button type="submit">{t("preferences.language.save")}</Button>
+        <Button type="submit" disabled={language.state.value === savedLanguage}>{t("preferences.language.save")}</Button
+        >
       </FormActions>
     </form>
   </Card>
