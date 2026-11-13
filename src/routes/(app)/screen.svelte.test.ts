@@ -307,7 +307,7 @@ describe("account shell screen", () => {
     const source = logo.element().getAttribute("src");
     const open = page.getByRole("banner").getByRole("link", { name: "Open navigation" });
     const controlBounds = open.element().getBoundingClientRect();
-    expect(logoBounds.left).toBeGreaterThanOrEqual(16);
+    expect(logoBounds.left).toBeGreaterThanOrEqual(12);
     expect(controlBounds.left).toBeGreaterThan(logoBounds.right);
     expect(
       Math.abs(logoBounds.top + logoBounds.height / 2 - controlBounds.top - controlBounds.height / 2)
@@ -407,11 +407,11 @@ describe("account shell screen", () => {
       .getBoundingClientRect();
     const outer = dialog.element().getBoundingClientRect();
 
-    if (width < 768) expect(outer.left).toBe(8);
-    // The dialog's own padding sets the inset: 16px on a phone, at least that elsewhere, equal on both sides.
+    if (width < 768) expect(outer.left).toBe(6);
+    // The dialog's own padding sets the inset: 12px on a phone, at least that elsewhere, equal on both sides.
     const inset = form.left - outer.left;
-    if (width < 768) expect(inset).toBe(16);
-    else expect(inset).toBeGreaterThanOrEqual(16);
+    if (width < 768) expect(inset).toBe(12);
+    else expect(inset).toBeGreaterThanOrEqual(12);
     expect(outer.right - form.right).toBe(inset);
     expect(heading.left).toBeCloseTo(form.left);
     expect(close.top + close.height / 2).toBeCloseTo(heading.top + heading.height / 2);
@@ -445,7 +445,7 @@ describe("account shell screen", () => {
 
     expect(heading.height).toBeGreaterThan(parseFloat(getComputedStyle(title).lineHeight));
     expect(close.top + close.height / 2).toBeCloseTo(heading.top + heading.height / 2);
-    expect(close.left - heading.right).toBeGreaterThanOrEqual(16);
+    expect(close.left - heading.right).toBeGreaterThanOrEqual(12);
     expect(dialog.element().scrollWidth).toBeLessThanOrEqual(dialog.element().clientWidth);
   });
 

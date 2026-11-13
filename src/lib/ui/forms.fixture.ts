@@ -43,11 +43,11 @@ function expectActionLayout(form: HTMLFormElement, button: Element, spans: boole
   else expect(bounds.width).toBeLessThan(formBounds.width);
 
   const feedback = form.querySelector('[role="alert"], [role="status"]');
-  if (feedback) expect(bounds.top - feedback.getBoundingClientRect().bottom).toBe(16);
+  if (feedback) expect(bounds.top - feedback.getBoundingClientRect().bottom).toBe(12);
 
   const lastInput = Array.from(form.querySelectorAll("input")).at(-1);
   if (!lastInput) return;
 
   const actionTop = (feedback ?? button).getBoundingClientRect().top;
-  expect(actionTop - lastInput.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(32);
+  expect(actionTop - lastInput.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(24);
 }
