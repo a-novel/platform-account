@@ -1,11 +1,6 @@
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
 import type { AccountInformationModel } from "#lib/application/auth/types.js";
-import type {
-  PictureEditor,
-  PictureRefusal,
-  ProfileServiceFeedback,
-  UsernameEditor,
-} from "#lib/application/profile/types.js";
+import type { PictureEditor, PictureRefusal, UsernameEditor } from "#lib/application/profile/types.js";
 import { usernameIssue } from "#lib/application/profile/username.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import { emailLanguage } from "#lib/server/auth/context.js";
@@ -98,7 +93,7 @@ async function cancelEmailUpdate(event: RequestEvent) {
   } catch (error) {
     if (isRedirect(error) || isHttpError(error, 403)) throw error;
 
-    // A change confirmed, replaced or expired since the page loaded leaves nothing to cancel.
+    // A change confirmed or expired since the page loaded, or replaced during the request, leaves nothing to cancel.
     if (!isHttpStatusError(error, 404)) {
       return serviceFailure(error, (feedback) => ({
         accountAction: { kind: "cancelEmail", state: { status: "service-error", feedback } },
@@ -123,7 +118,10 @@ function closeEditor(event: RequestEvent): never {
 }
 
 /** Fails with a service's own trouble, which a later try may get past. */
-function serviceFailure(error: unknown, result: (feedback: ProfileServiceFeedback) => AccountActionData) {
+function serviceFailure(
+  error: unknown,
+  result: (feedback: "serviceUnavailable" | "tooManyAttempts") => AccountActionData
+) {
   return isHttpStatusError(error, 429) ? fail(429, result("tooManyAttempts")) : fail(503, result("serviceUnavailable"));
 }
 
