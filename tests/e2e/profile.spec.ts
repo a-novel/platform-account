@@ -50,7 +50,7 @@ test("a visitor sets their username, then clears it", async ({ page, account }, 
   const dialog = page.getByRole("dialog", { name: "Choose your username", exact: true });
   const field = dialog.getByLabel("Username", { exact: true });
   await field.fill("Maya⁨ Chen");
-  await dialog.getByRole("button", { name: "Save username", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Save username", exact: true })).toBeDisabled();
   await expect(field).toHaveAccessibleDescription(
     /Remove line breaks, tabs, special spaces and text direction marks\.$/
   );
