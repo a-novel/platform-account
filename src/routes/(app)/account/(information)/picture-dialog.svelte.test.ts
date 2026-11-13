@@ -24,6 +24,7 @@ function controller(profile: ProfileState = { status: "ready" }, patch: Partial<
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",
+      cancelEmail: "?/cancelEmail",
       username: "?edit=username&/username",
       picture: "?edit=picture&/picture",
       removePicture: "?edit=picture&/removePicture",

@@ -1,11 +1,6 @@
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
 import type { AccountInformationModel } from "#lib/application/auth/types.js";
-import type {
-  PictureEditor,
-  PictureRefusal,
-  ProfileServiceFeedback,
-  UsernameEditor,
-} from "#lib/application/profile/types.js";
+import type { PictureEditor, PictureRefusal, UsernameEditor } from "#lib/application/profile/types.js";
 import { usernameIssue } from "#lib/application/profile/username.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import { emailLanguage } from "#lib/server/auth/context.js";
@@ -15,7 +10,11 @@ import { dialogUrl, editorParameter, localHref } from "../url-state";
 import type { AccountActionData } from "./account-action";
 
 import { isHttpStatusError, isHttpError as isServiceError } from "@a-novel-kit/nodelib-browser/http";
-import { credentialsUpdatePassword, shortCodeCreateEmailUpdate } from "@a-novel/service-authentication-rest";
+import {
+  credentialsUpdatePassword,
+  shortCodeCancelEmailUpdate,
+  shortCodeCreateEmailUpdate,
+} from "@a-novel/service-authentication-rest";
 import {
   PictureRefusal as ServicePictureRefusal,
   profilePictureDelete,
@@ -86,6 +85,25 @@ async function requestEmailUpdate(event: RequestEvent) {
   return emailAction({ status: "pending-email" });
 }
 
+/** Cancels the email change awaiting confirmation, so its link confirms nothing. */
+async function cancelEmailUpdate(event: RequestEvent) {
+  try {
+    const { authentication, session } = await requireAuthorization(event);
+    await shortCodeCancelEmailUpdate(authentication.api, session.accessToken);
+  } catch (error) {
+    if (isRedirect(error) || isHttpError(error, 403)) throw error;
+
+    // A change confirmed or expired since the page loaded, or replaced during the request, leaves nothing to cancel.
+    if (!isHttpStatusError(error, 404)) {
+      return serviceFailure(error, (feedback) => ({
+        accountAction: { kind: "cancelEmail", state: { status: "service-error", feedback } },
+      }));
+    }
+  }
+
+  closeEditor(event);
+}
+
 function usernameAction(editor: UsernameEditor): AccountActionData {
   return { accountAction: { kind: "username", editor } };
 }
@@ -94,13 +112,16 @@ function pictureAction(editor: PictureEditor): AccountActionData {
   return { accountAction: { kind: "picture", editor } };
 }
 
-/** Sends the visitor back to the tab with its dialogs closed, where the profile shows the change. */
+/** Sends the visitor back to the tab with its dialogs closed, where it shows the change. */
 function closeEditor(event: RequestEvent): never {
   redirect(303, localHref(dialogUrl(event.url, editorParameter, null)));
 }
 
-/** Fails with the profile service's own trouble, which a later try may get past. */
-function serviceFailure(error: unknown, result: (feedback: ProfileServiceFeedback) => AccountActionData) {
+/** Fails with a service's own trouble, which a later try may get past. */
+function serviceFailure(
+  error: unknown,
+  result: (feedback: "serviceUnavailable" | "tooManyAttempts") => AccountActionData
+) {
   return isHttpStatusError(error, 429) ? fail(429, result("tooManyAttempts")) : fail(503, result("serviceUnavailable"));
 }
 
@@ -177,6 +198,7 @@ async function removePicture(event: RequestEvent) {
 export const actions = {
   password: changePassword,
   email: requestEmailUpdate,
+  cancelEmail: cancelEmailUpdate,
   username: updateUsername,
   picture: updatePicture,
   removePicture,

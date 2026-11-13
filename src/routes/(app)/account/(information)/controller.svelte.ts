@@ -53,6 +53,8 @@ export interface AccountInformationController {
   submitPassword(form: FormData): boolean;
   /** Validates the email fields into state and reports whether native submission may continue. */
   submitEmail(form: FormData): boolean;
+  /** Starts cancelling the pending email change and reports whether native submission may continue. */
+  submitEmailCancel(): boolean;
   /** Keeps the username being typed, which the dialog counts. */
   editUsername(draft: string): void;
   /** Checks the username against the service's rule and reports whether native submission may continue. */
@@ -196,6 +198,10 @@ export function createAccountInformationController({
         return false;
       }
       return update({ emailState: { status: "submitting" } });
+    },
+    submitEmailCancel() {
+      if (forms.emailCancelState.status === "submitting") return false;
+      return update({ emailCancelState: { status: "submitting" } });
     },
     editUsername(draft) {
       // A refusal is about the name it refused, so another name clears it.

@@ -33,6 +33,7 @@ function controller(
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",
+      cancelEmail: "?/cancelEmail",
       username: "?edit=username&/username",
       picture: "?edit=picture&/picture",
       removePicture: "?edit=picture&/removePicture",
@@ -72,6 +73,27 @@ describe("my information screen", () => {
     await expect.element(page.getByText("maya.chen@example.test", { exact: true })).toBeVisible();
     const reference = page.getByRole("note", { name: "Reference" }).element();
     expect(getComputedStyle(note.element()).backgroundColor).toBe(getComputedStyle(reference).backgroundColor);
+  });
+
+  it("cancels the pending email change from its note, once", async () => {
+    await render(Screen, { controller: controller({ credentials: pendingCredentials }) }, withLocale());
+
+    const note = page.getByRole("note").filter({ hasText: "Awaiting confirmation" });
+    const cancel = note.getByRole("button", { name: "Cancel change" });
+    expect(cancel.element().closest("form")?.getAttribute("action")).toBe("?/cancelEmail");
+
+    await cancel.click();
+
+    await expect.element(note.getByRole("button", { name: "Cancelling…" })).toBeDisabled();
+  });
+
+  it("keeps the pending email change cancellable after the service refused it", async () => {
+    const refused = { status: "service-error", feedback: "serviceUnavailable" } as const;
+    const information = controller({ credentials: pendingCredentials, emailCancelState: refused });
+    await render(Screen, { controller: information }, withLocale("fr"));
+
+    await expect.element(page.getByRole("alert")).toBeVisible();
+    await expect.element(page.getByRole("button", { name: "Annuler la modification" })).toBeEnabled();
   });
 
   it("holds the place of an email it cannot read yet, and still offers to change it", async () => {

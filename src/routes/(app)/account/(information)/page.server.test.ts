@@ -15,6 +15,7 @@ import { HttpError } from "@a-novel-kit/nodelib-browser/http";
 import {
   AuthenticationApi,
   credentialsUpdatePassword,
+  shortCodeCancelEmailUpdate,
   shortCodeCreateEmailUpdate,
 } from "@a-novel/service-authentication-rest";
 import {
@@ -46,7 +47,7 @@ const profileApi = new ProfileApi("https://profile.test");
 const profile = { id: "019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21", username: "Maya" };
 
 function event(
-  action: "password" | "email" | "username" | "picture" | "removePicture",
+  action: "password" | "email" | "cancelEmail" | "username" | "picture" | "removePicture",
   fields: Record<string, string> | FormData,
   editor: string = action
 ): RequestEvent {
@@ -349,6 +350,35 @@ describe("picture action", () => {
     await expect(informationActions.picture(event("picture", pictureForm()))).resolves.toEqual({
       status,
       data: { accountAction: { kind: "picture", editor: { status: "service-error", feedback } } },
+    });
+  });
+});
+
+describe("cancelEmail action", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it.each([
+    ["cancels the pending change", undefined],
+    ["finds nothing left to cancel once the change ended", new HttpError(404, "")],
+  ])("%s, then shows the tab", async (_, error) => {
+    authenticated.mockResolvedValue(signedIn);
+    if (error) vi.mocked(shortCodeCancelEmailUpdate).mockRejectedValue(error);
+    else vi.mocked(shortCodeCancelEmailUpdate).mockResolvedValue();
+
+    await expect(informationActions.cancelEmail(event("cancelEmail", {}, ""))).rejects.toMatchObject({
+      status: 303,
+      location: "/account",
+    });
+    expect(shortCodeCancelEmailUpdate).toHaveBeenCalledExactlyOnceWith(expect.any(AuthenticationApi), "fixture-access");
+  });
+
+  it.each(profileFailures)("keeps the change cancellable after %s", async (_, error, status, feedback) => {
+    authenticated.mockResolvedValue(signedIn);
+    vi.mocked(shortCodeCancelEmailUpdate).mockRejectedValue(error);
+
+    await expect(informationActions.cancelEmail(event("cancelEmail", {}, ""))).resolves.toEqual({
+      status,
+      data: { accountAction: { kind: "cancelEmail", state: { status: "service-error", feedback } } },
     });
   });
 });

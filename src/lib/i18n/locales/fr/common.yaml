@@ -82,6 +82,8 @@ authUi:
       unavailable: Vos appareils ne peuvent pas être affichés pour le moment.
       unknown: Appareil inconnu
     email:
+      cancel: Annuler la modification
+      cancelling: Annulation…
       changeLabel: Modifier mon courriel
       description: Nous enverrons un lien de confirmation à votre nouveau courriel.
       dialogTitle: Modifiez votre courriel

@@ -162,6 +162,26 @@
   <StoryHarness {summary} tab="information" information={{ ...information, credentials: pendingCredentials }} />
 </Story>
 
+<Story name="Email change pending: cancelling" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={{ ...information, credentials: pendingCredentials, emailCancelState: { status: "submitting" } }}
+  />
+</Story>
+
+<Story name="Email change pending: cancel refused" asChild>
+  <StoryHarness
+    {summary}
+    tab="information"
+    information={{
+      ...information,
+      credentials: pendingCredentials,
+      emailCancelState: { status: "service-error", feedback: "serviceUnavailable" },
+    }}
+  />
+</Story>
+
 <Story name="Header unavailable" asChild>
   <StoryHarness
     summary={{ status: "loading" }}

@@ -119,6 +119,7 @@
             actions: {
               password: "/storybook/account/password",
               email: "/storybook/account/email",
+              cancelEmail: "/storybook/account/cancel-email",
               username: "/storybook/account/username",
               picture: "/storybook/account/picture",
               removePicture: "/storybook/account/remove-picture",
@@ -155,6 +156,7 @@
           enableScripts: noop,
           submitPassword: () => false,
           submitEmail: () => false,
+          submitEmailCancel: () => false,
           editUsername: noop,
           submitUsername: () => false,
           choosePicture: async () => {},
