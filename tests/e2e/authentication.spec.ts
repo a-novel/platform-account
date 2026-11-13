@@ -180,6 +180,31 @@ test("account forms change the password and confirm an email update", async ({ p
   await expect(page.getByRole("heading", { level: 1, name: email, exact: true })).toBeVisible();
 });
 
+test("a cancelled email update leaves its link invalid", async ({ page, account }, info) => {
+  await page.goto("/?auth=login&returnTo=%2Faccount");
+  await login(page, account);
+
+  const email = `cancelled-${account.email}`;
+  await page.getByRole("link", { name: "Change email", exact: true }).click();
+  const emailDialog = page.getByRole("dialog", { name: "Change your email", exact: true });
+  await emailDialog.getByLabel(/^New email address/).fill(email);
+  await emailDialog.getByLabel(/^Current password/).fill(account.password);
+  await emailDialog.getByRole("button", { name: "Send link", exact: true }).click();
+  const sent = page.getByRole("dialog", { name: "Check your inbox", exact: true });
+  await sent.getByRole("link", { name: "Got it", exact: true }).click();
+
+  const pending = page.getByRole("note").filter({ hasText: "Awaiting confirmation" });
+  await expect(pending).toContainText(email);
+  await stableScreenshot(page, info, "email-change-pending");
+  await pending.getByRole("button", { name: "Cancel change", exact: true }).click();
+  await expect(page).toHaveURL("/account");
+  await expect(pending).toHaveCount(0);
+
+  await page.goto(await emailLink(email, "/ext/email/validate"));
+  await expect(page).toHaveURL("/ext/email/validate?result=invalid");
+  await expect(page.getByRole("heading", { name: "This link is not valid" })).toBeVisible();
+});
+
 test("dialog history and keyboard dismissal restore the shell focus", async ({ page, isMobile }) => {
   await page.goto("/privacy");
   await expect(page).toHaveTitle("Privacy | Agora");

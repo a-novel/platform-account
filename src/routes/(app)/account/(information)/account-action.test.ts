@@ -37,6 +37,20 @@ describe("mergeAccountAction", () => {
     });
   });
 
+  it("overlays only the email cancellation state", () => {
+    expect(
+      mergeAccountAction(ready, {
+        accountAction: {
+          kind: "cancelEmail",
+          state: { status: "service-error", feedback: "serviceUnavailable" },
+        },
+      })
+    ).toEqual({
+      ...ready,
+      emailCancelState: { status: "service-error", feedback: "serviceUnavailable" },
+    });
+  });
+
   it.each([
     ["no action", null],
     ["text", "accountAction"],

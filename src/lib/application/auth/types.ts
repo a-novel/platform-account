@@ -115,6 +115,8 @@ export interface AccountInformationModel {
   emailState: Exclude<FormState<AccountEmailField>, { status: "success" }> | { status: "pending-email" };
   /** The address a submission the server refused keeps in its field. Passwords are never sent back. */
   emailDraft: string;
+  /** Cancelling the pending email change. Only the service can refuse it: the form has no field. */
+  emailCancelState: Extract<FormState<never>, { status: "ready" | "submitting" | "service-error" }>;
   username: UsernameEditor;
   picture: PictureEditor;
 }
@@ -123,6 +125,7 @@ export interface AccountInformationModel {
 export interface AccountInformationActions {
   password: string;
   email: string;
+  cancelEmail: string;
   username: string;
   picture: string;
   removePicture: string;

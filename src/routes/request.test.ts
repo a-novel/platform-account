@@ -693,6 +693,7 @@ describe("account session at the request boundary", () => {
   const accountChanges = [
     ["password", "/account", informationActions.password],
     ["email", "/account", informationActions.email],
+    ["cancelEmail", "/account", informationActions.cancelEmail],
     ["logoutDevice", "/account/devices", devicesActions.logoutDevice],
     ["logoutOtherDevices", "/account/devices", devicesActions.logoutOtherDevices],
     ["removeDevice", "/account/devices", devicesActions.removeDevice],

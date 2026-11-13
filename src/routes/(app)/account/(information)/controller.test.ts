@@ -27,6 +27,7 @@ function controller(
     actions: {
       password: "?edit=password&/password",
       email: "?edit=email&/email",
+      cancelEmail: "?/cancelEmail",
       username: "?edit=username&/username",
       picture: "?edit=picture&/picture",
       removePicture: "?edit=picture&/removePicture",
@@ -112,6 +113,14 @@ describe("createAccountInformationController", () => {
 
     expect(information[submit](validForm())).toBe(false);
     expect(information.state.model[key]).toEqual({ status: "submitting" });
+  });
+
+  it("cancels the pending email change once", () => {
+    const information = controller();
+
+    expect(information.submitEmailCancel()).toBe(true);
+    expect(information.state.model.emailCancelState).toEqual({ status: "submitting" });
+    expect(information.submitEmailCancel()).toBe(false);
   });
 
   it("opens the editor the URL names and shows the route's action result in it", () => {

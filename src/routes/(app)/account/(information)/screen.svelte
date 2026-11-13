@@ -9,6 +9,8 @@
 
 <script lang="ts">
   import type { AccountEditor } from "#lib/application/auth/types.js";
+  import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
+  import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { followInPlace } from "../../link-transition";
   import EmailDialog from "./email-dialog.svelte";
@@ -17,7 +19,7 @@
   import UsernameDialog from "./username-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Avatar, Card, IconButton, Skeleton } from "@a-novel-kit/uikit";
+  import { Alert, Avatar, Button, Card, IconButton, Skeleton } from "@a-novel-kit/uikit";
 
   import { Hourglass, Pencil } from "@lucide/svelte";
 
@@ -25,11 +27,13 @@
 
   const credentials = $derived(controller.state.model.credentials);
   const profile = $derived(controller.state.model.profile);
+  const emailCancel = $derived(controller.state.model.emailCancelState);
   const componentId = $props.id();
   const { t } = getI18nContext();
 
   const openEditor = (editor: AccountEditor) => (event: MouseEvent) =>
     followInPlace(event, controller.editors[editor].open);
+  const cancelEmail = (event: SubmitEvent) => submitThrough(event, () => controller.submitEmailCancel());
 </script>
 
 {#snippet changeButton(editor: AccountEditor, label: string)}
@@ -115,9 +119,27 @@
                     {#snippet icon()}
                       <Hourglass size="var(--icon-size-sm)" />
                     {/snippet}
+                    {#snippet actions()}
+                      <form method="POST" action={controller.state.actions.cancelEmail} onsubmit={cancelEmail}>
+                        <Button
+                          type="submit"
+                          variant="text"
+                          tone="neutral"
+                          size="sm"
+                          disabled={emailCancel.status === "submitting"}
+                        >
+                          {emailCancel.status === "submitting"
+                            ? t("authUi.account.email.cancelling")
+                            : t("authUi.account.email.cancel")}
+                        </Button>
+                      </form>
+                    {/snippet}
                     <span class="pending-email">{pending.email}</span>
                     {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
                   </Alert>
+                  {#if emailCancel.status === "service-error"}
+                    <AuthenticationError feedback={emailCancel.feedback} />
+                  {/if}
                 {/if}
               </dd>
             </div>

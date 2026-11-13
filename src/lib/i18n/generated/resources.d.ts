@@ -99,6 +99,8 @@ export default interface Resources {
           "unknown": "Unknown device"
         },
         "email": {
+          "cancel": "Cancel change",
+          "cancelling": "Cancelling…",
           "changeLabel": "Change email",
           "description": "We’ll send a confirmation link to your new email.",
           "dialogTitle": "Change your email",
