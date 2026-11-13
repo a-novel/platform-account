@@ -176,6 +176,23 @@ describe("username editor", () => {
     expect(information.state.model.username).toEqual({ draft: "  ", state: { status: "submitting" } });
     expect(information.submitUsername(form("Maya"))).toBe(false);
   });
+
+  it("clears a refusal once the name changes, and keeps an outage", () => {
+    const information = controller(ready);
+    const form = new FormData();
+    form.set("username", "x".repeat(33));
+
+    information.submitUsername(form);
+    information.editUsername("Maya Chen");
+    expect(information.state.model.username).toEqual({ draft: "Maya Chen", state: { status: "ready" } });
+
+    const outage = controller({
+      ...ready,
+      username: { draft: "Maya", state: { status: "service-error", feedback: "serviceUnavailable" } },
+    });
+    outage.editUsername("Maya Chen");
+    expect(outage.state.model.username.state).toEqual({ status: "service-error", feedback: "serviceUnavailable" });
+  });
 });
 
 describe("picture editor", () => {

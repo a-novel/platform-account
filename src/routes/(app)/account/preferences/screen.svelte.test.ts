@@ -12,7 +12,7 @@ import "@a-novel-kit/uikit-tokens/tokens.css";
 
 async function screen(initialValue: LanguageChoice, locale?: "en" | "fr") {
   const language = createSelectController<LanguageChoice>({ initialValue });
-  await render(Screen, { language, languageAction: "?/language" }, withLocale(locale));
+  await render(Screen, { language, savedLanguage: initialValue, languageAction: "?/language" }, withLocale(locale));
   return language;
 }
 
@@ -28,6 +28,19 @@ describe("account preferences screen", () => {
     const options = page.getByRole("option");
     await expect.element(options.nth(0)).toHaveTextContent("Langue du navigateur");
     await expect.element(options.nth(1)).toHaveTextContent("English");
+  });
+
+  it("saves only a language other than the one this device keeps", async () => {
+    await screen("fr");
+    const save = page.getByRole("button", { name: "Save" });
+
+    await expect.element(save).toBeDisabled();
+    await page.getByRole("combobox", { name: "Language" }).click();
+    await page.getByRole("option", { name: "English" }).click();
+    await expect.element(save).toBeEnabled();
+    await page.getByRole("combobox", { name: "Language" }).click();
+    await page.getByRole("option", { name: "Français" }).click();
+    await expect.element(save).toBeDisabled();
   });
 
   it("waits for the save button before posting the language", async () => {

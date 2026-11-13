@@ -198,7 +198,12 @@ export function createAccountInformationController({
       return update({ emailState: { status: "submitting" } });
     },
     editUsername(draft) {
-      forms = { ...forms, username: { ...forms.username, draft } };
+      // A refusal is about the name it refused, so another name clears it.
+      const { state } = forms.username;
+      forms = {
+        ...forms,
+        username: { draft, state: state.status === "validation-error" ? { status: "ready" } : state },
+      };
     },
     submitUsername(form) {
       if (forms.username.state.status === "submitting") return false;

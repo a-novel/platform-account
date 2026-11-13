@@ -18,6 +18,8 @@
     privacy?: PrivacyAccountState;
     /** The language chosen on the Preferences tab. */
     language?: LanguageChoice;
+    /** The language this device keeps now; defaults to the chosen one, so saving waits. */
+    savedLanguage?: LanguageChoice;
     /** Whether the language select shows its list. */
     languageOpen?: boolean;
     /** Whether the password fields show their text. */
@@ -223,6 +225,7 @@
           toggle: noop,
           select: noop,
         }}
+        savedLanguage={props.savedLanguage ?? props.language ?? "browser"}
       />
     {/if}
   </AccountScreen>
