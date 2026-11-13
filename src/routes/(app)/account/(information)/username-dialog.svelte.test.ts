@@ -81,6 +81,23 @@ describe("username dialog", () => {
     await expect.element(field).toHaveAccessibleDescription(/Use 32 characters or fewer\.$/);
   });
 
+  it("keeps the save off for a name the service refused, until the name changes", async () => {
+    const information = controller({
+      username: { draft: "Maya Chen", state: { status: "validation-error", issue: "refused" } },
+    });
+    information.enableScripts();
+    await render(UsernameDialog, { controller: information }, withLocale());
+    const dialog = page.getByRole("dialog", { name: "Choose your username" });
+    const field = dialog.getByLabelText("Username");
+    const save = dialog.getByRole("button", { name: "Save username" });
+
+    await expect.element(save).toBeDisabled();
+    await expect.element(field).toHaveAccessibleDescription(/This username can’t be used\. Choose another one\.$/);
+    await field.fill("Maya Chén");
+    await expect.element(save).toBeEnabled();
+    await expect.element(field).not.toHaveAttribute("aria-invalid", "true");
+  });
+
   it("keeps the save on without scripts, where the field reports no typing and the service checks the name", async () => {
     await render(UsernameDialog, { controller: controller() }, withLocale());
 

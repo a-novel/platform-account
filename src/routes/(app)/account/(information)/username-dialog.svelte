@@ -21,7 +21,7 @@
   const glyphs = $derived(countGlyphs(editor.draft));
   const submitting = $derived(editor.state.status === "submitting");
   // A name that breaks the rule shows why as it is typed, since its save waits for a valid one; the service's own
-  // refusal stays until the next try.
+  // refusal stays until the name changes.
   const issue = $derived(editor.state.status === "validation-error" ? editor.state.issue : usernameIssue(editor.draft));
   const current = $derived(profile.status === "ready" ? (profile.username ?? "") : "");
   // Saving waits for a valid name other than the current one. Without scripts, the field reports no typing, so the
