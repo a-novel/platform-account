@@ -46,7 +46,8 @@ interface PerRunValues {
  * stand in, since their boxes follow the text's width and its wrapping.
  *
  * Hydration and reloaded data write the real text back, so the fixed text holds until the capture
- * ends.
+ * ends. The page then renders again from scratch, focus kept: Chromium can keep a layer's earlier
+ * raster when the shorter text moves it, a pixel off a fresh paint.
  */
 export async function stableScreenshot(page: Page, info: TestInfo, name: string) {
   await page.evaluate(() => {
@@ -69,6 +70,12 @@ export async function stableScreenshot(page: Page, info: TestInfo, name: string)
     const observer = new MutationObserver((records) => records.forEach((record) => fixWithin(record.target)));
     observer.observe(document.body, { subtree: true, childList: true, characterData: true });
     Object.assign(window, { perRunValues: { originals, observer } satisfies PerRunValues });
+
+    const focused = document.activeElement;
+    document.documentElement.style.display = "none";
+    document.documentElement.getBoundingClientRect();
+    document.documentElement.style.removeProperty("display");
+    if (focused instanceof HTMLElement) focused.focus({ preventScroll: true });
   });
   try {
     await screenshot(page, info, name);
