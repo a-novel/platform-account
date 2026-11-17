@@ -79,6 +79,16 @@
     expect(canvasElement.querySelector('[name="shortCode"], [name="target"]')).toBeNull();
   }
 
+  async function verifyServiceError({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    // The failure shows inside the form, above the submit that retries it.
+    const alert = canvas.getByRole("alert");
+    const submit = canvas.getByRole("button", { name: t("shortCode.journeys.passwordReset.submit") });
+    await expect((submit as HTMLButtonElement).form?.contains(alert)).toBe(true);
+    await expect(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  }
+
   async function verifySuccess({ canvasElement }: { canvasElement: HTMLElement }) {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("status")).toBeVisible();
@@ -211,7 +221,7 @@
   />
 </Story>
 
-<Story name="Service error" asChild>
+<Story name="Service error" asChild play={verifyServiceError}>
   <StoryHarness
     initialModel={{
       journey: "password-reset",

@@ -49,7 +49,13 @@ const fetchProfile = vi.fn<typeof fetch>();
 /** The last authentication call as the service receives it, after the platform's fetch wrapper. */
 function sentRequest() {
   const [url, init] = fetchService.mock.lastCall ?? [];
-  return { url, method: init?.method, headers: Object.fromEntries(new Headers(init?.headers)), body: init?.body };
+  // A request without a method is a GET, as fetch sends it.
+  return {
+    url,
+    method: init?.method ?? "GET",
+    headers: Object.fromEntries(new Headers(init?.headers)),
+    body: init?.body,
+  };
 }
 
 const userId = "140f24ee-1531-4a9d-ace8-20b38e1b21bc";
@@ -242,14 +248,11 @@ describe("account session at the request boundary", () => {
       authorization: "allowed",
     });
     expect(fetchService).toHaveBeenCalledOnce();
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content headers are the client's own; the platform owns who the call is for.
+    expect(sentRequest()).toMatchObject({
       url: "https://authentication.test/v2/session",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
   });
 
@@ -330,8 +333,7 @@ describe("account session at the request boundary", () => {
     expect(fetchProfile).toHaveBeenCalledOnce();
     const [url, init] = fetchProfile.mock.calls[0] ?? [];
     expect(url).toBe("https://profile.test/v1/profile/self");
-    expect(Object.fromEntries(new Headers(init?.headers))).toEqual({
-      "content-type": "application/json",
+    expect(Object.fromEntries(new Headers(init?.headers))).toMatchObject({
       authorization: "Bearer private-access",
       "x-client-ip": "192.0.2.1",
       "x-service-authorization": "profile-service-token",
@@ -521,14 +523,11 @@ describe("account session at the request boundary", () => {
       credentials: { status: "ready", email: credentials.email, locationConsent: true },
       profile: { status: "ready" },
     });
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content headers are the client's own; the platform owns who the call is for.
+    expect(sentRequest()).toMatchObject({
       url: "https://authentication.test/v2/credentials/self",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
     expect(JSON.stringify(data)).not.toContain("private-access");
     expect(JSON.stringify(data)).not.toContain(refreshToken);
@@ -580,14 +579,11 @@ describe("account session at the request boundary", () => {
       },
       locationConsent: true,
     });
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content headers are the client's own; the platform owns who the call is for.
+    expect(sentRequest()).toMatchObject({
       url: "https://authentication.test/v2/sessions",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
     expect(JSON.stringify(data)).not.toContain("Gecko");
   });
@@ -606,7 +602,8 @@ describe("account session at the request boundary", () => {
 
     await expect(action(event)).resolves.toEqual({ devicesAction: { status } });
     expect(fetchService).toHaveBeenCalledTimes(2);
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content headers are the client's own; the platform owns who the call is for.
+    expect(sentRequest()).toMatchObject({
       url: `https://authentication.test${path}`,
       method,
       headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },

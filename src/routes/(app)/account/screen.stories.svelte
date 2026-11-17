@@ -113,7 +113,19 @@
   async function verifyHeader({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
+    await expect(canvas.getByText(summary.initials, { exact: true })).toBeVisible();
+    await expect(canvas.getByRole("heading", { level: 1, name: summary.email })).toBeVisible();
+    const roles = canvas.getByRole("list", { name: t("account.roles.label") });
+    await expect(within(roles).getByRole("listitem")).toHaveTextContent(t("account.roles.user"));
+    // The session's end follows its label.
+    const sessionEnd = canvas.getByText(t("account.loggedInUntil")).parentElement;
+    await expect(sessionEnd).toHaveTextContent(new RegExp(`^${t("account.loggedInUntil")}\\s+\\S`));
     await expect(canvas.getByRole("button", { name: t("account.logout.submit") })).toBeEnabled();
+    const tabs = within(canvas.getByRole("navigation", { name: t("account.tabs.label") }));
+    await expect(tabs.getByRole("link", { name: t("account.tabs.information") })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
   }
 
   async function verifyProfile({ canvasElement, globals }: PlayContext) {

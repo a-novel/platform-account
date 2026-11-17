@@ -1,4 +1,5 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
+import { interceptNativeSubmissions } from "#lib/ui/forms.fixture.js";
 
 import Screen, { type LanguageChoice } from "./screen.svelte";
 
@@ -50,17 +51,10 @@ describe("account preferences screen", () => {
     await page.getByRole("option", { name: "Français" }).click();
     expect(language.state.value).toBe("fr");
 
-    const form = page.getByRole("button", { name: "Save" }).element().closest("form");
-    if (!form) throw new Error("The language must belong to its form");
-    const submitted = new Promise<FormData>((resolve) =>
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        resolve(new FormData(form));
-      })
-    );
+    const submitted = interceptNativeSubmissions();
     await page.getByRole("button", { name: "Save" }).click();
 
-    expect(form.getAttribute("action")).toBe("?/language");
-    expect((await submitted).get("language")).toBe("fr");
+    expect(submitted.map((form) => form.getAttribute("action"))).toEqual(["?/language"]);
+    expect(new FormData(submitted[0]).get("language")).toBe("fr");
   });
 });

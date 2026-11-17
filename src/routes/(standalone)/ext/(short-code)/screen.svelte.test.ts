@@ -25,6 +25,7 @@ describe("secure-link screen", () => {
     const form = document.querySelector("form");
     if (!form) throw new Error("Expected password form");
     expect(form.noValidate).toBe(true);
+    const submitted = interceptNativeSubmissions();
     // The two show-password toggles are buttons too.
     const submit = page.getByRole("button", { name: /account|compte/ });
     const minimum = Number(PasswordSchema.minLength);
@@ -34,6 +35,8 @@ describe("secure-link screen", () => {
       .getByLabelText(locale === "fr" ? /Confirmez votre nouveau mot de passe/ : /Confirm new password/)
       .fill("different-password");
     await submit.click();
+    // The refused submission stays in the page.
+    expect(submitted).toEqual([]);
     const message =
       locale === "fr" ? `Utilisez au moins ${minimum} caractères.` : `Use at least ${minimum} characters.`;
     await expect.element(page.getByText(message)).toBeVisible();
@@ -47,7 +50,6 @@ describe("secure-link screen", () => {
     await page
       .getByLabelText(locale === "fr" ? /Confirmez votre nouveau mot de passe/ : /Confirm new password/)
       .fill("valid-password");
-    const submitted = interceptNativeSubmissions();
     await submit.click();
     await expect.element(submit).toBeDisabled();
     expect(controller.state.model.state).toEqual({ status: "submitting" });
@@ -101,23 +103,6 @@ describe("secure-link screen", () => {
 
     await expect.element(page.getByRole("heading", { level: 1, name: "This link is not valid" })).toBeVisible();
     await expect.element(page.getByRole("link", { name: action, exact: true })).toBeVisible();
-  });
-
-  it("keeps a service error with its submit action", async () => {
-    await render(
-      ShortCodeScreen,
-      {
-        controller: shortCodeController({
-          journey: "password-reset",
-          state: { status: "service-error", feedback: "serviceUnavailable" },
-        }),
-      },
-      withLocale()
-    );
-    const alert = page.getByRole("alert").element();
-    const submit = page.getByRole("button", { name: "Reset password" }).element() as HTMLButtonElement;
-    expect(submit.form?.contains(alert)).toBe(true);
-    expect(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
   it("shows the result the route returns in place of the email validation it started", async () => {
