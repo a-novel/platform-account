@@ -8,8 +8,7 @@
   import { addressBar, dialogUrl, localHref } from "../url-state";
   import type { DevicesActionData } from "./+page.server";
   import { confirmationParameter, confirmationValue, readConfirmation } from "./confirmation-state";
-  import type { AccountDeviceConfirmation } from "./controller.svelte";
-  import { createAccountDevicesController } from "./controller.svelte";
+  import { type AccountDeviceConfirmation, createAccountDevicesController } from "./controller.svelte";
   import { devicePageUrl, readPages } from "./device-pages";
   import Screen from "./screen.svelte";
 

@@ -1,8 +1,7 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { expectFormActionLayout } from "#lib/ui/forms.fixture.js";
 
-import type { ShortCodeScreenModel } from "./controller.svelte";
-import { createShortCodeScreenController } from "./controller.svelte";
+import { type ShortCodeScreenModel, createShortCodeScreenController } from "./controller.svelte";
 import ShortCodeScreen from "./screen.svelte";
 
 import { describe, expect, it } from "vitest";

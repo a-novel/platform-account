@@ -4,8 +4,8 @@
   import { goto } from "$app/navigation";
 
   import { createShortCodeScreenController, shortCodeControllerState } from "../../controller.svelte";
+  import { shortCodePageTitle } from "../../page-title";
   import Screen from "../../screen.svelte";
-  import { shortCodePageTitle } from "../../short-code";
 
   import { onMount } from "svelte";
 

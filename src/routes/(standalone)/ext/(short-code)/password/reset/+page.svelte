@@ -2,8 +2,8 @@
   import PageTitle from "#lib/ui/PageTitle.svelte";
 
   import { createShortCodeScreenController, shortCodeControllerState } from "../../controller.svelte";
+  import { shortCodePageTitle } from "../../page-title";
   import Screen from "../../screen.svelte";
-  import { shortCodePageTitle } from "../../short-code";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 

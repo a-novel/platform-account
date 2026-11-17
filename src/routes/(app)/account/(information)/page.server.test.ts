@@ -106,17 +106,33 @@ describe("password action", () => {
   });
 
   it.each([
-    ["a failed change", () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new Error("private detail"))],
-    ["an unreachable session check", () => authenticated.mockRejectedValue(new AuthenticationUnavailableError())],
-  ])("keeps the form usable after %s", async (_, arrange) => {
+    [
+      "too many attempts",
+      () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new HttpError(429, "private detail")),
+      429,
+      "tooManyAttempts",
+    ],
+    [
+      "a failed change",
+      () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new Error("private detail")),
+      503,
+      "serviceUnavailable",
+    ],
+    [
+      "an unreachable session check",
+      () => authenticated.mockRejectedValue(new AuthenticationUnavailableError()),
+      503,
+      "serviceUnavailable",
+    ],
+  ] as const)("keeps the form usable after %s", async (_, arrange, status, feedback) => {
     authenticated.mockResolvedValue(signedIn);
     arrange();
 
     const result = await informationActions.password(event("password", passwordFields));
 
     expect(result).toEqual({
-      status: 503,
-      data: { accountAction: { kind: "password", state: { status: "service-error", feedback: "serviceUnavailable" } } },
+      status,
+      data: { accountAction: { kind: "password", state: { status: "service-error", feedback } } },
     });
     expect(JSON.stringify(result)).not.toContain("private detail");
   });
@@ -228,12 +244,15 @@ describe("username action", () => {
     });
   });
 
+  // Profile refuses a name with 422 from its 1.2 release, and with 400 before it.
   it.each([
-    ["the rule the platform's mirror finds", "Maya\tChen", "characters"],
-    ["a refusal only the service could tell", "Maya", "refused"],
-  ])("keeps a refused name in the field, with %s", async (_, username, issue) => {
+    ["the rule the platform's mirror finds", "Maya\tChen", "characters", 400],
+    ["the rule the platform's mirror finds", "Maya\tChen", "characters", 422],
+    ["a refusal only the service could tell", "Maya", "refused", 400],
+    ["a refusal only the service could tell", "Maya", "refused", 422],
+  ])("keeps a refused name in the field, with %s, after a %i", async (_, username, issue, refusal) => {
     authenticated.mockResolvedValue(signedIn);
-    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(400, "private service detail"));
+    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(refusal, "private service detail"));
 
     await expect(informationActions.username(event("username", { username }))).resolves.toEqual({
       status: 400,

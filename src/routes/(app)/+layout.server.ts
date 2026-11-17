@@ -77,11 +77,12 @@ async function readShellSession(event: ShellEvent): Promise<ShellSession> {
   const profile = await readProfile(event, resolved.accessToken);
   if (!profile) return { status: "loading" };
 
-  // An account whose email handle the shell has not kept goes by its username, or by the screen's generic label.
+  // An account whose email handle the shell has not kept goes by its username, or by the screen's generic label,
+  // with the generic initial.
   const { username, picture } = profile;
   const display = resolved.identityHandle
     ? accountDisplayFromHandle(resolved.identityHandle, username)
-    : { displayName: username };
+    : { displayName: username, initials: "A" };
   return { status: "authenticated", ...display, picture };
 }
 

@@ -8,7 +8,7 @@ import type { Handle } from "@sveltejs/kit/hooks";
 
 /**
  * Gives each request its locale, in the language the visitor chose or else their browser's, refuses
- * framing, keeps signed-in and email-link pages out of caches, and traces the response.
+ * framing, keeps personal responses and email-link pages out of caches, and traces the response.
  */
 export const handle: Handle = async ({ event, resolve }) => {
   const chosen = parseLanguage(event.cookies.get(LANGUAGE_COOKIE), supportedLocales);

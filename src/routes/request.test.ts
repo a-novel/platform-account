@@ -345,7 +345,7 @@ describe("account session at the request boundary", () => {
     const { event } = request("/", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen@example.com" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
     const { session } = await loadShell(event);
-    expect(session).toEqual({ status: "authenticated" });
+    expect(session).toEqual({ status: "authenticated", initials: "A" });
   });
 
   it("keeps anonymous service claims out of authenticated UI", async () => {
@@ -820,14 +820,17 @@ describe("secure-link request boundary", () => {
     expect(values.has("__Host-account_refresh_token")).toBe(false);
   });
 
-  it("returns a retryable outage without echoing secrets or claiming completion", async () => {
+  it.each([
+    [503, "serviceUnavailable"],
+    [429, "tooManyAttempts"],
+  ] as const)("returns a retryable %i without echoing secrets or claiming completion", async (status, feedback) => {
     const { event } = request(registrationLink, {}, password);
     fetchService
       .mockResolvedValueOnce(Response.json({ accessToken: "anonymous-access", refreshToken: "" }))
-      .mockResolvedValueOnce(new Response("private service detail", { status: 503 }));
+      .mockResolvedValueOnce(new Response("private service detail", { status }));
     await expect(submitShortCodeRoute("register", event)).resolves.toEqual({
-      status: 503,
-      data: { shortCode: { journey: "register", state: { status: "service-error", feedback: "serviceUnavailable" } } },
+      status,
+      data: { shortCode: { journey: "register", state: { status: "service-error", feedback } } },
     });
   });
 });

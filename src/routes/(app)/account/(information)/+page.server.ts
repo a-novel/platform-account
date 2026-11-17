@@ -129,7 +129,7 @@ async function updateUsername(event: RequestEvent) {
   } catch (error) {
     rethrowRefusal(error);
 
-    // Profile answers 422 for a refused username, and 400 before its 422 release.
+    // Profile refuses a username with 422 from its 1.2 release, and with 400 before it.
     if (isHttpStatusError(error, 400, 413, 422)) {
       const issue = usernameIssue(draft) ?? "refused";
       return fail(400, usernameAction({ draft, state: { status: "validation-error", issue } }));

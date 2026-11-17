@@ -3,8 +3,7 @@ import { withLocale } from "#lib/i18n/provider.fixture.js";
 
 import type { ProfileState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
-import type { AccountInformationModel } from "./controller.svelte";
-import { createAccountInformationController } from "./controller.svelte";
+import { type AccountInformationModel, createAccountInformationController } from "./controller.svelte";
 import PictureDialog from "./picture-dialog.svelte";
 
 import { describe, expect, it, onTestFinished } from "vitest";

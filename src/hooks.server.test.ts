@@ -91,22 +91,11 @@ describe("request hook", () => {
     expect(response.headers.get("referrer-policy")).toBe("strict-origin");
   });
 
-  const session = (name: string) => (name === "__Host-account_refresh_token" ? "refresh" : undefined);
-  const picture = "/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=1";
-
-  it.each<{
-    name: string;
-    path: string;
-    cookies: (name: string) => string | undefined;
-    headers: Record<string, string>;
-    want: string;
-  }>([
-    { name: "a page without a policy", path: "/", cookies: () => undefined, headers: {}, want: "private, no-store" },
-    { name: "a signed-in page without a policy", path: "/", cookies: session, headers: {}, want: "private, no-store" },
+  // The rule reads the response alone: a session, the route or the path changes nothing.
+  it.each<{ name: string; headers: Record<string, string>; want: string }>([
+    { name: "a response without a policy", headers: {}, want: "private, no-store" },
     {
       name: "a login redirect that sets the session",
-      path: "/?auth=login",
-      cookies: () => undefined,
       headers: {
         "cache-control": "public, max-age=60",
         location: "/account",
@@ -115,33 +104,14 @@ describe("request hook", () => {
       want: "private, no-store",
     },
     {
-      name: "a picture that refreshes the session",
-      path: picture,
-      cookies: session,
-      headers: {
-        "cache-control": "public, max-age=31536000, immutable",
-        "set-cookie": "__Host-account_access_token=new",
-      },
-      want: "private, no-store",
-    },
-    {
       name: "a shared picture",
-      path: picture,
-      cookies: session,
       headers: { "cache-control": "public, max-age=31536000, immutable" },
       want: "public, max-age=31536000, immutable",
     },
-    {
-      name: "a page with its own policy",
-      path: "/",
-      cookies: () => undefined,
-      headers: { "cache-control": "private" },
-      want: "private",
-    },
-  ])("caches $name as $want", async ({ path, cookies, headers, want }) => {
-    const request = { ...event(path), cookies: { get: cookies } } as RequestEvent;
+    { name: "a page with its own policy", headers: { "cache-control": "private" }, want: "private" },
+  ])("caches $name as $want", async ({ headers, want }) => {
     const response = await handle({
-      event: request,
+      event: event("/"),
       resolve: vi.fn().mockResolvedValue(new Response("", { headers })),
     });
     expect(response.headers.get("cache-control")).toBe(want);

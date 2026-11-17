@@ -2,15 +2,18 @@ import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
-import type { AuthenticationPanelModel, ShellApps, ShellViewModel } from "./controller.svelte";
 import {
+  type AuthenticationPanelModel,
+  type ShellApps,
+  type ShellViewModel,
   createAuthenticationPanelController,
   createShellController,
   readyAuthenticationModel,
 } from "./controller.svelte";
+import { withNavigationOpen } from "./navigation-state";
 import Screen from "./screen.svelte";
 import ShellStory from "./story.svelte";
-import { readAuthView, withAuthView, withNavigationOpen } from "./url-state";
+import { readAuthView, withAuthView } from "./url-state";
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
@@ -215,6 +218,18 @@ describe("account shell screen", () => {
     await expect.element(account).toHaveAttribute("title", "Maya Chen");
     await expect.element(account).toHaveAttribute("href", "/account");
     await expect.element(page.getByRole("button", { name: "Me déconnecter" })).toBeVisible();
+  });
+
+  it("names an account the platform cannot name with the generic label and initial", async () => {
+    render(
+      Screen,
+      { controller: controller({ session: { status: "authenticated", initials: "A" } }) },
+      withLocale("fr")
+    );
+
+    const account = page.getByRole("complementary").getByRole("link", { name: "Mon compte" });
+    await expect.element(account).toHaveAttribute("href", "/account");
+    expect(account.element().textContent).toMatch(/A\s*Mon compte/);
   });
 
   it("contains a long account name in the rail and the mobile drawer", async () => {
