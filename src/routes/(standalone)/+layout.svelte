@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
-
   import Screen from "./screen.svelte";
+
+  import { getPlatformDowntime } from "@a-novel-kit/nodelib-svelte";
 
   let { children } = $props();
 </script>

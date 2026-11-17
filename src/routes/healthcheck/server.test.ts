@@ -19,6 +19,8 @@ const config: RuntimeConfig = {
   studioUrl: "https://studio.example.test",
   jsonKeysServiceUrl: "http://json-keys:8080",
   profileServiceUrl: "http://profile:8080",
+  profileServiceTokenPath: undefined,
+  serviceTokenPath: undefined,
 };
 
 const authenticationDependencies = {

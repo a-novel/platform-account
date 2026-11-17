@@ -1,13 +1,13 @@
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
 import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
 import type { FormState } from "#lib/application/auth/types.js";
-import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
 
 import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
 import { readAuthView, withAuthView } from "./url-state";
 
 import { SvelteURL } from "svelte/reactivity";
 
+import type { PlatformDowntime } from "@a-novel-kit/nodelib-svelte";
 import type { OpenController, PasswordInputController } from "@a-novel-kit/uikit";
 
 /** The journeys the shell authentication dialog offers. */

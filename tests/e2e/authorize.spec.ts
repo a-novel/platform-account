@@ -1,10 +1,9 @@
 import { client } from "./client";
 import { expect, login, test } from "./fixtures";
-import { callerFetch } from "./service-token";
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
+import { callerFetch, screenshot } from "@a-novel-kit/nodelib-test/playwright";
 import { AuthenticationApi, authorizationCodeExchange, claimsGet } from "@a-novel/service-authentication-rest";
 
 import type { Page } from "playwright/test";

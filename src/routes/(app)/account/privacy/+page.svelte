@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { getTelemetryPreference, hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
-
   import { createLocationConsentController } from "./controller.svelte";
   import Screen from "./screen.svelte";
+
+  import { getTelemetryPreference, hasTelemetryPreference } from "@a-novel-kit/nodelib-svelte";
 
   let { data, form } = $props();
   // Only a platform that collects browser telemetry asks for consent, so only it has an answer to change.

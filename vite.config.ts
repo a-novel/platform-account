@@ -27,10 +27,6 @@ export default SvelteKitVite(
         "connect-src": ["self", "https://faro-collector-prod-eu-west-2.grafana.net"],
       },
     },
-    // Deployments derive the origin from each request. A build for a known address, such as the
-    // Playwright server, trusts ORIGIN instead.
-    paths: { origin: process.env.ORIGIN },
-    tracing: { server: true },
     // The release version names the build, so browser telemetry reports which release it runs.
     version: { name: manifest.version },
   }

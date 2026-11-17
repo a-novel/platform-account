@@ -1,7 +1,7 @@
 import { compose, emailLink, endSessionCheckWindow, expect, login, stableScreenshot, test } from "./fixtures";
-import { accountCaller, callerFetch } from "./service-token";
+import { accountCaller } from "./service-token";
 
-import { screenshot } from "@a-novel-kit/nodelib-test/playwright";
+import { callerFetch, screenshot } from "@a-novel-kit/nodelib-test/playwright";
 
 import type { Page } from "playwright/test";
 

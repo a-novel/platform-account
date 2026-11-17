@@ -1,11 +1,11 @@
 <script lang="ts">
   import TelemetrySetting from "#lib/ui/TelemetrySetting.svelte";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
-  import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
   import type { LocationConsentController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+  import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
   import { Button, Card, Skeleton, Switch } from "@a-novel-kit/uikit";
 
   let {

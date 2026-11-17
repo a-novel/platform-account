@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { retryWhile } from "#lib/client/retry.svelte.js";
+  import { telemetry } from "#lib/client/telemetry.js";
   import { goto, invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -11,6 +11,8 @@
   import { type AccountDeviceConfirmation, createAccountDevicesController } from "./controller.svelte";
   import { devicePageUrl, readPages } from "./device-pages";
   import Screen from "./screen.svelte";
+
+  import { retryWhile } from "@a-novel-kit/nodelib-svelte";
 
   let { data, form } = $props();
   const actions = {
@@ -29,7 +31,7 @@
   const listRetries = retryWhile(
     () => data.devices.status === "unavailable",
     () => invalidate(devicesData),
-    { maxRetries: 5 }
+    { maxRetries: 5, onError: (error) => telemetry.captureError(error) }
   );
 
   const controller = createAccountDevicesController({

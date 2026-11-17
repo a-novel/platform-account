@@ -1,9 +1,8 @@
 <!-- @component The frame of the pages an email link opens, outside the shell: the page and any planned downtime. -->
 <script lang="ts">
-  import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
-
   import type { Snippet } from "svelte";
 
+  import type { PlatformDowntime } from "@a-novel-kit/nodelib-svelte";
   import { DowntimeBanner } from "@a-novel-kit/uikit";
 
   let {
