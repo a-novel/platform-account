@@ -113,8 +113,6 @@ export interface ShellController {
   openAuthentication(view: AuthenticationJourney): void;
   /** Switches between the expanded and collapsed navigation rail. */
   toggleRail(): void;
-  /** Requests logout and reports whether native form submission should continue. */
-  logout(): boolean;
 }
 
 /** Configuration for the default account shell controller. */
@@ -233,7 +231,6 @@ export function createShellController({
       rail = rail === "expanded" ? "collapsed" : "expanded";
       onRailChange?.(rail);
     },
-    logout: () => session.status !== "anonymous",
   };
 }
 

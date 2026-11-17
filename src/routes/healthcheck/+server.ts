@@ -3,30 +3,42 @@ import { serviceFetch } from "#lib/server/service-fetch.js";
 
 import type { RequestHandler } from "./$types";
 
-import { type HealthServiceConfig, aggregateHealth } from "@a-novel-kit/nodelib-server";
+import { aggregateHealth } from "@a-novel-kit/nodelib-server";
 
 import { json } from "@sveltejs/kit";
 
 /** Probes the platform's service registry and preserves each service-owned dependency map. */
 export const GET: RequestHandler = async ({ fetch }) => {
-  // Probes prove the platform's identity to each service like any call, but are made for no visitor.
-  const probe =
-    (service: ServiceUrl, path: string, token?: TokenPath): (() => HealthServiceConfig) =>
-    () => {
-      const config = getRuntimeConfig();
-      return {
-        timeoutMs: config.healthcheckTimeoutMs,
-        url: new URL(path, `${config[service]}/`),
-        fetch: serviceFetch({ serviceTokenPath: token && config[token] }, fetch),
-      };
-    };
-
   const health = await aggregateHealth({
     config: {
-      authentication: probe("authenticationServiceUrl", "v2/healthcheck", "serviceTokenPath"),
+      authentication: () => {
+        const config = getRuntimeConfig();
+
+        return {
+          timeoutMs: config.healthcheckTimeoutMs,
+          url: new URL("v2/healthcheck", `${config.authenticationServiceUrl}/`),
+          // The probe proves the platform's identity like any call, but is made for no visitor.
+          fetch: serviceFetch({ serviceTokenPath: config.serviceTokenPath }, fetch),
+        };
+      },
       // JSON keys' API is public, so its probe carries no token.
-      jsonKeys: probe("jsonKeysServiceUrl", "v2/healthcheck"),
-      profile: probe("profileServiceUrl", "v1/healthcheck", "profileServiceTokenPath"),
+      jsonKeys: () => {
+        const config = getRuntimeConfig();
+
+        return {
+          timeoutMs: config.healthcheckTimeoutMs,
+          url: new URL("v2/healthcheck", `${config.jsonKeysServiceUrl}/`),
+        };
+      },
+      profile: () => {
+        const config = getRuntimeConfig();
+
+        return {
+          timeoutMs: config.healthcheckTimeoutMs,
+          url: new URL("v1/healthcheck", `${config.profileServiceUrl}/`),
+          fetch: serviceFetch({ serviceTokenPath: config.profileServiceTokenPath }, fetch),
+        };
+      },
     },
     fetch,
   });
@@ -38,6 +50,3 @@ export const GET: RequestHandler = async ({ fetch }) => {
     status: health.status === "up" ? 200 : 503,
   });
 };
-
-type ServiceUrl = "authenticationServiceUrl" | "jsonKeysServiceUrl" | "profileServiceUrl";
-type TokenPath = "serviceTokenPath" | "profileServiceTokenPath";
