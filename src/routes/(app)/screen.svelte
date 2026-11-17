@@ -150,8 +150,7 @@
 {#snippet accountWidget(compact: boolean)}
   <div class="account-widget" data-session={model.session.status}>
     {#if model.session.status !== "anonymous"}
-      {@const name = authenticatedSession?.displayName}
-      {@const label = name ?? t("shell.accountFallback")}
+      {@const label = authenticatedSession?.displayName ?? t("shell.accountFallback")}
       <!-- This platform serves the account page, so it opens in place, even while the account's details load. -->
       <Button
         class="shell-account-button {compact ? 'compact-control' : ''}"
@@ -176,8 +175,8 @@
             <Skeleton class="account-picture-skeleton" shape="rectangle" />
           {/if}
         </span>
-        {#if name && !compact}
-          <span class="account-label">{name}</span>
+        {#if authenticatedSession && !compact}
+          <span class="account-label">{label}</span>
         {:else}
           <VisuallyHidden>{label}</VisuallyHidden>
           {#if !compact}<Skeleton class="account-label-skeleton" />{/if}

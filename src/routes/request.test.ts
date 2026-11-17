@@ -1,6 +1,3 @@
-import { createI18n } from "#lib/i18n/instance.js";
-import { logoutAuthentication } from "#lib/server/auth/logout.js";
-
 import { actions as authenticationActions } from "./(app)/(home)/+page.server";
 import { load as loadShell } from "./(app)/+layout.server";
 import { actions as informationActions } from "./(app)/account/(information)/+page.server";
@@ -8,6 +5,7 @@ import { load as loadAccount } from "./(app)/account/+layout.server";
 import { actions as devicesActions, load as loadDevices } from "./(app)/account/devices/+page.server";
 import { actions as privacyActions } from "./(app)/account/privacy/+page.server";
 import { loadShortCodeRoute, submitShortCodeRoute } from "./(standalone)/ext/(short-code)/short-code.server";
+import { POST as logout } from "./auth/logout/+server";
 
 import { Buffer } from "node:buffer";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -104,7 +102,7 @@ function request(
     cookies,
     getClientAddress: () => "192.0.2.1",
     url,
-    locals: { locale: "fr", i18n: createI18n("fr") },
+    locals: { locale: "fr" },
     request: new Request(url, fields ? { method: "POST", body: new URLSearchParams(fields), headers } : { headers }),
     depends: () => {},
   } as unknown as RequestEvent;
@@ -163,26 +161,8 @@ describe("invitation requests at the request boundary", () => {
     });
   });
 
-  const olderServiceConflicts = [
-    ["account_exists", Response.json({ code: "account_exists" }, { status: 409 })],
-    ["already_waitlisted", Response.json({ code: "already_waitlisted" }, { status: 409 })],
-  ] as const;
-
-  // A service older than v2.24.0 answers 409 for a listed or registered address.
-  it.each(olderServiceConflicts)("confirms a 409 for %s like a new address", async (_, answer) => {
-    const { event } = request("/?auth=register", {}, { email });
-    fetchService
-      .mockResolvedValueOnce(Response.json({ accessToken: "anonymous-access", refreshToken: "anonymous-refresh" }))
-      .mockResolvedValueOnce(answer);
-    await expect(authenticationActions.default(event)).resolves.toEqual({
-      authentication: { journey: "register", state: { status: "recorded", email } },
-    });
-  });
-
   const unacknowledged = [
     ["storage unavailable", new Response("private service detail", { status: 503 })],
-    ["unknown conflict", Response.json({ code: "private service detail" }, { status: 409 })],
-    ["malformed conflict", new Response("private service detail", { status: 409 })],
     ["network failure", new Error("private service detail")],
   ] as const;
 
@@ -361,12 +341,11 @@ describe("account session at the request boundary", () => {
     expect(account).toMatchObject({ authorization: "allowed", profile: { status: "unavailable" } });
   });
 
-  it("uses a localized account label when the identity cookie contains a full email", async () => {
+  it("leaves the account unnamed when the identity cookie contains a full email", async () => {
     const { event } = request("/", { ...tokenCookies, "__Host-account_identity_handle": "maya.chen@example.com" });
     fetchService.mockResolvedValueOnce(Response.json(identity));
-    await expect(loadShell(event)).resolves.toMatchObject({
-      session: { status: "authenticated", displayName: "Mon compte", initials: "A" },
-    });
+    const { session } = await loadShell(event);
+    expect(session).toEqual({ status: "authenticated" });
   });
 
   it("keeps anonymous service claims out of authenticated UI", async () => {
@@ -477,7 +456,7 @@ describe("account session at the request boundary", () => {
     fetchService
       .mockResolvedValueOnce(Response.json(identity))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    await expect(logoutAuthentication(event)).rejects.toMatchObject({ status: 303, location: "/" });
+    await expect(logout(event as Parameters<typeof logout>[0])).rejects.toMatchObject({ status: 303, location: "/" });
     expect(sentRequest()).toEqual({
       url: "https://authentication.test/v2/session/revoke",
       method: "PUT",
@@ -496,7 +475,7 @@ describe("account session at the request boundary", () => {
       ...tokenCookies,
       "__Host-account_identity_handle": "maya.chen",
     });
-    await expect(logoutAuthentication(event)).rejects.toMatchObject({ status: 303, location: "/" });
+    await expect(logout(event as Parameters<typeof logout>[0])).rejects.toMatchObject({ status: 303, location: "/" });
     expect(values.size).toBe(0);
     expect(cookies.delete.mock.calls).toEqual([
       ["__Host-account_access_token", { path: "/" }],

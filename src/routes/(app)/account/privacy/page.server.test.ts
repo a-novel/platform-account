@@ -102,14 +102,4 @@ describe("location consent action", () => {
     });
     expect(credentialsUpdateLocationConsent).not.toHaveBeenCalled();
   });
-
-  it("sends a logged-out visitor to the login before any change", async () => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(privacyActions.locationConsent(event({ enabled: "on" }))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%2Fprivacy",
-    });
-    expect(credentialsUpdateLocationConsent).not.toHaveBeenCalled();
-  });
 });

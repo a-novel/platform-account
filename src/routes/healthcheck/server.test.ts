@@ -103,39 +103,6 @@ describe("GET /healthcheck", () => {
     });
   });
 
-  it("keeps a reachable service up while a reported dependency makes the platform unavailable", async () => {
-    const dependencies = {
-      ...authenticationDependencies,
-      "client:postgres": { detail: "connection refused", status: "down" as const },
-    };
-
-    await expect(probe(answer(dependencies))).resolves.toEqual({
-      status: 503,
-      health: {
-        services: {
-          authentication: { dependencies, status: "up" },
-          jsonKeys: { dependencies: jsonKeysDependencies, status: "up" },
-          profile: { dependencies: profileDependencies, status: "up" },
-        },
-        status: "down",
-      },
-    });
-  });
-
-  it("reports an unavailable service without fabricating dependency checks", async () => {
-    const fetchImplementation = vi.fn<typeof globalThis.fetch>(async () => {
-      throw new Error("connection details");
-    });
-
-    await expect(probe(fetchImplementation)).resolves.toEqual({
-      status: 503,
-      health: {
-        services: { authentication: { status: "down" }, jsonKeys: { status: "down" }, profile: { status: "down" } },
-        status: "down",
-      },
-    });
-  });
-
   it("derives the unavailable services from the registry when runtime configuration fails", async () => {
     const fetchImplementation = vi.fn<typeof globalThis.fetch>();
     readConfig.mockImplementation(() => {

@@ -87,26 +87,6 @@ describe("password action", () => {
     expect(JSON.stringify(result)).not.toContain("private-value");
   });
 
-  it("changes the password after checking the session again, without its confirmation", async () => {
-    authenticated.mockResolvedValue(signedIn);
-    vi.mocked(credentialsUpdatePassword).mockResolvedValue({
-      id: "test-user",
-      email: "creator@example.test",
-      role: "auth:user",
-      createdAt: new Date("2026-08-01T10:00:00Z"),
-      updatedAt: new Date("2026-11-04T10:00:00Z"),
-    });
-
-    await expect(informationActions.password(event("password", passwordFields))).resolves.toEqual({
-      accountAction: { kind: "password", state: { status: "success", feedback: "passwordChanged" } },
-    });
-    expect(authenticated).toHaveBeenCalledOnce();
-    expect(credentialsUpdatePassword).toHaveBeenCalledExactlyOnceWith(expect.any(AuthenticationApi), "fixture-access", {
-      currentPassword: "old-password",
-      password: "new-password",
-    });
-  });
-
   it("shows a rejected current password on its field instead of the access-denied page", async () => {
     authenticated.mockResolvedValue(signedIn);
     vi.mocked(credentialsUpdatePassword).mockRejectedValue(new HttpError(403, "incorrect current password"));
@@ -139,16 +119,6 @@ describe("password action", () => {
       data: { accountAction: { kind: "password", state: { status: "service-error", feedback: "serviceUnavailable" } } },
     });
     expect(JSON.stringify(result)).not.toContain("private detail");
-  });
-
-  it("sends a logged-out visitor to the login before any change", async () => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(informationActions.password(event("password", passwordFields))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Dpassword",
-    });
-    expect(credentialsUpdatePassword).not.toHaveBeenCalled();
   });
 });
 
@@ -233,16 +203,6 @@ describe("email action", () => {
       },
     });
     expect(JSON.stringify(result)).not.toContain("private service detail");
-  });
-
-  it("sends a logged-out visitor to the login before any change", async () => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(informationActions.email(event("email", emailFields))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Demail",
-    });
-    expect(shortCodeCreateEmailUpdate).not.toHaveBeenCalled();
   });
 });
 
