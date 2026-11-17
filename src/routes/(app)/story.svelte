@@ -90,11 +90,11 @@
     openAuthentication: () => {},
     authenticationHref: (view) => `#${view ?? "home"}`,
     toggleRail: () => {},
-    logout: () => false,
   };
 </script>
 
-<div class="story-frame">
+<!-- A fixed scenario: the logout form never leaves the story. -->
+<div class="story-frame" onsubmit={(event) => event.preventDefault()}>
   <Screen {controller}>
     {@render children?.()}
   </Screen>

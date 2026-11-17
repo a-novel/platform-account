@@ -1,5 +1,4 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
-import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
 import { type PrivacyAccountState, createLocationConsentController } from "./controller.svelte";
 import Screen from "./screen.svelte";
@@ -8,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page } from "vitest/browser";
 
+import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
 import "@a-novel-kit/uikit-fonts/fonts.css";
 import "@a-novel-kit/uikit-tokens/tokens.css";
 

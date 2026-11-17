@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { retryWhile } from "#lib/client/retry.svelte.js";
   import { setAuthenticationTitle } from "#lib/ui/PageTitle.svelte";
-  import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
-  import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
   import { PUBLIC_PLATFORM_DOMAIN } from "$app/env/public";
   import { afterNavigate, goto, invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
@@ -24,6 +21,7 @@
 
   import { saveNavigationRail } from "@a-novel-kit/nodelib-browser/preferences";
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+  import { getPlatformDowntime, hasTelemetryPreference, retryWhile } from "@a-novel-kit/nodelib-svelte";
   import { AuthorizationProvider } from "@a-novel-kit/uikit";
   import { createAuthorizationController } from "@a-novel-kit/uikit/authorization";
 

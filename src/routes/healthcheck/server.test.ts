@@ -19,6 +19,8 @@ const config: RuntimeConfig = {
   studioUrl: "https://studio.example.test",
   jsonKeysServiceUrl: "http://json-keys:8080",
   profileServiceUrl: "http://profile:8080",
+  profileServiceTokenPath: undefined,
+  serviceTokenPath: undefined,
 };
 
 const authenticationDependencies = {
@@ -70,10 +72,11 @@ describe("GET /healthcheck", () => {
         status: "up",
       },
     });
-    expect(fetchImplementation.mock.calls.map(([url]) => url)).toEqual([
-      new URL("http://authentication:8080/api/v2/healthcheck"),
-      new URL("http://json-keys:8080/v2/healthcheck"),
-      new URL("http://profile:8080/v1/healthcheck"),
+    // The probes run in parallel, so the order they reach fetch in is the event loop's.
+    expect(fetchImplementation.mock.calls.map(([url]) => String(url)).toSorted()).toEqual([
+      "http://authentication:8080/api/v2/healthcheck",
+      "http://json-keys:8080/v2/healthcheck",
+      "http://profile:8080/v1/healthcheck",
     ]);
     for (const [, init] of fetchImplementation.mock.calls) {
       expect(new Headers(init?.headers).get("accept")).toBe("application/json");

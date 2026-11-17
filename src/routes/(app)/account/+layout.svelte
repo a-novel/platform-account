@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { retryWhile } from "#lib/client/retry.svelte.js";
   import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { invalidate } from "$app/navigation";
@@ -12,6 +11,7 @@
   import { editorParameter } from "./url-state";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+  import { retryWhile } from "@a-novel-kit/nodelib-svelte";
 
   let { data, children } = $props();
   const { t } = getI18nContext();

@@ -27,7 +27,6 @@
 
 <script lang="ts">
   import { profilePicture } from "#lib/application/profile/picture.js";
-  import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
   import type { AccountEditor, AccountInformationController } from "./(information)/controller.svelte";
   import InformationScreen from "./(information)/screen.svelte";
@@ -40,6 +39,7 @@
   import AccountScreen from "./screen.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+  import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
   import type { OpenController, PasswordInputController } from "@a-novel-kit/uikit";
 
   let props: AccountStoryProps = $props();

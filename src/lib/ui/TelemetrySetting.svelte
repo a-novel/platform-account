@@ -1,8 +1,7 @@
 <!-- @component The device's telemetry answer as a switch, or a note when the platform collects nothing. -->
 <script lang="ts">
-  import type { TelemetryPreference } from "./telemetry-preference";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
+  import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
   import { Switch, type SwitchController } from "@a-novel-kit/uikit";
 
   let {

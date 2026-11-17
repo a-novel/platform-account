@@ -11,8 +11,6 @@
 </script>
 
 <script lang="ts">
-  import { submitThrough } from "#lib/ui/form-submission.js";
-
   import AuthenticationPanel from "./authentication-panel.svelte";
   import CloseLink from "./close-link.svelte";
   import { followInPlace } from "./link-transition";
@@ -57,7 +55,6 @@
   const authenticationId = `${componentId}-authentication`;
   const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
-  const submitLogout = (event: SubmitEvent) => submitThrough(event, () => controller.logout());
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
   const authDialogTitle = $derived.by(() => {
     if (authenticationState === "pending-email") return t("shell.auth.pendingTitle");
@@ -174,7 +171,7 @@
         {/if}
       </Button>
       <Separator decorative />
-      <form class="logout-form" method="POST" action={controller.state.logoutAction} onsubmit={submitLogout}>
+      <form class="logout-form" method="POST" action={controller.state.logoutAction}>
         {@render railButton(compact, t("shell.logout"), LogOut, { type: "submit" })}
       </form>
     {:else}

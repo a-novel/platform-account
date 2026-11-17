@@ -77,7 +77,6 @@ describe("createShellController", () => {
     expect(onAuthViewChange.mock.calls).toEqual([[null], ["login"], [null], ["login"]]);
 
     data = { ...data, session: { status: "anonymous" } };
-    expect(controller.logout()).toBe(false);
     expect(controller.state.model.session).toEqual({ status: "anonymous" });
   });
 
@@ -190,16 +189,6 @@ describe("createShellController", () => {
       apps: null,
       platformDowntime: undefined,
     });
-  });
-
-  it("submits the logout of an account natively, and refuses one without a session", () => {
-    const controller = shell({
-      getData: () => ({ ...anonymous, session: { status: "authenticated", displayName: "Maya Chen" } }),
-    });
-
-    expect(controller.logout()).toBe(true);
-    expect(controller.state.model.session.status).toBe("authenticated");
-    expect(shell({ getData: () => anonymous }).logout()).toBe(false);
   });
 });
 
