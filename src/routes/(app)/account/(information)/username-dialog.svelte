@@ -3,13 +3,11 @@
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
-  import { followInPlace } from "../../link-transition";
+  import CloseLink from "../../close-link.svelte";
   import type { AccountInformationController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Dialog, Field, FormActions, IconButton, Input } from "@a-novel-kit/uikit";
-
-  import { X } from "@lucide/svelte";
+  import { Button, Dialog, Field, FormActions, Input } from "@a-novel-kit/uikit";
 
   let { controller }: { controller: AccountInformationController } = $props();
 
@@ -30,7 +28,6 @@
     controller.state.scripted && (trimUsername(editor.draft) === trimUsername(current) || issue !== null)
   );
   const submit = (event: SubmitEvent) => submitThrough(event, (form) => controller.submitUsername(form));
-  const close = (event: MouseEvent) => followInPlace(event, controller.editors.username.close);
   const edit = (event: Event & { currentTarget: HTMLInputElement }) =>
     controller.editUsername(event.currentTarget.value);
 
@@ -64,16 +61,11 @@
 
 <Dialog controller={controller.editors.username} title={t("account.username.dialogTitle")} size="sm">
   {#snippet headerActions()}
-    <IconButton
+    <CloseLink
       label={t("account.closeEditor")}
-      variant="ghost"
-      tone="neutral"
-      size="sm"
       href={controller.editorHref(null)}
-      onclick={close}
-    >
-      <X size="var(--icon-size-sm)" aria-hidden="true" />
-    </IconButton>
+      onclose={controller.editors.username.close}
+    />
   {/snippet}
 
   <form method="POST" action={controller.state.actions.username} aria-busy={submitting} novalidate onsubmit={submit}>

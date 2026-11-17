@@ -1,12 +1,13 @@
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
+import { interceptNativeSubmissions } from "#lib/ui/forms.fixture.js";
 
 import type { ProfileState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
 import { type AccountInformationModel, createAccountInformationController } from "./controller.svelte";
 import PictureDialog from "./picture-dialog.svelte";
 
-import { describe, expect, it, onTestFinished } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
 import { page, userEvent } from "vitest/browser";
 
@@ -30,7 +31,6 @@ function controller(profile: ProfileState = { status: "ready" }, patch: Partial<
     },
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
-    allowNativeSubmission: false,
   });
 }
 
@@ -57,26 +57,16 @@ async function frame(file: File) {
   return information;
 }
 
-/** Keeps the dialog's native submission in the page, and returns the picture it would send. */
-function interceptSubmission(): () => File | undefined {
-  let sent: File | undefined;
-  const intercept = (event: SubmitEvent) => {
-    const field = (event.target as HTMLFormElement).elements.namedItem("picture");
-    if (!(field instanceof HTMLInputElement) || !field.files?.length) return;
-    event.preventDefault();
-    sent = field.files[0];
-  };
-  document.addEventListener("submit", intercept, { capture: true });
-  onTestFinished(() => document.removeEventListener("submit", intercept, { capture: true }));
-  return () => sent;
-}
-
-/** Saves the framed picture and returns the file the form sends. */
+/**
+ * Saves the framed picture and returns the file the form sends. The dialog stops the first submission to
+ * encode the picture, so only the one carrying it reaches the browser.
+ */
 async function save(): Promise<File> {
-  const sent = interceptSubmission();
+  const submitted = interceptNativeSubmissions();
   await page.getByRole("button", { name: "Save picture" }).click();
-  await expect.poll(sent).toBeDefined();
-  return sent() as File;
+  await expect.poll(() => submitted.length).toBe(1);
+  const field = submitted[0]?.elements.namedItem("picture") as HTMLInputElement;
+  return field.files?.[0] as File;
 }
 
 describe("picture dialog", () => {

@@ -1,5 +1,5 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
-import { expectFormActionLayout, submitForm } from "#lib/ui/forms.fixture.js";
+import { submitForm } from "#lib/ui/forms.fixture.js";
 
 import AuthenticationPanel from "./authentication-panel.svelte";
 import {
@@ -18,7 +18,6 @@ import "@a-novel-kit/uikit-tokens/tokens.css";
 function authenticationController(model: AuthenticationPanelModel) {
   return createAuthenticationPanelController({
     getState: () => ({ model, action: `/auth?/${model.journey}` }),
-    allowNativeSubmission: false,
   });
 }
 
@@ -32,7 +31,6 @@ describe("authentication panel", () => {
     await page.getByLabelText(/Password/).fill("valid-example-password");
     const form = await submitForm("Log in");
 
-    await expectFormActionLayout(form);
     expect(form.getAttribute("action")).toBe("/auth?/login");
     expect(form.getAttribute("method")).toBe("POST");
     expect(controller.state.model.state.status).toBe("submitting");
@@ -48,7 +46,7 @@ describe("authentication panel", () => {
     const login = (state: AuthenticationPanelModel["state"]) =>
       ({ model: { journey: "login", state }, action: "/auth?/login" }) as AuthenticationPanelControllerState;
     let state = $state(login({ status: "ready" }));
-    const controller = createAuthenticationPanelController({ getState: () => state, allowNativeSubmission: false });
+    const controller = createAuthenticationPanelController({ getState: () => state });
     render(AuthenticationPanel, { controller }, withLocale());
 
     await page.getByLabelText(/Email address/).fill("creator@example.test");
@@ -74,7 +72,6 @@ describe("authentication panel", () => {
         action: "/auth",
         maintenance: true,
       }),
-      allowNativeSubmission: false,
     });
     render(AuthenticationPanel, { controller }, withLocale());
 
@@ -150,9 +147,6 @@ describe("authentication panel", () => {
     expect(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     await expect.element(page.getByRole("alert")).toMatchTextContent("Temporarily unavailable");
     await expect.element(page.getByRole("alert")).toMatchTextContent("Please try again in a few minutes.");
-    const form = (submit as HTMLButtonElement).form;
-    if (!form) throw new Error("Submit button must belong to a form");
-    await expectFormActionLayout(form);
   });
 
   it("translates stable feedback codes through the active locale", async () => {

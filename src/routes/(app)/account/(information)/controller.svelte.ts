@@ -137,8 +137,6 @@ export interface AccountInformationControllerOptions extends Omit<
   getModel: () => Omit<AccountInformationModel, "editor">;
   /** The editor the URL names, which Back and Forward change. */
   getEditor: () => AccountEditor | null;
-  /** Allows the browser to submit forms after the controller accepts their transition. */
-  allowNativeSubmission?: boolean;
   /** Observes accepted editor changes, which the route mirrors in the URL. */
   onEditorChange?: (editor: AccountEditor | null) => void;
   /** Builds the URL of an editor change, from the current route. */
@@ -154,7 +152,6 @@ export function createAccountInformationController({
   actions,
   devicesHref,
   logoutOthersHref,
-  allowNativeSubmission = true,
   onEditorChange,
   editorUrl = (editor) => (editor ? `?edit=${editor}` : "?"),
   pictures = browserPictureFiles,
@@ -167,11 +164,6 @@ export function createAccountInformationController({
   const state = $derived({ model: { ...forms, editor }, actions, devicesHref, logoutOthersHref, scripted });
   // Counts the files chosen, so only the latest one opens once decoded.
   let choices = 0;
-
-  function update(patch: Partial<Omit<AccountInformationModel, "editor">>): boolean {
-    forms = { ...forms, ...patch };
-    return allowNativeSubmission;
-  }
 
   /** Frees the image being framed, once the picture dialog shows it no more. */
   function releasePicture() {
@@ -244,23 +236,26 @@ export function createAccountInformationController({
       if (forms.passwordState.status === "submitting") return false;
       const result = validatePasswordChange(form);
       if (!result.success) {
-        update({ passwordState: { status: "validation-error", issues: result.issues } });
+        forms = { ...forms, passwordState: { status: "validation-error", issues: result.issues } };
         return false;
       }
-      return update({ passwordState: { status: "submitting" } });
+      forms = { ...forms, passwordState: { status: "submitting" } };
+      return true;
     },
     submitEmail(form) {
       if (forms.emailState.status === "submitting") return false;
       const result = validateEmailUpdate(form);
       if (!result.success) {
-        update({ emailState: { status: "validation-error", issues: result.issues } });
+        forms = { ...forms, emailState: { status: "validation-error", issues: result.issues } };
         return false;
       }
-      return update({ emailState: { status: "submitting" } });
+      forms = { ...forms, emailState: { status: "submitting" } };
+      return true;
     },
     submitEmailCancel() {
       if (forms.emailCancelState.status === "submitting") return false;
-      return update({ emailCancelState: { status: "submitting" } });
+      forms = { ...forms, emailCancelState: { status: "submitting" } };
+      return true;
     },
     editUsername(draft) {
       // A refusal is about the name it refused, so another name clears it.
@@ -275,10 +270,11 @@ export function createAccountInformationController({
       const draft = String(form.get("username") ?? "");
       const issue = usernameIssue(draft);
       if (issue) {
-        update({ username: { draft, state: { status: "validation-error", issue } } });
+        forms = { ...forms, username: { draft, state: { status: "validation-error", issue } } };
         return false;
       }
-      return update({ username: { draft, state: { status: "submitting" } } });
+      forms = { ...forms, username: { draft, state: { status: "submitting" } } };
+      return true;
     },
     async choosePicture(file) {
       releasePicture();
@@ -316,7 +312,8 @@ export function createAccountInformationController({
     submitPictureRemoval() {
       if (forms.picture.status === "removing" || forms.picture.status === "saving") return false;
       releasePicture();
-      return update({ picture: { status: "removing" } });
+      forms = { ...forms, picture: { status: "removing" } };
+      return true;
     },
   };
 }

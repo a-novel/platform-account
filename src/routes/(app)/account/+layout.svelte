@@ -9,45 +9,55 @@
   import { accountData } from "../dependencies";
   import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
   import Screen from "./screen.svelte";
-  import { addressBar, editorParameter } from "./url-state";
+  import { editorParameter } from "./url-state";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
 
   let { data, children } = $props();
   const { t } = getI18nContext();
 
-  const routeTabs: Record<string, AccountTab> = {
-    "/(app)/account/(information)": "information",
-    "/(app)/account/devices": "devices",
-    "/(app)/account/privacy": "privacy",
-    "/(app)/account/preferences": "preferences",
+  /** The route of each tab, which gives its address and tells whether it shows. */
+  const tabRoutes = {
+    information: "/(app)/account/(information)",
+    devices: "/(app)/account/devices",
+    privacy: "/(app)/account/privacy",
+    preferences: "/(app)/account/preferences",
+  } as const;
+  const tabs = {
+    information: resolve(tabRoutes.information),
+    devices: resolve(tabRoutes.devices),
+    privacy: resolve(tabRoutes.privacy),
+    preferences: resolve(tabRoutes.preferences),
   };
-  const currentTab = () => routeTabs[page.route.id ?? ""] ?? null;
+  const currentTab = () =>
+    (Object.keys(tabRoutes) as AccountTab[]).find((tab) => tabRoutes[tab] === page.route.id) ?? null;
 
   const controller = createAccountLayoutController({
     getSummary: () => data.summary,
     logoutAction: resolve("/auth/logout"),
-    pictureEditorHref: `${resolve("/(app)/account/(information)")}?edit=picture`,
-    tabs: {
-      information: resolve("/(app)/account/(information)"),
-      devices: resolve("/(app)/account/devices"),
-      privacy: resolve("/(app)/account/privacy"),
-      preferences: resolve("/(app)/account/preferences"),
-    },
+    pictureEditorHref: `${tabs.information}?edit=picture`,
+    tabs,
     getCurrentTab: currentTab,
   });
 
   const currentPath = $derived(page.url.pathname + page.url.search);
 
-  const tabTitles = {
-    information: "pageTitles.account",
-    devices: "pageTitles.devices",
-    privacy: "pageTitles.privacy",
-    preferences: "pageTitles.preferences",
-  } as const;
+  function tabTitle(tab: AccountTab | null) {
+    switch (tab) {
+      case "devices":
+        return t("pageTitles.devices");
+      case "privacy":
+        return t("pageTitles.privacy");
+      case "preferences":
+        return t("pageTitles.preferences");
+      default:
+        return t("pageTitles.account");
+    }
+  }
+
   /** Asks for the account's details again. New details reset an open editor's form, so a retry waits for it to close. */
   async function reloadDetails() {
-    if (!addressBar(page.url).searchParams.has(editorParameter)) await invalidate(accountData);
+    if (!(page.shallow?.url ?? page.url).searchParams.has(editorParameter)) await invalidate(accountData);
   }
 
   retryWhile(
@@ -59,7 +69,7 @@
   );
 </script>
 
-<PageTitle title={t(tabTitles[currentTab() ?? "information"])} />
+<PageTitle title={tabTitle(currentTab())} />
 
 {#snippet frame()}
   <Screen {controller}>{@render children()}</Screen>

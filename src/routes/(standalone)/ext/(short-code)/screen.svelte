@@ -2,7 +2,7 @@
   import type { ShortCodePasswordField, ShortCodeScreenController } from "./controller.svelte";
 
   /** Props for a pure standalone email-link completion screen. */
-  export interface ShortCodeScreenProps {
+  interface ShortCodeScreenProps {
     controller: ShortCodeScreenController;
   }
 </script>
@@ -41,7 +41,7 @@
 
 <main class="standalone-page">
   <section class="secure-action" aria-labelledby={hasOutcome ? undefined : `${componentId}-title`}>
-    {#if !hasOutcome && model.journey !== "email-update"}
+    {#if !hasOutcome}
       <header class="page-heading">
         {#if model.journey === "register"}
           <h1 id={`${componentId}-title`}>{t("shortCode.journeys.register.title")}</h1>

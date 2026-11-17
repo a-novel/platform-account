@@ -49,7 +49,13 @@ const fetchProfile = vi.fn<typeof fetch>();
 /** The last authentication call as the service receives it, after the platform's fetch wrapper. */
 function sentRequest() {
   const [url, init] = fetchService.mock.lastCall ?? [];
-  return { url, method: init?.method, headers: Object.fromEntries(new Headers(init?.headers)), body: init?.body };
+  // A request without a method is a GET, as fetch sends it.
+  return {
+    url,
+    method: init?.method ?? "GET",
+    headers: Object.fromEntries(new Headers(init?.headers)),
+    body: init?.body,
+  };
 }
 
 const userId = "140f24ee-1531-4a9d-ace8-20b38e1b21bc";
@@ -81,6 +87,14 @@ const password = { password: "replacement-password", confirmPassword: "replaceme
 const encodedEmail = Buffer.from("maya.chen@example.com").toString("base64url");
 const registrationLink = `/ext/account/create?shortCode=private-code&target=${encodedEmail}`;
 
+/** The route SvelteKit matches for each path the suite requests by its address. */
+const routes: Record<string, string> = {
+  "/account": "/(app)/account/(information)",
+  "/account/devices": "/(app)/account/devices",
+  "/account/privacy": "/(app)/account/privacy",
+  "/privacy": "/(app)/privacy",
+};
+
 function request(
   path: string,
   cookieValues: Record<string, string> = {},
@@ -99,6 +113,7 @@ function request(
   };
   const url = new URL(path, "https://account.test");
   const event = {
+    route: { id: routes[url.pathname] ?? null },
     cookies,
     getClientAddress: () => "192.0.2.1",
     url,
@@ -233,14 +248,13 @@ describe("account session at the request boundary", () => {
       authorization: "allowed",
     });
     expect(fetchService).toHaveBeenCalledOnce();
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content type is the client's own; the platform owns who the call is for.
+    const sent = sentRequest();
+    const { "content-type": _, ...headers } = sent.headers;
+    expect({ ...sent, headers }).toEqual({
       url: "https://authentication.test/v2/session",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
   });
 
@@ -321,8 +335,9 @@ describe("account session at the request boundary", () => {
     expect(fetchProfile).toHaveBeenCalledOnce();
     const [url, init] = fetchProfile.mock.calls[0] ?? [];
     expect(url).toBe("https://profile.test/v1/profile/self");
-    expect(Object.fromEntries(new Headers(init?.headers))).toEqual({
-      "content-type": "application/json",
+    // A bodyless call's content type is the client's own; the platform owns who the call is for.
+    const { "content-type": _, ...headers } = Object.fromEntries(new Headers(init?.headers));
+    expect(headers).toEqual({
       authorization: "Bearer private-access",
       "x-client-ip": "192.0.2.1",
       "x-service-authorization": "profile-service-token",
@@ -505,20 +520,20 @@ describe("account session at the request boundary", () => {
         status: "ready",
         roles: [Role.User],
         email: credentials.email,
+        initials: "MC",
         loggedInUntil: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeStyle: "short" }).format(sessionEnd),
         profile: {},
       },
       credentials: { status: "ready", email: credentials.email, locationConsent: true },
       profile: { status: "ready" },
     });
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content type is the client's own; the platform owns who the call is for.
+    const sent = sentRequest();
+    const { "content-type": _, ...headers } = sent.headers;
+    expect({ ...sent, headers }).toEqual({
       url: "https://authentication.test/v2/credentials/self",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
     expect(JSON.stringify(data)).not.toContain("private-access");
     expect(JSON.stringify(data)).not.toContain(refreshToken);
@@ -570,14 +585,13 @@ describe("account session at the request boundary", () => {
       },
       locationConsent: true,
     });
-    expect(sentRequest()).toEqual({
+    // A bodyless call's content type is the client's own; the platform owns who the call is for.
+    const sent = sentRequest();
+    const { "content-type": _, ...headers } = sent.headers;
+    expect({ ...sent, headers }).toEqual({
       url: "https://authentication.test/v2/sessions",
       method: "GET",
-      headers: {
-        "content-type": "application/json",
-        authorization: "Bearer private-access",
-        "x-client-ip": "192.0.2.1",
-      },
+      headers: { authorization: "Bearer private-access", "x-client-ip": "192.0.2.1" },
     });
     expect(JSON.stringify(data)).not.toContain("Gecko");
   });

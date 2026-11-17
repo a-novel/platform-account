@@ -112,13 +112,6 @@ describe("createAccountInformationController", () => {
     expect(JSON.stringify(information.state)).not.toContain("new-password");
   });
 
-  it.each(forms)("keeps the %s submission in place when the route sends it", (_, submit, key) => {
-    const information = controller(ready, { allowNativeSubmission: false });
-
-    expect(information[submit](validForm())).toBe(false);
-    expect(information.state.model[key]).toEqual({ status: "submitting" });
-  });
-
   it("cancels the pending email change once", () => {
     const information = controller();
 
@@ -175,7 +168,7 @@ describe("username editor", () => {
   });
 
   it("refuses a name the service would refuse, and submits any other once", () => {
-    const information = controller(ready, { allowNativeSubmission: true });
+    const information = controller(ready);
     const form = (username: string) => {
       const data = new FormData();
       data.set("username", username);

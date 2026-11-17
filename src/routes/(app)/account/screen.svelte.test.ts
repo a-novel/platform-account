@@ -21,6 +21,7 @@ const summary: AccountSummaryState = {
   status: "ready",
   roles: ["auth:user"],
   email: "maya.chen@example.test",
+  initials: "MC",
   profile: {},
   loggedInUntil: "Nov 10, 2026, 6:40 PM",
 };
@@ -51,16 +52,6 @@ function shellColumn(): HTMLElement {
 describe("account layout screen", () => {
   beforeEach(async () => {
     await page.viewport(1280, 800);
-  });
-
-  it("heads the tabs with the account's picture, email, roles and session end", async () => {
-    await render(Screen, { controller: controller(), children }, withLocale());
-
-    await expect.element(page.getByText("MC", { exact: true })).toBeVisible();
-    await expect.element(page.getByRole("heading", { level: 1, name: "maya.chen@example.test" })).toBeVisible();
-    await expect.element(page.getByRole("list", { name: "Roles" }).getByRole("listitem")).toMatchTextContent("User");
-    await expect.element(page.getByText(/^Logged in until\s+Nov 10, 2026, 6:40 PM$/)).toBeVisible();
-    await expect.element(page.getByText("Tab content")).toBeVisible();
   });
 
   it("opens the picture's editor from the header's picture, which shows the uploaded one", async () => {

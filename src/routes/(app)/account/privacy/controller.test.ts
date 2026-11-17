@@ -28,10 +28,8 @@ describe("createLocationConsentController", () => {
     expect(location.account).toEqual({ status: "ready", locationConsent: true });
   });
 
-  it.each([
-    ["unavailable credentials", { status: "unavailable" }],
-    ["a logged-out visitor", null],
-  ] as const)("offers no change for %s", (_, account) => {
+  it("offers no change while the credentials are unavailable", () => {
+    const account = { status: "unavailable" } as const;
     const location = createLocationConsentController(() => account);
 
     location.consent.toggle();

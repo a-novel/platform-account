@@ -2,22 +2,11 @@
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
-  import { followInPlace } from "../../link-transition";
+  import CloseLink from "../../close-link.svelte";
   import type { AccountInformationController, PictureRefusal } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import {
-    Alert,
-    Button,
-    Dialog,
-    Field,
-    FileInput,
-    type FileInputController,
-    IconButton,
-    PictureFrame,
-  } from "@a-novel-kit/uikit";
-
-  import { X } from "@lucide/svelte";
+  import { Alert, Button, Dialog, Field, FileInput, type FileInputController, PictureFrame } from "@a-novel-kit/uikit";
 
   let { controller }: { controller: AccountInformationController } = $props();
 
@@ -30,7 +19,6 @@
   const componentId = $props.id();
   const { t } = getI18nContext();
 
-  const close = (event: MouseEvent) => followInPlace(event, controller.editors.picture.close);
   const remove = (event: SubmitEvent) => submitThrough(event, () => controller.submitPictureRemoval());
 
   // The field names the file being framed, since the input empties itself after each choice.
@@ -85,16 +73,11 @@
 
 <Dialog controller={controller.editors.picture} title={t("account.picture.dialogTitle")} size="sm">
   {#snippet headerActions()}
-    <IconButton
+    <CloseLink
       label={t("account.closeEditor")}
-      variant="ghost"
-      tone="neutral"
-      size="sm"
       href={controller.editorHref(null)}
-      onclick={close}
-    >
-      <X size="var(--icon-size-sm)" aria-hidden="true" />
-    </IconButton>
+      onclose={controller.editors.picture.close}
+    />
   {/snippet}
 
   <div class="picture-editor">

@@ -4,7 +4,7 @@
   import type { Snippet } from "svelte";
 
   /** Fixed-state Storybook harness around the pure shell. */
-  export interface ShellStoryProps {
+  interface ShellStoryProps {
     model: ShellViewModel;
     authenticationModel?: AuthenticationPanelModel;
     /** Whether the password field shows its text. */

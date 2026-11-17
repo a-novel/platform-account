@@ -3,6 +3,7 @@ import type { AuthenticationEvent } from "#lib/server/auth/context.js";
 import { readTokenExpiry } from "#lib/server/auth/session.js";
 import { type ProfileEvent, getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 
+import { accountDisplayFromHandle } from "../account-display";
 import { accountData } from "../dependencies";
 import type { AccountCredentialsState, AccountSummaryState, ProfileState } from "./controller.svelte";
 
@@ -64,6 +65,10 @@ export const load = async (event: AuthenticationEvent & Pick<ServerLoadEvent, "l
       status: "ready",
       roles: session.claims.roles ?? [],
       email: credentials.status === "ready" ? credentials.email : undefined,
+      initials:
+        credentials.status === "ready"
+          ? accountDisplayFromHandle(credentials.email.split("@")[0] ?? "").initials
+          : undefined,
       loggedInUntil: refreshExpiry ? dates.format(refreshExpiry) : undefined,
       profile: profile.status === "ready" ? { username: profile.username, picture: profile.picture } : undefined,
     };

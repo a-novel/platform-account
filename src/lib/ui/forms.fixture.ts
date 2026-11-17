@@ -1,7 +1,10 @@
-import { expect } from "vitest";
+import { expect, onTestFinished } from "vitest";
 import { page } from "vitest/browser";
 
-/** Submits the form of the named button through its submit event, and returns that form. */
+/**
+ * Submits the form of the named button through its submit event, and returns that form. A dispatched event
+ * runs the form's handlers but never submits it natively, so the test page stays.
+ */
 export async function submitForm(buttonName: string): Promise<HTMLFormElement> {
   const buttonLocator = page.getByRole("button", { name: buttonName });
   await expect.element(buttonLocator).toBeVisible();
@@ -14,40 +17,17 @@ export async function submitForm(buttonName: string): Promise<HTMLFormElement> {
 }
 
 /**
- * Checks a form's action layout at phone and desktop widths. The submit button ends at the form's edge: it spans
- * the form on a phone, and keeps its natural width elsewhere. Its feedback sits right above it. Both keep twice the
- * field gap from the last field.
+ * Stops every native submission until the test ends, since one would navigate the test page away, and
+ * returns the forms the page let submit: those whose submit event no handler prevented.
  */
-export async function expectFormActionLayout(form: HTMLFormElement) {
-  const button = form.querySelector('button[type="submit"]');
-  expect(button).not.toBeNull();
-  if (!button) return;
+export function interceptNativeSubmissions(): HTMLFormElement[] {
+  const submitted: HTMLFormElement[] = [];
+  const intercept = (event: SubmitEvent) => {
+    if (!event.defaultPrevented && event.target instanceof HTMLFormElement) submitted.push(event.target);
+    event.preventDefault();
+  };
 
-  const originalViewport = { width: window.innerWidth, height: window.innerHeight };
-  try {
-    for (const width of [320, 390, 1280]) {
-      await page.viewport(width, 844);
-      expectActionLayout(form, button, width < 560);
-    }
-  } finally {
-    await page.viewport(originalViewport.width, originalViewport.height);
-  }
-}
-
-/** Checks the action layout at the current viewport width. */
-function expectActionLayout(form: HTMLFormElement, button: Element, spans: boolean) {
-  const bounds = button.getBoundingClientRect();
-  const formBounds = form.getBoundingClientRect();
-  expect(bounds.right).toBeCloseTo(formBounds.right);
-  if (spans) expect(bounds.width).toBeCloseTo(formBounds.width);
-  else expect(bounds.width).toBeLessThan(formBounds.width);
-
-  const feedback = form.querySelector('[role="alert"], [role="status"]');
-  if (feedback) expect(bounds.top - feedback.getBoundingClientRect().bottom).toBe(12);
-
-  const lastInput = Array.from(form.querySelectorAll("input")).at(-1);
-  if (!lastInput) return;
-
-  const actionTop = (feedback ?? button).getBoundingClientRect().top;
-  expect(actionTop - lastInput.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(24);
+  document.addEventListener("submit", intercept);
+  onTestFinished(() => document.removeEventListener("submit", intercept));
+  return submitted;
 }

@@ -4,13 +4,15 @@
   import type { Snippet } from "svelte";
 
   /** Props for the account layout: the header, the tab bar and the tab showing. */
-  export interface AccountLayoutScreenProps {
+  interface AccountLayoutScreenProps {
     controller: AccountLayoutController;
     children: Snippet;
   }
 </script>
 
 <script lang="ts">
+  import { submitThrough } from "#lib/ui/form-submission.js";
+
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { Avatar, Badge, Button, NavList, Skeleton, StickyBar, VisuallyHidden } from "@a-novel-kit/uikit";
   import { Role } from "@a-novel/service-authentication-rest";
@@ -23,6 +25,7 @@
   const summary = $derived(layout.summary);
   const componentId = $props.id();
   const { t } = getI18nContext();
+  const submitLogout = (event: SubmitEvent) => submitThrough(event, () => controller.submitLogout());
 
   const tabs = $derived([
     {
@@ -43,19 +46,7 @@
   const email = $derived(summary.status === "ready" ? summary.email : undefined);
   // The username leads and the email stands in for it, so either one waits for the profile to tell.
   const name = $derived(profile?.username || (profile && email));
-  // An account without a picture shows initials: two from a dotted or dashed handle.
-  const initials = $derived.by(() => {
-    const handle = email?.split("@")[0] ?? "";
-    const words = handle.split(/[._-]+/).filter(Boolean);
-    return words
-      .slice(0, 2)
-      .map((word) => word[0]?.toUpperCase())
-      .join("");
-  });
-
-  function submitLogout(event: SubmitEvent) {
-    if (!controller.submitLogout()) event.preventDefault();
-  }
+  const initials = $derived(summary.status === "ready" ? summary.initials : undefined);
 
   /** Scrolls the tab bar to the current tab, which a phone may leave past the bar's end. */
   function revealCurrentTab(bar: HTMLElement) {
@@ -72,7 +63,13 @@
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
     <a class="picture" href={layout.pictureEditorHref}>
       <VisuallyHidden>{t("account.picture.changeLabel")}</VisuallyHidden>
-      <Avatar label={name || t("account.title")} src={profile?.picture} {initials} size="xl" aria-hidden="true" />
+      <Avatar
+        label={name || t("account.title")}
+        src={profile?.picture}
+        initials={initials ?? ""}
+        size="xl"
+        aria-hidden="true"
+      />
       {#if !profile?.picture && !name}<Skeleton class="picture-skeleton" shape="circle" />{/if}
       <span class="badge" aria-hidden="true"><Camera size="var(--icon-size-sm)" /></span>
     </a>

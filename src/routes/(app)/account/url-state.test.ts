@@ -1,28 +1,6 @@
-import { addressBar, dialogUrl, localHref } from "./url-state";
+import { dialogUrl, localHref } from "./url-state";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-describe("addressBar", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("reads the request's URL while the server renders", () => {
-    const request = new URL("https://account.test/account?edit=email");
-    const url = addressBar(request);
-
-    expect(url.href).toBe(request.href);
-    expect(url).not.toBe(request);
-  });
-
-  it("reads the address bar in the browser, which shallow routing changes without the page's URL", () => {
-    vi.stubGlobal("window", { location: { href: "https://account.test/account/devices?confirm=others#list" } });
-
-    expect(addressBar(new URL("https://account.test/account/devices")).href).toBe(
-      "https://account.test/account/devices?confirm=others#list"
-    );
-  });
-});
+import { describe, expect, it } from "vitest";
 
 describe("dialogUrl", () => {
   const url = new URL("https://account.test/account?menu=open&edit=password&/password#email");

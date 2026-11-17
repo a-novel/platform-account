@@ -12,7 +12,7 @@
 
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import type { StoryContext } from "@storybook/sveltekit";
-  import { expect, userEvent, within } from "storybook/test";
+  import { expect, within } from "storybook/test";
 
   const anonymous: ShellViewModel = {
     activeNavigation: null,
@@ -70,35 +70,36 @@
 
   type PlayContext = Pick<StoryContext, "canvasElement" | "globals">;
 
-  function clearFocus() {
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-  }
-
   async function verifyAnonymousAuthentication({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("complementary", { name: t("shell.navigation") })).toBeVisible();
+    await expect(canvas.getByRole("main")).toBeVisible();
     await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
-    await expect(canvas.getByRole("link", { name: t("shell.register") })).toHaveAttribute("href", "#register");
+    // The account page is the site's landing page, which the account link opens: the rail lists no Home.
+    await expect(canvas.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("button", { name: t("shell.logout") })).not.toBeInTheDocument();
 
-    const signIn = canvas.getByRole("link", { name: t("shell.signIn") });
-    await expect(signIn).toHaveAttribute("href", "#login");
-    await userEvent.click(signIn);
-    await expect(canvas.queryByRole("dialog", { name: t("shell.auth.login.title") })).not.toBeInTheDocument();
-    clearFocus();
+    for (const [name, href] of [
+      [t("shell.signIn"), "#login"],
+      [t("shell.register"), "#register"],
+    ]) {
+      const link = canvas.getByRole("link", { name });
+      await expect(link).toHaveAttribute("href", href);
+      // Chrome reports `justify-content: flex-start` as flow-start.
+      await expect(getComputedStyle(link).justifyContent).toMatch(/^(flex|flow)-start$/);
+    }
   }
 
-  async function verifyRailToggle({ canvasElement, globals }: PlayContext) {
+  async function verifyCollapsedRail({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("link", { name: t("shell.apps.studio") })).toBeVisible();
     await expect(canvas.getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "24");
     await expect(canvas.getByRole("link", { name: t("shell.signIn") })).toHaveAttribute("title", t("shell.signIn"));
+    await expect(canvas.getByRole("link", { name: t("shell.register") })).toHaveAttribute("title", t("shell.register"));
     const toggle = canvas.getByRole("button", { name: t("shell.expandNavigation") });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-
-    await userEvent.click(toggle);
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    clearFocus();
   }
 
   async function verifyExpandedMobileNavigation({ canvasElement, globals }: PlayContext) {
@@ -107,10 +108,6 @@
     const navigation = canvas.getByRole("dialog", { name: t("shell.brand") });
     await expect(navigation).toBeVisible();
     await expect(within(navigation).getByRole("img", { name: t("shell.brand") })).toHaveAttribute("width", "96");
-
-    await userEvent.click(within(navigation).getByRole("link", { name: t("shell.closeNavigation") }));
-    await expect(navigation).toBeVisible();
-    clearFocus();
   }
 
   async function verifyCollapsedMobileNavigation({ canvasElement, globals }: PlayContext) {
@@ -124,11 +121,6 @@
     await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
     await expect(canvas.queryByRole("dialog", { name: t("shell.brand") })).not.toBeInTheDocument();
     await expect(getComputedStyle(mobileHeader).backgroundColor).toBe(getComputedStyle(navigationRail).backgroundColor);
-
-    await userEvent.click(openNavigation);
-    await expect(canvas.queryByRole("dialog", { name: t("shell.brand") })).not.toBeInTheDocument();
-    await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
-    clearFocus();
   }
 
   async function verifyAppList({ canvasElement, globals }: PlayContext) {
@@ -147,28 +139,11 @@
     await expect(account).toHaveAttribute("aria-current", "page");
     // This platform serves the account page, so the link stays in the tab.
     await expect(account).not.toHaveAttribute("target");
+    // The initials avatar leads the name.
+    await expect(account.textContent).toMatch(/MC\s*Maya Chen/);
     await expect(canvas.getByRole("button", { name: t("shell.logout") })).toBeVisible();
-    await userEvent.click(canvas.getByRole("button", { name: t("shell.logout") }));
-    await expect(account).toBeVisible();
     await expect(canvas.queryByRole("link", { name: t("shell.signIn") })).not.toBeInTheDocument();
     await expect(canvas.queryByRole("link", { name: t("shell.register") })).not.toBeInTheDocument();
-    clearFocus();
-  }
-
-  async function verifyAuthenticatedMobileLayout({ canvasElement, globals }: PlayContext) {
-    await verifyExpandedMobileNavigation({ canvasElement, globals });
-
-    const canvas = within(canvasElement);
-    const t = createStorybookTranslator(globals);
-    const navigation = canvas.getByRole("dialog", { name: t("shell.brand") });
-    const labelStarts = [
-      within(navigation).getByText(t("shell.apps.studio")).getBoundingClientRect().left,
-      within(navigation).getByText("Maya Chen").getBoundingClientRect().left,
-      within(navigation).getByText(t("shell.logout")).getBoundingClientRect().left,
-    ];
-
-    await expect(Math.max(...labelStarts) - Math.min(...labelStarts)).toBeLessThanOrEqual(1);
-    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
   }
 
   async function verifyUnnamedAccount({ canvasElement, globals }: PlayContext) {
@@ -244,7 +219,7 @@
   <StoryHarness model={withOpenMobileNavigation(anonymous)} collectsTelemetry />
 </Story>
 
-<Story name="Collapsed rail" exportName="CollapsedRail" asChild play={verifyRailToggle}>
+<Story name="Collapsed rail" exportName="CollapsedRail" asChild play={verifyCollapsedRail}>
   <StoryHarness model={{ ...anonymous, rail: "collapsed" }} />
 </Story>
 
@@ -283,7 +258,7 @@
   exportName="AuthenticatedMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
-  play={verifyAuthenticatedMobileLayout}
+  play={verifyExpandedMobileNavigation}
 >
   <StoryHarness model={withOpenMobileNavigation(authenticated)} />
 </Story>

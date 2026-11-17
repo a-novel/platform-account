@@ -1,6 +1,7 @@
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
+import { interceptNativeSubmissions } from "#lib/ui/forms.fixture.js";
 
 import {
   type AuthenticationPanelModel,
@@ -52,7 +53,6 @@ function controller(
       model: options.authenticationModel ?? readyAuthenticationModel(readAuthView(url.searchParams) ?? "login"),
       action: "/auth",
     }),
-    allowNativeSubmission: false,
   });
 
   const shell = createShellController({
@@ -67,7 +67,6 @@ function controller(
     privacyHref: options.privacyHref ?? null,
     logoutAction: "/auth/logout",
     authentication,
-    allowNativeLogout: false,
     onAuthViewChange: (view) => (url = withAuthView(url, view)),
     onDrawerChange: (open) => (url = withNavigationOpen(url, open)),
     getUrl: () => url,
@@ -94,55 +93,22 @@ async function settledStyle(element: Element) {
 
 const maya = { status: "authenticated", displayName: "Maya Chen", initials: "MC" } as const;
 
-// Chrome 158 reports `justify-content: flex-start` as flow-start.
-const startAligned = /^(flex|flow)-start$/;
-
 describe("account shell screen", () => {
   beforeEach(async () => {
     await page.viewport(1280, 800);
   });
 
-  it("brands the rail with Agora and opens the login dialog for an anonymous visitor", async () => {
+  it.each([
+    ["Log in", "login", "Log in"],
+    ["Register", "register", "Join the Agora invitation list"],
+  ] as const)("opens the %s journey in place", async (link, view, title) => {
     const shell = controller();
     render(Screen, { controller: shell }, withLocale());
 
-    await expect.element(page.getByRole("complementary", { name: "Agora navigation" })).toBeVisible();
-    await expect.element(page.getByRole("main")).toBeVisible();
-    await expect.element(page.getByRole("img", { name: "Agora" })).toHaveAttribute("width", "96");
-    // The account page is the site's landing page, which the account link opens: the rail lists no Home.
-    await expect.element(page.getByRole("link", { name: "Home" })).not.toBeInTheDocument();
-    await expect.element(page.getByRole("button", { name: "Log out" })).not.toBeInTheDocument();
+    await page.getByRole("link", { name: link }).click();
 
-    const register = page.getByRole("link", { name: "Register" });
-    await expect.element(register).toHaveAttribute("href", "/?auth=register");
-    expect(getComputedStyle(register.element()).justifyContent).toMatch(startAligned);
-
-    const login = page.getByRole("link", { name: "Log in" });
-    await expect.element(login).toHaveAttribute("href", "/?auth=login");
-    expect(getComputedStyle(login.element()).justifyContent).toMatch(startAligned);
-    await login.click();
-
-    expect(shell.state.model.authView).toBe("login");
-  });
-
-  it("opens the invitation request in place", async () => {
-    const shell = controller();
-    render(Screen, { controller: shell }, withLocale());
-
-    await page.getByRole("link", { name: "Register" }).click();
-
-    expect(shell.state.model.authView).toBe("register");
-    await expect.element(page.getByRole("dialog", { name: "Join the Agora invitation list" })).toBeVisible();
-  });
-
-  it("lists the Agora apps in their own rail navigation", async () => {
-    render(Screen, { controller: controller() }, withLocale("fr"));
-
-    const apps = page.getByRole("complementary").getByRole("navigation", { name: "Applications Agora" });
-    await expect.element(apps).toBeVisible();
-    await expect
-      .element(apps.getByRole("link", { name: "Studio" }))
-      .toHaveAttribute("href", "https://studio.example.test");
+    expect(shell.state.model.authView).toBe(view);
+    await expect.element(page.getByRole("dialog", { name: title })).toBeVisible();
   });
 
   it("lists no app while the server cannot read where the apps live", async () => {
@@ -181,34 +147,13 @@ describe("account shell screen", () => {
     await expect.element(page.getByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
   });
 
-  it("links the account name to the account page and keeps logout in reach", async () => {
-    const shell = controller({ session: maya });
-    render(Screen, { controller: shell }, withLocale());
-
-    const account = page.getByRole("link", { name: "Maya Chen" });
-    await expect.element(account).toHaveAttribute("href", "/account");
-    // This platform serves the account page, so the link stays in the tab.
-    await expect.element(account).not.toHaveAttribute("target");
-    // The initials avatar leads the name.
-    expect(account.element().textContent).toMatch(/MC\s*Maya Chen/);
-    expect(getComputedStyle(account.element()).backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    await expect.element(page.getByRole("link", { name: "Log in" })).not.toBeInTheDocument();
-    await expect.element(page.getByRole("link", { name: "Register" })).not.toBeInTheDocument();
+  it("submits the logout natively", async () => {
+    render(Screen, { controller: controller({ session: maya }) }, withLocale());
+    const submitted = interceptNativeSubmissions();
 
     await page.getByRole("button", { name: "Log out" }).click();
-    expect(shell.state.model.session.status).toBe("anonymous");
-  });
 
-  it("keeps the collapsed rail's destinations and account controls named", async () => {
-    render(Screen, { controller: controller({ rail: "collapsed" }) }, withLocale("fr"));
-
-    await expect.element(page.getByRole("link", { name: "Studio" })).toBeVisible();
-    await expect.element(page.getByRole("img", { name: "Agora" })).toHaveAttribute("width", "24");
-    await expect
-      .element(page.getByRole("button", { name: "Développer la navigation" }))
-      .toHaveAttribute("aria-expanded", "false");
-    await expect.element(page.getByRole("link", { name: "Me connecter" })).toHaveAttribute("title", "Me connecter");
-    await expect.element(page.getByRole("link", { name: "M’inscrire" })).toHaveAttribute("title", "M’inscrire");
+    expect(submitted.map((form) => form.getAttribute("action"))).toEqual(["/auth/logout"]);
   });
 
   it("names the account in the collapsed rail without visible text", async () => {
@@ -216,6 +161,8 @@ describe("account shell screen", () => {
 
     const account = page.getByRole("link", { name: "Maya Chen" });
     await expect.element(account).toHaveAttribute("title", "Maya Chen");
+    // A link to a page the visitor is not on sits on the rail's own surface.
+    expect(getComputedStyle(account.element()).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     await expect.element(account).toHaveAttribute("href", "/account");
     await expect.element(page.getByRole("button", { name: "Me déconnecter" })).toBeVisible();
   });

@@ -1,11 +1,10 @@
 <script lang="ts">
+  import CloseLink from "../../close-link.svelte";
   import { followInPlace } from "../../link-transition";
   import type { AccountDevice, AccountDevicesController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Dialog, FormActions, IconButton } from "@a-novel-kit/uikit";
-
-  import { X } from "@lucide/svelte";
+  import { Button, Dialog, FormActions } from "@a-novel-kit/uikit";
 
   let {
     controller,
@@ -38,16 +37,11 @@
   size="sm"
 >
   {#snippet headerActions()}
-    <IconButton
+    <CloseLink
       label={t("account.closeEditor")}
-      variant="ghost"
-      tone="neutral"
-      size="sm"
       href={controller.confirmationHref(null)}
-      onclick={close}
-    >
-      <X size="var(--icon-size-sm)" aria-hidden="true" />
-    </IconButton>
+      onclose={controller.confirmation.close}
+    />
   {/snippet}
 
   <form

@@ -3,13 +3,14 @@
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
+  import CloseLink from "../../close-link.svelte";
   import { followInPlace } from "../../link-transition";
   import type { AccountInformationController, AccountPasswordField } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Dialog, Field, FormActions, IconButton, Link, PasswordInput } from "@a-novel-kit/uikit";
+  import { Button, Dialog, Field, FormActions, Link, PasswordInput } from "@a-novel-kit/uikit";
 
-  import { ShieldCheck, X } from "@lucide/svelte";
+  import { ShieldCheck } from "@lucide/svelte";
 
   let { controller }: { controller: AccountInformationController } = $props();
 
@@ -38,16 +39,11 @@
   size="sm"
 >
   {#snippet headerActions()}
-    <IconButton
+    <CloseLink
       label={t("account.closeEditor")}
-      variant="ghost"
-      tone="neutral"
-      size="sm"
       href={controller.editorHref(null)}
-      onclick={close}
-    >
-      <X size="var(--icon-size-sm)" aria-hidden="true" />
-    </IconButton>
+      onclose={controller.editors.password.close}
+    />
   {/snippet}
 
   {#if changed}
@@ -87,7 +83,7 @@
       <Field
         controlId={`${componentId}-new-password`}
         label={t("account.password.newLabel")}
-        hint={t("account.password.hint")}
+        hint={t("form.passwordHint")}
         error={error("newPassword")}
         required
       >

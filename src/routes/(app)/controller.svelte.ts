@@ -122,8 +122,6 @@ export interface ShellControllerOptions extends Omit<ShellControllerState, "mode
   /** The layout's load data, which each navigation may replace. */
   getData: () => ShellData;
   authentication: AuthenticationPanelController;
-  /** Allows the browser to submit the logout form after the controller accepts it. */
-  allowNativeLogout?: boolean;
   /** Observes accepted authentication-view changes. */
   onAuthViewChange?: (view: AuthenticationJourney | null) => void;
   /** Observes accepted navigation-rail changes. */
@@ -148,7 +146,6 @@ export function createShellController({
   logoutAction,
   platformDowntime,
   authentication,
-  allowNativeLogout = true,
   onAuthViewChange,
   onRailChange,
   onDrawerChange,
@@ -161,8 +158,7 @@ export function createShellController({
   // decides again.
   let drawerOpen = $derived(readNavigationOpen(getUrl().searchParams));
   let authView = $derived(readAuthView(getUrl().searchParams) ?? (getAuthLocked() ? "login" : null));
-  // A logout the browser does not submit signs the shell out until the next load.
-  let session = $derived(getData().session);
+  const session = $derived(getData().session);
 
   const state = $derived.by((): ShellControllerState => {
     const { activeNavigation, apps } = getData();
@@ -237,11 +233,7 @@ export function createShellController({
       rail = rail === "expanded" ? "collapsed" : "expanded";
       onRailChange?.(rail);
     },
-    logout() {
-      if (session.status === "anonymous") return false;
-      if (!allowNativeLogout) session = { status: "anonymous" };
-      return allowNativeLogout;
-    },
+    logout: () => session.status !== "anonymous",
   };
 }
 
@@ -280,14 +272,11 @@ export interface AuthenticationPanelController {
 export interface AuthenticationPanelControllerOptions {
   /** The form the route shows: the latest action result for its journey, or a blank form, and where it posts. */
   getState: () => AuthenticationPanelControllerState;
-  /** Allows the browser to submit the form after the controller accepts the transition. */
-  allowNativeSubmission?: boolean;
 }
 
 /** Creates a reactive controller for a shell authentication form. */
 export function createAuthenticationPanelController({
   getState,
-  allowNativeSubmission = true,
 }: AuthenticationPanelControllerOptions): AuthenticationPanelController {
   // A submission edits the form until the route shows another one, which also masks the password again.
   let form = $derived({ ...getState(), passwordShown: false });
@@ -317,7 +306,7 @@ export function createAuthenticationPanelController({
         return false;
       }
       setStatus({ status: "submitting" });
-      return allowNativeSubmission;
+      return true;
     },
   };
 }

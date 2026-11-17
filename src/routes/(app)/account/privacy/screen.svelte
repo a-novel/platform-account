@@ -34,7 +34,7 @@
   <section class="group" aria-labelledby={`${componentId}-account`}>
     <h2 id={`${componentId}-account`}>{t("privacy.account.title")}</h2>
     <Card surface="raised">
-      {#if location.account?.status === "ready"}
+      {#if location.account.status === "ready"}
         {@const account = location.account}
         <form method="POST" action={locationConsentAction} aria-busy={location.pending} onchange={submitOnChange}>
           <Switch

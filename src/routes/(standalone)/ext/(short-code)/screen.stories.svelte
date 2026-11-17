@@ -54,9 +54,11 @@
   async function verifyEmailConfirmation({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("status")).toHaveTextContent(t("shortCode.journeys.emailUpdate.submitting"));
+    const submitting = t("shortCode.journeys.emailUpdate.submitting");
+    await expect(canvas.getByRole("status")).toHaveTextContent(submitting);
+    await expect(canvas.getByRole("heading", { level: 1, name: submitting })).toBeVisible();
     await expect(canvas.queryByRole("button")).not.toBeInTheDocument();
-    await expect(canvas.queryByLabelText(t("shortCode.newPasswordLabel"))).not.toBeInTheDocument();
+    expect(canvasElement.querySelector('input[type="password"]')).toBeNull();
   }
 
   async function verifyValidationFeedback({ canvasElement }: { canvasElement: HTMLElement }) {
@@ -67,13 +69,24 @@
   async function verifySubmittingLocked({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("button", { name: t("shortCode.journeys.passwordReset.submitting") })).toBeDisabled();
-    await expect(
-      canvas.getByLabelText(t("shortCode.newPasswordLabel"), {
-        exact: false,
-        selector: 'input[name="password"]',
-      })
-    ).toHaveAttribute("readonly");
+    const button = canvas.getByRole("button", { name: t("shortCode.journeys.passwordReset.submitting") });
+    await expect(button).toBeDisabled();
+    expect(button.querySelector('[role="status"]')).toBeNull();
+    for (const name of ["password", "confirmPassword"]) {
+      await expect(canvasElement.querySelector(`input[name="${name}"]`)).toHaveAttribute("readonly");
+    }
+    // The link's code and target stay in the address the form posts to.
+    expect(canvasElement.querySelector('[name="shortCode"], [name="target"]')).toBeNull();
+  }
+
+  async function verifyServiceError({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    // The failure shows inside the form, above the submit that retries it.
+    const alert = canvas.getByRole("alert");
+    const submit = canvas.getByRole("button", { name: t("shortCode.journeys.passwordReset.submit") });
+    await expect((submit as HTMLButtonElement).form?.contains(alert)).toBe(true);
+    await expect(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   }
 
   async function verifySuccess({ canvasElement }: { canvasElement: HTMLElement }) {
@@ -208,7 +221,7 @@
   />
 </Story>
 
-<Story name="Service error" asChild>
+<Story name="Service error" asChild play={verifyServiceError}>
   <StoryHarness
     initialModel={{
       journey: "password-reset",

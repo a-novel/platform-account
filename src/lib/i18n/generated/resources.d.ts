@@ -106,7 +106,6 @@ export default interface Resources {
         "confirmLabel": "Confirm new password",
         "currentLabel": "Current password",
         "dialogTitle": "Change your password",
-        "hint": "Choose a long, memorable password.",
         "newLabel": "New password",
         "submit": "Change password",
         "submitting": "Changing password…",

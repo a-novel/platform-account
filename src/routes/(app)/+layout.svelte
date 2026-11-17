@@ -22,8 +22,6 @@
   import Screen from "./screen.svelte";
   import { normalizeAuthUrl, readAuthView, withAuthView } from "./url-state";
 
-  import { onMount } from "svelte";
-
   import { saveNavigationRail } from "@a-novel-kit/nodelib-browser/preferences";
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { AuthorizationProvider } from "@a-novel-kit/uikit";
@@ -36,11 +34,12 @@
   });
 
   const platformDowntime = getPlatformDowntime();
-  let currentHref = $state(page.url.href);
+  // The address bar: the URL of the latest shallow navigation, which Back and Forward restore, until a full one.
+  const url = $derived(new URL((page.shallow?.url ?? page.url).href));
   const authentication = createAuthenticationPanelController({
     // The dialog's journey, or a blank login form while the dialog is closed.
     getState: () => ({
-      ...authenticationState(readAuthView(new URL(currentHref).searchParams) ?? "login"),
+      ...authenticationState(readAuthView(url.searchParams) ?? "login"),
       maintenance: platformDowntime.started,
     }),
   });
@@ -54,10 +53,10 @@
     platformDowntime,
     authentication,
     onAuthViewChange: changeAuthView,
-    onDrawerChange: (open) => showShallow(withNavigationOpen(new URL(currentHref), open)),
+    onDrawerChange: (open) => showShallow(withNavigationOpen(url, open)),
     // Every Agora app under the shared domain opens with the rail the visitor left.
     onRailChange: (rail) => saveNavigationRail(rail, { domain: PUBLIC_PLATFORM_DOMAIN }),
-    getUrl: () => new URL(currentHref),
+    getUrl: () => url,
     // The home route only renders a posted form's result over the locked account page.
     getAuthLocked: () => page.status === 401 || page.route.id === "/(app)/(home)",
   });
@@ -74,31 +73,20 @@
       : undefined
   );
 
+  // A link may name an invalid or duplicate authentication view, which the address bar drops.
   afterNavigate(async ({ complete, shallow }) => {
     if (shallow) return;
 
     // History updates require the router to finish initial hydration.
     await complete;
-    synchronizeUrl();
+    const normalized = normalizeAuthUrl(url);
+    if (normalized.href !== url.href) showShallow(normalized);
   });
 
-  onMount(() => {
-    window.addEventListener("popstate", synchronizeUrl);
-
-    return () => window.removeEventListener("popstate", synchronizeUrl);
-  });
-
-  /** Shows a URL change without loading the page, and makes it the shell's current URL. */
+  /** Shows a URL change without loading the page. */
   function showShallow(next: URL, replace = true) {
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- Shallow routing edits the current, resolved URL.
     goto(next, { shallow: true, replace, state: page.state });
-    currentHref = next.href;
-  }
-
-  function synchronizeUrl() {
-    const normalized = normalizeAuthUrl(new URL(window.location.href));
-    if (normalized.href !== window.location.href) showShallow(normalized);
-    else currentHref = normalized.href;
   }
 
   /** The authentication form of a view: the latest action result for it, or a blank form. */
@@ -110,24 +98,23 @@
   }
 
   function authenticationAction(view: AuthenticationJourney): string {
-    const current = new URL(currentHref);
-    const target = new URL(resolve(""), current);
+    const target = new URL(resolve(""), url);
     target.searchParams.set("auth", view);
 
-    const returnTo = current.searchParams.get("returnTo");
+    const returnTo = url.searchParams.get("returnTo");
     if (returnTo) target.searchParams.set("returnTo", returnTo);
 
     return target.pathname + target.search;
   }
 
   /**
-   * Shows an authentication view in the URL. A journey opened from the menu also closes the menu, before the router
-   * updates the address bar, so each change builds on the shell's current URL rather than the browser's.
+   * Shows an authentication view in the URL, with the menu closed: a journey opened from the menu closes it, and the
+   * router may not have shown that yet.
    */
   function changeAuthView(view: AuthenticationJourney | null) {
-    const previousView = readAuthView(new URL(currentHref).searchParams);
+    const previousView = readAuthView(url.searchParams);
     // Opening the dialog adds a history entry. Any other change replaces the current one.
-    showShallow(withAuthView(new URL(currentHref), view), previousView !== null || view === null);
+    showShallow(withAuthView(withNavigationOpen(url, false), view), previousView !== null || view === null);
   }
 </script>
 

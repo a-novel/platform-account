@@ -5,6 +5,8 @@ export interface AccountSummary {
   roles: readonly string[];
   /** The current email, absent while Authentication cannot report it. A pending change stays out. */
   email?: string;
+  /** The initials an account without a picture shows, from its email's handle as the shell's. */
+  initials?: string;
   /** When the visitor must log in again, formatted: the refresh token's expiry. */
   loggedInUntil?: string;
   /** The public profile, absent while the profile service cannot report it. */

@@ -78,13 +78,6 @@ describe("createAccountDevicesController", () => {
     expect(devices.submitChange()).toBe(false);
   });
 
-  it("keeps the change in place when the route sends it", () => {
-    const devices = controller(model, { allowNativeSubmission: false });
-
-    expect(devices.submitChange()).toBe(false);
-    expect(devices.state.model.action).toEqual({ status: "submitting" });
-  });
-
   it.each(["logged-out", "removed"] as const)("allows another change once the route shows it %s", (status) => {
     const devices = controller({ ...model, action: { status } });
 
