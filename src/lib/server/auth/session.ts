@@ -297,11 +297,6 @@ export class AuthenticationSession {
   }
 }
 
-/** Tells whether a request carries a session, which makes its response the visitor's alone. */
-export function hasSession(cookies: SessionCookies): boolean {
-  return cookies.get(accessTokenCookie) !== undefined || cookies.get(refreshTokenCookie) !== undefined;
-}
-
 /** Tells whether a request carries an account's session. An anonymous session holds no refresh token. */
 export function hasAccountSession(cookies: SessionCookies): boolean {
   return cookies.get(refreshTokenCookie) !== undefined;

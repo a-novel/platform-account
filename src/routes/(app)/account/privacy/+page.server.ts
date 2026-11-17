@@ -1,13 +1,13 @@
-import { requireAuthorization } from "#lib/server/auth/authorization.js";
+import { requireAuthorization, rethrowRefusal } from "#lib/server/auth/authorization.js";
+import { serviceFeedback } from "#lib/server/service-fetch.js";
 
 import type { PageServerLoadEvent } from "./$types";
 import type { PrivacyAccountState } from "./controller.svelte";
 
-import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
 import { credentialsUpdateLocationConsent } from "@a-novel/service-authentication-rest";
 
 import type { RequestEvent } from "@sveltejs/kit";
-import { fail, isHttpError, isRedirect } from "@sveltejs/kit";
+import { fail } from "@sveltejs/kit";
 
 /** Reads the account's location consent from the credentials the account layout loaded. */
 export const load = async ({ parent }: PageServerLoadEvent) => {
@@ -27,15 +27,12 @@ async function changeLocationConsent(event: RequestEvent) {
     const { authentication, session } = await requireAuthorization(event);
     await credentialsUpdateLocationConsent(authentication.api, session.accessToken, { enabled });
   } catch (error) {
-    if (isRedirect(error) || isHttpError(error, 403)) throw error;
+    rethrowRefusal(error);
 
-    const tooMany = isHttpStatusError(error, 429);
-    const account = {
-      status: "ready",
-      locationConsent: !enabled,
-      feedback: tooMany ? "tooManyAttempts" : "serviceUnavailable",
-    } satisfies PrivacyAccountState;
-    return fail(tooMany ? 429 : 503, { account });
+    const { status, feedback } = serviceFeedback(error);
+    return fail(status, {
+      account: { status: "ready", locationConsent: !enabled, feedback } satisfies PrivacyAccountState,
+    });
   }
 
   return { account: { status: "ready", locationConsent: enabled } satisfies PrivacyAccountState };

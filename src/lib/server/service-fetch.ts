@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
 
+import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
+
 /** ServiceFetchOptions describes who a platform service call is made for. */
 export interface ServiceFetchOptions {
   /** The file of the projected service token that proves the platform's identity, on Kubernetes. */
@@ -43,4 +45,15 @@ export async function serviceHeaders(options: ServiceFetchOptions, init?: Header
   }
 
   return headers;
+}
+
+/** ServiceFeedback is how a form action answers a failed service call: its status and the form's message. */
+export type ServiceFeedback =
+  { status: 429; feedback: "tooManyAttempts" } | { status: 503; feedback: "serviceUnavailable" };
+
+/** Maps a failed service call to too many attempts for a 429, and to unavailable for anything else. */
+export function serviceFeedback(cause: unknown): ServiceFeedback {
+  return isHttpStatusError(cause, 429)
+    ? { status: 429, feedback: "tooManyAttempts" }
+    : { status: 503, feedback: "serviceUnavailable" };
 }

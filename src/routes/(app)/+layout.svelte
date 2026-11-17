@@ -9,17 +9,18 @@
   import { page } from "$app/state";
 
   import { readAuthenticationActionModel } from "./action-data";
-  import type { AuthenticationJourney } from "./controller.svelte";
   import {
+    type AuthenticationJourney,
     type AuthenticationPanelControllerState,
     createAuthenticationPanelController,
     createShellController,
     readyAuthenticationModel,
   } from "./controller.svelte";
   import { shellSessionData } from "./dependencies";
+  import { withNavigationOpen } from "./navigation-state";
   import { authenticationPageTitle } from "./page-title";
   import Screen from "./screen.svelte";
-  import { normalizeAuthUrl, readAuthView, withAuthView, withNavigationOpen } from "./url-state";
+  import { normalizeAuthUrl, readAuthView, withAuthView } from "./url-state";
 
   import { onMount } from "svelte";
 

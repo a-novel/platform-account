@@ -24,20 +24,18 @@ function event(path: string, language?: string, routeId?: string | null, chosen?
 }
 
 describe("request hook", () => {
-  it("keeps translations and document language isolated across concurrent requests", async () => {
+  it("keeps the document language isolated across concurrent requests", async () => {
     const french = event("/", "fr-CA,fr;q=0.9,en;q=0.8");
     const english = event("/", "de");
-    const resolve = vi.fn<Parameters<Handle>[0]["resolve"]>(async (request, options) => {
+    const resolve = vi.fn<Parameters<Handle>[0]["resolve"]>(async (_, options) => {
       await Promise.resolve();
-      const html = await options?.transformPageChunk?.({ html: '<html lang="%lang%">', done: true });
-      return new Response(html + request.locals.i18n.t("shell.accountFallback"));
+      return new Response(await options?.transformPageChunk?.({ html: '<html lang="%lang%">', done: true }));
     });
     const [fr, en] = await Promise.all([handle({ event: french, resolve }), handle({ event: english, resolve })]);
-    await expect(fr.text()).resolves.toBe('<html lang="fr">Mon compte');
-    await expect(en.text()).resolves.toBe('<html lang="en">Account');
+    await expect(fr.text()).resolves.toBe('<html lang="fr">');
+    await expect(en.text()).resolves.toBe('<html lang="en">');
     expect(french.locals.locale).toBe("fr");
     expect(english.locals.locale).toBe("en");
-    expect(french.locals.i18n).not.toBe(english.locals.i18n);
   });
 
   it.each([
@@ -93,35 +91,30 @@ describe("request hook", () => {
     expect(response.headers.get("referrer-policy")).toBe("strict-origin");
   });
 
-  it("keeps a response rendered with a session out of every cache", async () => {
-    const signedIn = {
-      ...event("/privacy"),
-      cookies: { get: (name: string) => (name === "__Host-account_refresh_token" ? "refresh" : undefined) },
-    } as RequestEvent;
+  // The rule reads the response alone: a session, the route or the path changes nothing.
+  it.each<{ name: string; headers: Record<string, string>; want: string }>([
+    { name: "a response without a policy", headers: {}, want: "private, no-store" },
+    {
+      name: "a response that sets cookies, as a session refresh or a started sign-in does",
+      headers: {
+        "cache-control": "public, max-age=60",
+        location: "/account",
+        "set-cookie": "__Host-account_access_token=new",
+      },
+      want: "private, no-store",
+    },
+    {
+      name: "a shared picture",
+      headers: { "cache-control": "public, max-age=31536000, immutable" },
+      want: "public, max-age=31536000, immutable",
+    },
+    { name: "a page with its own policy", headers: { "cache-control": "private" }, want: "private" },
+  ])("caches $name as $want", async ({ headers, want }) => {
     const response = await handle({
-      event: signedIn,
-      resolve: vi.fn().mockResolvedValue(new Response("page", { headers: { "cache-control": "public, max-age=60" } })),
+      event: event("/"),
+      resolve: vi.fn().mockResolvedValue(new Response("", { headers })),
     });
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-  });
-
-  it("lets a signed-in visitor's picture keep its shared cache policy", async () => {
-    const picture = {
-      ...event("/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=1", undefined, "/profile/picture/[id]"),
-      cookies: { get: (name: string) => (name === "__Host-account_access_token" ? "access" : undefined) },
-    } as RequestEvent;
-    const cached = { "cache-control": "public, max-age=31536000, immutable" };
-
-    const shared = await handle({
-      event: picture,
-      resolve: vi.fn().mockResolvedValue(new Response("", { headers: cached })),
-    });
-    expect(shared.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-
-    // A refreshed or new session puts the visitor's tokens in the response, which only they may keep.
-    const withCookie = new Response("", { headers: { ...cached, "set-cookie": "__Host-account_access_token=new" } });
-    const refreshed = await handle({ event: picture, resolve: vi.fn().mockResolvedValue(withCookie) });
-    expect(refreshed.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("cache-control")).toBe(want);
   });
 
   it.each([200, 303, 400])("refuses framing of every response with status %s", async (status) => {
@@ -132,12 +125,8 @@ describe("request hook", () => {
     expect(response.headers.get("x-frame-options")).toBe("DENY");
   });
 
-  it("preserves caching policy on ordinary pages", async () => {
-    const response = await handle({
-      event: event("/"),
-      resolve: vi.fn().mockResolvedValue(new Response("home", { headers: { "cache-control": "private" } })),
-    });
-    expect(response.headers.get("cache-control")).toBe("private");
+  it("keeps ordinary pages out of search-engine directives", async () => {
+    const response = await handle({ event: event("/"), resolve: vi.fn().mockResolvedValue(new Response("home")) });
     expect(response.headers.has("x-robots-tag")).toBe(false);
   });
 
@@ -164,7 +153,7 @@ describe("request hook", () => {
     const root = provider.getTracer("test").startSpan("sveltekit.handle.root");
     const request = {
       ...event("/"),
-      request: new Request("https://studio.test/", { method }),
+      request: new Request("https://account.test/", { method }),
       route: { id: route },
       tracing: { enabled: true, root, current: root },
     } as unknown as RequestEvent;

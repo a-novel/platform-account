@@ -1,8 +1,7 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
-import type { PrivacyAccountState } from "./controller.svelte";
-import { createLocationConsentController } from "./controller.svelte";
+import { type PrivacyAccountState, createLocationConsentController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 
 import { describe, expect, it, vi } from "vitest";

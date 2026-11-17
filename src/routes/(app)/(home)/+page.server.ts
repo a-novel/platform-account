@@ -3,6 +3,7 @@ import { safeReturnTo } from "#lib/application/auth/navigation.js";
 import type { AuthenticationFeedback, FormIssue } from "#lib/application/auth/types.js";
 import { emailLanguage, getAuthenticationContext } from "#lib/server/auth/context.js";
 import { refuseDuringDowntime } from "#lib/server/downtime.js";
+import { serviceFeedback } from "#lib/server/service-fetch.js";
 
 import type { AuthenticationField, AuthenticationJourney, AuthenticationPanelModel } from "../controller.svelte";
 import { readAuthView } from "../url-state";
@@ -30,9 +31,8 @@ function failService(status: number, journey: AuthenticationJourney, feedback: A
 
 /** Fails the action as unavailable, or as rate-limited when authentication refused the caller. */
 function failUnavailable(journey: AuthenticationJourney, error: unknown, email: string) {
-  return isHttpStatusError(error, 429)
-    ? failService(429, journey, "tooManyAttempts", email)
-    : failService(503, journey, "serviceUnavailable", email);
+  const { status, feedback } = serviceFeedback(error);
+  return failService(status, journey, feedback, email);
 }
 
 async function login(event: RequestEvent, form: FormData) {
@@ -61,9 +61,7 @@ async function requestInvitation(event: RequestEvent, form: FormData) {
       lang: emailLanguage(event.locals.locale),
     });
   } catch (error) {
-    // A service older than v2.24.0 answers 409 for a listed or registered address, which gets the same
-    // answer as a new one, so the confirmation reveals no membership.
-    if (!isHttpStatusError(error, 409)) return failUnavailable("register", error, input.value.email);
+    return failUnavailable("register", error, input.value.email);
   }
 
   return {
@@ -97,7 +95,6 @@ async function requestPasswordReset(event: RequestEvent, form: FormData) {
   };
 }
 
-// The account page is the platform's only screen, so a signed-in visitor goes straight to it.
 /**
  * The account page is the site's one landing page, so a visit lands there with the dialog it asked for.
  * A form posted here renders its result over the locked page instead, which a redirect would lose.

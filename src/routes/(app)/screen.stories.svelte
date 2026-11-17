@@ -36,6 +36,11 @@
     // A profile with a username and a picture: the username names the account, the handle keeps the initials.
     session: { status: "authenticated", displayName: "Moonlit Maya 🌊", initials: "MC", picture: portraitPicture },
   };
+  // An account the platform can name by neither its email handle nor its username.
+  const unnamedAccount: ShellViewModel = {
+    ...anonymous,
+    session: { status: "authenticated", initials: "A" },
+  };
   const loadingAccount: ShellViewModel = {
     ...anonymous,
     session: { status: "loading" },
@@ -166,6 +171,15 @@
     await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
   }
 
+  async function verifyUnnamedAccount({ canvasElement, globals }: PlayContext) {
+    const canvas = within(canvasElement);
+    const t = createStorybookTranslator(globals);
+    const account = within(canvas.getByRole("complementary")).getByRole("link", { name: t("shell.accountFallback") });
+    await expect(account).toHaveAttribute("href", "#account");
+    // The generic initial leads the generic label.
+    await expect(account.textContent).toMatch(new RegExp(`A\\s*${t("shell.accountFallback")}`));
+  }
+
   async function verifyMobileAuthenticationActions({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
@@ -284,6 +298,10 @@
 
 <Story name="Authenticated with a picture, mobile" globals={reviewStoryGlobals.mobile} asChild>
   <StoryHarness model={withOpenMobileNavigation(withPicture)} />
+</Story>
+
+<Story name="Unnamed account" asChild play={verifyUnnamedAccount}>
+  <StoryHarness model={unnamedAccount} />
 </Story>
 
 <Story name="Loading account" asChild>

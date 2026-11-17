@@ -3,7 +3,8 @@ import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
 import type { FormState } from "#lib/application/auth/types.js";
 import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
 
-import { readAuthView, readNavigationOpen, withAuthView, withNavigationOpen } from "./url-state";
+import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
+import { readAuthView, withAuthView } from "./url-state";
 
 import { SvelteURL } from "svelte/reactivity";
 
@@ -55,7 +56,8 @@ export type ShellSession =
   | { status: "loading" }
   | {
       status: "authenticated";
-      displayName: string;
+      /** The account's name, absent when neither its username nor its email handle is known. */
+      displayName?: string;
       initials?: string;
       /** The address of the account's picture, which replaces the initials. */
       picture?: string;

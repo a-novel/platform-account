@@ -5,7 +5,7 @@ import { readPlatformDowntime } from "#lib/server/downtime.js";
 import { getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 import { getRuntimeConfig } from "#lib/server/runtime-config.server.js";
 
-import { type AccountDisplay, accountDisplayFromHandle } from "./account-display";
+import { accountDisplayFromHandle } from "./account-display";
 import type { ShellApps, ShellSession, ShellViewModel } from "./controller.svelte";
 import { shellSessionData } from "./dependencies";
 
@@ -77,17 +77,13 @@ async function readShellSession(event: ShellEvent): Promise<ShellSession> {
   const profile = await readProfile(event, resolved.accessToken);
   if (!profile) return { status: "loading" };
 
+  // An account whose email handle the shell has not kept goes by its username, or by the screen's generic label,
+  // with the generic initial.
   const { username, picture } = profile;
   const display = resolved.identityHandle
     ? accountDisplayFromHandle(resolved.identityHandle, username)
-    : fallbackDisplay(event, username);
+    : { displayName: username, initials: "A" };
   return { status: "authenticated", ...display, picture };
-}
-
-/** Names an account whose email handle the shell has not kept: by its username, else generically. */
-function fallbackDisplay(event: ShellEvent, username?: string): AccountDisplay {
-  const t = event.locals.i18n.getFixedT(event.locals.locale, "common");
-  return { displayName: username ?? t("shell.accountFallback"), initials: "A" };
 }
 
 /** Reads the visitor's public profile, or null while the profile service can't answer. */

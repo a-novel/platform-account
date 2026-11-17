@@ -55,7 +55,8 @@ function validationMessage(issue: z.core.$ZodIssue, empty: boolean): Authenticat
   }
 }
 
-function textValue(form: FormData, name: string): string {
+/** Reads a form field as text: a file or a missing field reads as empty. */
+export function textValue(form: FormData, name: string): string {
   const value = form.get(name);
   return typeof value === "string" ? value : "";
 }

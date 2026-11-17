@@ -5,8 +5,7 @@
 
   import { addressBar, dialogUrl, editorParameter, localHref } from "../url-state";
   import { createInformationModel, mergeAccountAction } from "./account-action";
-  import type { AccountEditor } from "./controller.svelte";
-  import { createAccountInformationController } from "./controller.svelte";
+  import { type AccountEditor, createAccountInformationController } from "./controller.svelte";
   import { readEditor } from "./editor-state";
   import Screen from "./screen.svelte";
 

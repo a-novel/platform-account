@@ -87,26 +87,6 @@ describe("password action", () => {
     expect(JSON.stringify(result)).not.toContain("private-value");
   });
 
-  it("changes the password after checking the session again, without its confirmation", async () => {
-    authenticated.mockResolvedValue(signedIn);
-    vi.mocked(credentialsUpdatePassword).mockResolvedValue({
-      id: "test-user",
-      email: "creator@example.test",
-      role: "auth:user",
-      createdAt: new Date("2026-08-01T10:00:00Z"),
-      updatedAt: new Date("2026-11-04T10:00:00Z"),
-    });
-
-    await expect(informationActions.password(event("password", passwordFields))).resolves.toEqual({
-      accountAction: { kind: "password", state: { status: "success", feedback: "passwordChanged" } },
-    });
-    expect(authenticated).toHaveBeenCalledOnce();
-    expect(credentialsUpdatePassword).toHaveBeenCalledExactlyOnceWith(expect.any(AuthenticationApi), "fixture-access", {
-      currentPassword: "old-password",
-      password: "new-password",
-    });
-  });
-
   it("shows a rejected current password on its field instead of the access-denied page", async () => {
     authenticated.mockResolvedValue(signedIn);
     vi.mocked(credentialsUpdatePassword).mockRejectedValue(new HttpError(403, "incorrect current password"));
@@ -126,29 +106,35 @@ describe("password action", () => {
   });
 
   it.each([
-    ["a failed change", () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new Error("private detail"))],
-    ["an unreachable session check", () => authenticated.mockRejectedValue(new AuthenticationUnavailableError())],
-  ])("keeps the form usable after %s", async (_, arrange) => {
+    [
+      "too many attempts",
+      () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new HttpError(429, "private detail")),
+      429,
+      "tooManyAttempts",
+    ],
+    [
+      "a failed change",
+      () => vi.mocked(credentialsUpdatePassword).mockRejectedValue(new Error("private detail")),
+      503,
+      "serviceUnavailable",
+    ],
+    [
+      "an unreachable session check",
+      () => authenticated.mockRejectedValue(new AuthenticationUnavailableError()),
+      503,
+      "serviceUnavailable",
+    ],
+  ] as const)("keeps the form usable after %s", async (_, arrange, status, feedback) => {
     authenticated.mockResolvedValue(signedIn);
     arrange();
 
     const result = await informationActions.password(event("password", passwordFields));
 
     expect(result).toEqual({
-      status: 503,
-      data: { accountAction: { kind: "password", state: { status: "service-error", feedback: "serviceUnavailable" } } },
+      status,
+      data: { accountAction: { kind: "password", state: { status: "service-error", feedback } } },
     });
     expect(JSON.stringify(result)).not.toContain("private detail");
-  });
-
-  it("sends a logged-out visitor to the login before any change", async () => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(informationActions.password(event("password", passwordFields))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Dpassword",
-    });
-    expect(credentialsUpdatePassword).not.toHaveBeenCalled();
   });
 });
 
@@ -234,16 +220,6 @@ describe("email action", () => {
     });
     expect(JSON.stringify(result)).not.toContain("private service detail");
   });
-
-  it("sends a logged-out visitor to the login before any change", async () => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(informationActions.email(event("email", emailFields))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%3Fedit%3Demail",
-    });
-    expect(shortCodeCreateEmailUpdate).not.toHaveBeenCalled();
-  });
 });
 
 const profileFailures = [
@@ -268,12 +244,15 @@ describe("username action", () => {
     });
   });
 
+  // Profile refuses a name with 422 from its 1.2 release, and with 400 before it.
   it.each([
-    ["the rule the platform's mirror finds", "Maya\tChen", "characters"],
-    ["a refusal only the service could tell", "Maya", "refused"],
-  ])("keeps a refused name in the field, with %s", async (_, username, issue) => {
+    [400, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
+    [422, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
+    [400, "a refusal only the service could tell", "Maya", "refused"],
+    [422, "a refusal only the service could tell", "Maya", "refused"],
+  ])("keeps a refused name in the field after a %i, with %s", async (refusal, _, username, issue) => {
     authenticated.mockResolvedValue(signedIn);
-    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(400, "private service detail"));
+    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(refusal, "private service detail"));
 
     await expect(informationActions.username(event("username", { username }))).resolves.toEqual({
       status: 400,

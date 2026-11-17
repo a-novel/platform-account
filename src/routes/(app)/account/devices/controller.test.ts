@@ -1,5 +1,9 @@
-import type { AccountDeviceConfirmation, AccountDevicesModel } from "./controller.svelte";
-import { type AccountDevicesControllerOptions, createAccountDevicesController } from "./controller.svelte";
+import {
+  type AccountDeviceConfirmation,
+  type AccountDevicesControllerOptions,
+  type AccountDevicesModel,
+  createAccountDevicesController,
+} from "./controller.svelte";
 
 import { describe, expect, it, vi } from "vitest";
 

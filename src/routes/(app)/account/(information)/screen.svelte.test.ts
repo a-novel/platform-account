@@ -4,8 +4,12 @@ import { submitForm } from "#lib/ui/forms.fixture.js";
 
 import type { AccountCredentialsState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
-import type { AccountEditor, AccountInformationModel } from "./controller.svelte";
-import { type AccountInformationControllerOptions, createAccountInformationController } from "./controller.svelte";
+import {
+  type AccountEditor,
+  type AccountInformationControllerOptions,
+  type AccountInformationModel,
+  createAccountInformationController,
+} from "./controller.svelte";
 import Screen from "./screen.svelte";
 
 import { describe, expect, it } from "vitest";

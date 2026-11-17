@@ -20,7 +20,6 @@ import {
   type Session,
   sessionDelete,
   sessionList,
-  sessionRevoke,
   sessionRevokeOthers,
 } from "@a-novel/service-authentication-rest";
 
@@ -201,23 +200,6 @@ describe("devices load", () => {
 describe("device actions", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  const changes = [
-    ["logoutDevice", sessionRevoke, "logged-out", [{ id: phoneID }]],
-    ["logoutOtherDevices", sessionRevokeOthers, "logged-out-others", []],
-    ["removeDevice", sessionDelete, "removed", [{ id: phoneID }]],
-  ] as const;
-
-  it.each(changes)("%s checks the session again, then changes the devices", async (action, change, done, form) => {
-    authenticated.mockResolvedValue(signedIn);
-    vi.mocked(change).mockResolvedValue(undefined);
-
-    await expect(devicesActions[action](actionEvent(action, { sessionID: phoneID }))).resolves.toEqual({
-      devicesAction: { status: done },
-    });
-    expect(authenticated).toHaveBeenCalledOnce();
-    expect(change).toHaveBeenCalledExactlyOnceWith(expect.any(AuthenticationApi), "fixture-access", ...form);
-  });
-
   it.each([
     ["logoutDevice", {}],
     ["removeDevice", { sessionID: "" }],
@@ -268,15 +250,5 @@ describe("device actions", () => {
       data: { devicesAction: { status: "service-error", feedback: "serviceUnavailable" } },
     });
     expect(sessionRevokeOthers).not.toHaveBeenCalled();
-  });
-
-  it.each(changes)("%s sends a logged-out visitor to the login before any change", async (action, change) => {
-    authenticated.mockResolvedValue(null);
-
-    await expect(devicesActions[action](actionEvent(action, { sessionID: phoneID }))).rejects.toMatchObject({
-      status: 303,
-      location: "/account?auth=login&returnTo=%2Faccount%2Fdevices",
-    });
-    expect(change).not.toHaveBeenCalled();
   });
 });

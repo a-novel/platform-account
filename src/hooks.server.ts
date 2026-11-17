@@ -1,7 +1,4 @@
 import { resolveLocale, supportedLocales } from "#lib/i18n/config.js";
-import { createI18n } from "#lib/i18n/instance.js";
-import { hasSession } from "#lib/server/auth/session.js";
-import { secureShortCodeResponse } from "#lib/server/auth/short-code-response.js";
 
 import { LANGUAGE_COOKIE, parseLanguage } from "@a-novel-kit/nodelib-browser/preferences";
 
@@ -10,14 +7,13 @@ import type { RequestEvent } from "@sveltejs/kit";
 import type { Handle } from "@sveltejs/kit/hooks";
 
 /**
- * Gives each request its own locale and translations, in the language the visitor chose or else their
- * browser's, refuses framing, keeps signed-in and email-link pages out of caches, and traces the response.
+ * Gives each request its locale, in the language the visitor chose or else their browser's, refuses
+ * framing, keeps personal responses and email-link pages out of caches, and traces the response.
  */
 export const handle: Handle = async ({ event, resolve }) => {
   const chosen = parseLanguage(event.cookies.get(LANGUAGE_COOKIE), supportedLocales);
   const locale = resolveLocale(chosen, event.request.headers.get("accept-language"));
 
-  event.locals.i18n = createI18n(locale);
   event.locals.locale = locale;
 
   const response = await resolve(event, {
@@ -27,19 +23,27 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Any page can open the login dialog, so no page may be framed by a site overlaying it (RFC 9700 §4.16).
   // Pages refuse framing in their CSP, set in vite.config.ts; this header covers every response.
   response.headers.set("x-frame-options", "DENY");
-  // A response rendered with a session is the visitor's alone, so no cache may keep it (RFC 9111 §5.2.2.5).
-  if (hasSession(event.cookies) && !isSharedPicture(event, response)) {
+  // A response that sets cookies, or whose route chose no policy, may hold the visitor's session, so no cache
+  // may keep it (RFC 9111 §5.2.2.5). A route's own policy stands otherwise, as a profile picture's does.
+  if (response.headers.has("set-cookie") || !response.headers.has("cache-control")) {
     response.headers.set("cache-control", "private, no-store");
+  }
+  if (isEmailLinkPage(event)) {
+    for (const [name, value] of Object.entries(emailLinkHeaders)) response.headers.set(name, value);
   }
 
   traceResponse(event, response);
-  return isEmailLinkPage(event) ? secureShortCodeResponse(response) : response;
+  return response;
 };
 
-// A profile picture is the same for every visitor, unless its response carries the visitor's new tokens.
-function isSharedPicture({ route }: RequestEvent, response: Response): boolean {
-  return route.id === "/profile/picture/[id]" && !response.headers.has("set-cookie");
-}
+/** Keeps an email-link response out of caches, search indexes and referrers. */
+const emailLinkHeaders = {
+  "cache-control": "no-store",
+  // Referrers carry the origin alone, which keeps the link's secrets private. SvelteKit still reads
+  // that origin to check native form posts.
+  "referrer-policy": "strict-origin",
+  "x-robots-tag": "noindex, nofollow",
+};
 
 // SvelteKit routes on the decoded path, so an encoded `/%65xt/…` still renders an email-link page: the
 // matched route decides, and the raw path covers the requests no route matched.
@@ -47,7 +51,7 @@ function isEmailLinkPage({ route, url }: RequestEvent): boolean {
   return route.id ? route.id.startsWith("/(standalone)/ext/") : url.pathname.startsWith("/ext/");
 }
 
-// Names the request's span after its route, as `GET /(studio)/account`, and records the response's
+// Names the request's span after its route, as `GET /(app)/account/devices`, and records the response's
 // status, so span metrics split the traffic by page and tell a refusal from a fault. A request that
 // matched no route keeps its method alone, so no path names a span.
 function traceResponse({ request, route, tracing }: RequestEvent, { status }: Response): void {
