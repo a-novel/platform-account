@@ -1,5 +1,4 @@
-import type { AccountSummaryState } from "#lib/application/auth/types.js";
-
+import type { AccountSummaryState } from "./controller.svelte";
 import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";

@@ -1,6 +1,5 @@
 <script module lang="ts">
-  import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
-  import type { ShellViewModel } from "#lib/application/shell/types.js";
+  import type { AuthenticationPanelModel, ShellViewModel } from "./controller.svelte";
 
   import type { Snippet } from "svelte";
 

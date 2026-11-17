@@ -1,4 +1,4 @@
-import type { ShortCodeJourney } from "#lib/application/auth/types.js";
+import type { ShortCodeJourney } from "./controller.svelte";
 
 import { EmailSchema, ShortCodeSchema } from "@a-novel/service-authentication-rest";
 

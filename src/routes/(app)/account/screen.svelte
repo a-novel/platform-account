@@ -27,16 +27,16 @@
   const tabs = $derived([
     {
       href: layout.tabs.information,
-      label: t("authUi.account.tabs.information"),
+      label: t("account.tabs.information"),
       current: layout.currentTab === "information",
     },
-    { href: layout.tabs.privacy, label: t("authUi.account.tabs.privacy"), current: layout.currentTab === "privacy" },
+    { href: layout.tabs.privacy, label: t("account.tabs.privacy"), current: layout.currentTab === "privacy" },
     {
       href: layout.tabs.preferences,
-      label: t("authUi.account.tabs.preferences"),
+      label: t("account.tabs.preferences"),
       current: layout.currentTab === "preferences",
     },
-    { href: layout.tabs.devices, label: t("authUi.account.tabs.devices"), current: layout.currentTab === "devices" },
+    { href: layout.tabs.devices, label: t("account.tabs.devices"), current: layout.currentTab === "devices" },
   ]);
 
   const profile = $derived(summary.status === "ready" ? summary.profile : undefined);
@@ -71,14 +71,8 @@
     <!-- The link reads as its action. The picture stays unread: the heading beside it names the account. -->
     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
     <a class="picture" href={layout.pictureEditorHref}>
-      <VisuallyHidden>{t("authUi.account.picture.changeLabel")}</VisuallyHidden>
-      <Avatar
-        label={name || t("authUi.account.title")}
-        src={profile?.picture}
-        {initials}
-        size="xl"
-        aria-hidden="true"
-      />
+      <VisuallyHidden>{t("account.picture.changeLabel")}</VisuallyHidden>
+      <Avatar label={name || t("account.title")} src={profile?.picture} {initials} size="xl" aria-hidden="true" />
       {#if !profile?.picture && !name}<Skeleton class="picture-skeleton" shape="circle" />{/if}
       <span class="badge" aria-hidden="true"><Camera size="var(--icon-size-sm)" /></span>
     </a>
@@ -88,7 +82,7 @@
         {#if name}
           <bdi>{name}</bdi>
         {:else}
-          <VisuallyHidden>{t("authUi.account.title")}</VisuallyHidden>
+          <VisuallyHidden>{t("account.title")}</VisuallyHidden>
           <Skeleton class="title-skeleton" />
         {/if}
       </h1>
@@ -97,15 +91,15 @@
         <Skeleton class="details-skeleton" />
       {:else}
         <!-- Each role keeps one color, so a privileged account reads as such at a glance. -->
-        <ul class="roles" aria-label={t("authUi.account.roles.label")}>
+        <ul class="roles" aria-label={t("account.roles.label")}>
           {#each summary.roles as role (role)}
             <li>
               {#if role === Role.SuperAdmin}
-                <Badge tone="danger">{t("authUi.account.roles.superAdmin")}</Badge>
+                <Badge tone="danger">{t("account.roles.superAdmin")}</Badge>
               {:else if role === Role.Admin}
-                <Badge tone="highlight">{t("authUi.account.roles.admin")}</Badge>
+                <Badge tone="highlight">{t("account.roles.admin")}</Badge>
               {:else if role === Role.User}
-                <Badge tone="brand">{t("authUi.account.roles.user")}</Badge>
+                <Badge tone="brand">{t("account.roles.user")}</Badge>
               {:else}
                 <Badge tone="neutral">{role}</Badge>
               {/if}
@@ -114,7 +108,7 @@
         </ul>
         {#if summary.loggedInUntil}
           <p class="session">
-            <span class="label">{t("authUi.account.loggedInUntil")}</span>
+            <span class="label">{t("account.loggedInUntil")}</span>
             {summary.loggedInUntil}
           </p>
         {/if}
@@ -125,14 +119,12 @@
     <form class="logout" method="POST" action={layout.logoutAction} onsubmit={submitLogout}>
       <Button type="submit" variant="text" tone="neutral" size="sm" disabled={layout.logoutState === "submitting"}>
         <LogOut size="var(--icon-size-sm)" aria-hidden="true" />
-        {layout.logoutState === "submitting"
-          ? t("authUi.account.logout.submitting")
-          : t("authUi.account.logout.submit")}
+        {layout.logoutState === "submitting" ? t("account.logout.submitting") : t("account.logout.submit")}
       </Button>
     </form>
   </header>
 
-  <StickyBar as="nav" edge="start" class="tabs" aria-label={t("authUi.account.tabs.label")} {@attach revealCurrentTab}>
+  <StickyBar as="nav" edge="start" class="tabs" aria-label={t("account.tabs.label")} {@attach revealCurrentTab}>
     <NavList class="tab-list" orientation="horizontal" items={tabs} />
   </StickyBar>
 
@@ -276,7 +268,7 @@
   }
 
   /* On a phone logging out moves under the details. */
-  @container (max-width: 34rem) {
+  @container (width <= 34rem) {
     .account-header {
       grid-template-columns: auto minmax(0, 1fr);
     }

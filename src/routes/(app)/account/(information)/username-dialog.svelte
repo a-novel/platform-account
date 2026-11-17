@@ -37,15 +37,15 @@
   const error = $derived.by(() => {
     switch (issue) {
       case "characters":
-        return t("authUi.account.username.issues.characters");
+        return t("account.username.issues.characters");
       case "invisible":
-        return t("authUi.account.username.issues.invisible");
+        return t("account.username.issues.invisible");
       case "length":
-        return t("authUi.account.username.issues.length", { limit: usernameGlyphsMax });
+        return t("account.username.issues.length", { limit: usernameGlyphsMax });
       case "size":
-        return t("authUi.account.username.issues.size");
+        return t("account.username.issues.size");
       case "refused":
-        return t("authUi.account.username.issues.refused");
+        return t("account.username.issues.refused");
       default:
         return undefined;
     }
@@ -55,17 +55,17 @@
 <!-- The count reads with the hint, as the field's description, whenever the field takes focus. -->
 {#snippet hint()}
   <span class="hint">
-    <span>{t("authUi.account.username.hint")}</span>
+    <span>{t("account.username.hint")}</span>
     <span class="counter" class:over={glyphs > usernameGlyphsMax}>
-      {t("authUi.account.username.counter", { glyphs, limit: usernameGlyphsMax })}
+      {t("account.username.counter", { glyphs, limit: usernameGlyphsMax })}
     </span>
   </span>
 {/snippet}
 
-<Dialog controller={controller.editors.username} title={t("authUi.account.username.dialogTitle")} size="sm">
+<Dialog controller={controller.editors.username} title={t("account.username.dialogTitle")} size="sm">
   {#snippet headerActions()}
     <IconButton
-      label={t("authUi.account.closeEditor")}
+      label={t("account.closeEditor")}
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -77,7 +77,7 @@
   {/snippet}
 
   <form method="POST" action={controller.state.actions.username} aria-busy={submitting} novalidate onsubmit={submit}>
-    <Field controlId={`${componentId}-username`} label={t("authUi.account.username.label")} {hint} {error}>
+    <Field controlId={`${componentId}-username`} label={t("account.username.label")} {hint} {error}>
       {#snippet children(control)}
         <Input
           {...control}
@@ -97,7 +97,7 @@
         {/if}
       {/snippet}
       <Button type="submit" disabled={submitting || idle}>
-        {submitting ? t("authUi.account.username.submitting") : t("authUi.account.username.submit")}
+        {submitting ? t("account.username.submitting") : t("account.username.submit")}
       </Button>
     </FormActions>
   </form>

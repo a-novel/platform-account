@@ -20,7 +20,137 @@ access:
   unavailable:
     description: Your session has been kept. Please reload this page in a few minutes.
     title: Access temporarily unavailable
-authFlow:
+account:
+  closeEditor: Close dialog
+  credentials:
+    description: The information you authenticate with.
+    title: Credentials
+  devices:
+    activeNow: Active now
+    confirm:
+      cancel: Cancel
+      deviceTitle: Log out {{device}}?
+      othersBody: Every device but this one will be logged out.
+      othersTitle: Log out all devices?
+    current: This device
+    description: Devices logged in to your Agora account.
+    lastActive: Last active {{date}}
+    locationTip:
+      body: Turn on “Record where my devices log in” in Privacy to see each device’s IP address and approximate place.
+      link: Open Privacy
+      title: Locations are off
+    loggedOut: That device is logged out
+    loggedOutDescription: Devices you logged out of, or whose session ended. Each one disappears about a month later.
+    loggedOutOthers: Your other devices are logged out
+    loggedOutTitle: Logged out
+    logout: Log out
+    logoutLabel: Log out {{device}}
+    logoutOthers: Log out all devices
+    lossDelay: It can take up to 15 minutes for a logged-out device to lose access.
+    name: "{{browser}} on {{system}}"
+    nameUnknownBrowser: Browser on {{system}}
+    pagination:
+      active: Pages of your active devices
+      loggedOut: Pages of your logged-out devices
+    remove: Remove
+    removed: Device removed
+    removeLabel: Remove {{device}}
+    title: Devices
+    unavailable: Your devices can’t be shown right now.
+    unknown: Unknown device
+  email:
+    cancel: Cancel change
+    cancelling: Cancelling…
+    changeLabel: Change email
+    description: We’ll send a confirmation link to your new email.
+    dialogTitle: Change your email
+    hint: Your current email remains active until you confirm.
+    label: New email address
+    pending: Awaiting confirmation
+    pendingDescription: If no other account uses the new address, you’ll receive a confirmation link there.
+    pendingExpiry: Link expires {{date}}
+    submit: Send link
+    submitting: Sending link…
+    success:
+      expiry: The link expires on {{date}}.
+      keep: Until you confirm, keep logging in with {{email}}.
+      sent: If no other account uses {{email}}, a confirmation link should arrive there shortly.
+      title: Check your inbox
+    title: Email
+  gotIt: Got it
+  loggedInUntil: Logged in until
+  logout:
+    submit: Log out
+    submitting: Logging out…
+  password:
+    changeLabel: Change password
+    confirmLabel: Confirm new password
+    currentLabel: Current password
+    dialogTitle: Change your password
+    hint: Choose a long, memorable password.
+    newLabel: New password
+    submit: Change password
+    submitting: Changing password…
+    success:
+      description: Use your new password the next time you log in.
+      devices: Your other devices stay logged in.
+      review: Review your devices
+      title: Password changed
+    title: Password
+  picture:
+    changeLabel: Change picture
+    choose: Choose an image
+    current: Your current picture
+    dialogTitle: Change your picture
+    frameLabel: Picture frame
+    none: No picture
+    opening: Opening the image…
+    refusals:
+      dimensions: Agora accepts pictures from 1 to 512 pixels wide. Try framing the image again.
+      format: Agora couldn’t read this picture. Try another image.
+      ratio: Agora accepts only square pictures. Try framing the image again.
+      tooLarge: This picture is over 256 KiB. Try zooming in, or choose a simpler image.
+      unreadable: This file can’t be opened as an image. Choose another one.
+    remove: Remove picture
+    removing: Removing picture…
+    save: Save picture
+    saving: Saving picture…
+    scriptRequired: Framing a picture needs JavaScript. Turn it on in your browser, then reload this page.
+    title: Picture
+  profile:
+    description: Anyone on Agora can see this information.
+    title: Public profile
+  roles:
+    admin: Admin
+    label: Roles
+    superAdmin: Super admin
+    user: User
+  signIn:
+    title: Email and password
+  tabs:
+    devices: Devices
+    information: My information
+    label: Account sections
+    preferences: Preferences
+    privacy: Privacy
+  title: Your account
+  username:
+    changeLabel: Change username
+    counter: "{{glyphs}} / {{limit}}"
+    dialogTitle: Choose your username
+    hint: Leave it empty to remove your username.
+    issues:
+      characters: Remove line breaks, tabs, special spaces and text direction marks.
+      invisible: Use at least one visible character.
+      length: Use {{limit}} characters or fewer.
+      refused: This username can’t be used. Choose another one.
+      size: Remove some invisible characters or stacked accents.
+    label: Username
+    none: Not set
+    submit: Save username
+    submitting: Saving username…
+    title: Username
+form:
   feedback:
     emailUpdated: Your email address was updated.
     invalidCredentials: The email address or password is incorrect.
@@ -30,6 +160,8 @@ authFlow:
     registrationCompleted: Your account is ready.
     serviceUnavailable: Please try again in a few minutes.
     tooManyAttempts: Too many attempts. Please wait a few minutes before trying again.
+  passwordHint: We recommend at least 15 characters, such as a few words that are easy for you to remember.
+  unavailableTitle: Temporarily unavailable
   validation:
     confirmPassword: Confirm your new password.
     currentPassword: Enter your current password.
@@ -40,183 +172,6 @@ authFlow:
     minLength_other: Use at least {{count}} characters.
     password: Enter your password.
     passwordMismatch: The passwords do not match.
-authUi:
-  account:
-    closeEditor: Close dialog
-    credentials:
-      description: The information you authenticate with.
-      title: Credentials
-    devices:
-      activeNow: Active now
-      confirm:
-        cancel: Cancel
-        deviceTitle: Log out {{device}}?
-        othersBody: Every device but this one will be logged out.
-        othersTitle: Log out all devices?
-      current: This device
-      description: Devices logged in to your Agora account.
-      lastActive: Last active {{date}}
-      locationTip:
-        body: Turn on “Record where my devices log in” in Privacy to see each device’s IP address and approximate place.
-        link: Open Privacy
-        title: Locations are off
-      loggedOut: That device is logged out
-      loggedOutDescription: Devices you logged out of, or whose session ended. Each one disappears about a month later.
-      loggedOutOthers: Your other devices are logged out
-      loggedOutTitle: Logged out
-      logout: Log out
-      logoutLabel: Log out {{device}}
-      logoutOthers: Log out all devices
-      lossDelay: It can take up to 15 minutes for a logged-out device to lose access.
-      name: "{{browser}} on {{system}}"
-      nameUnknownBrowser: Browser on {{system}}
-      pagination:
-        active: Pages of your active devices
-        loggedOut: Pages of your logged-out devices
-      remove: Remove
-      removed: Device removed
-      removeLabel: Remove {{device}}
-      title: Devices
-      unavailable: Your devices can’t be shown right now.
-      unknown: Unknown device
-    email:
-      cancel: Cancel change
-      cancelling: Cancelling…
-      changeLabel: Change email
-      description: We’ll send a confirmation link to your new email.
-      dialogTitle: Change your email
-      hint: Your current email remains active until you confirm.
-      label: New email address
-      pending: Awaiting confirmation
-      pendingDescription: If no other account uses the new address, you’ll receive a confirmation link there.
-      pendingExpiry: Link expires {{date}}
-      submit: Send link
-      submitting: Sending link…
-      success:
-        expiry: The link expires on {{date}}.
-        keep: Until you confirm, keep logging in with {{email}}.
-        sent: If no other account uses {{email}}, a confirmation link should arrive there shortly.
-        title: Check your inbox
-      title: Email
-    gotIt: Got it
-    loggedInUntil: Logged in until
-    logout:
-      submit: Log out
-      submitting: Logging out…
-    password:
-      changeLabel: Change password
-      confirmLabel: Confirm new password
-      currentLabel: Current password
-      dialogTitle: Change your password
-      hint: Choose a long, memorable password.
-      newLabel: New password
-      submit: Change password
-      submitting: Changing password…
-      success:
-        description: Use your new password the next time you log in.
-        devices: Your other devices stay logged in.
-        review: Review your devices
-        title: Password changed
-      title: Password
-    picture:
-      changeLabel: Change picture
-      choose: Choose an image
-      current: Your current picture
-      dialogTitle: Change your picture
-      frameLabel: Picture frame
-      none: No picture
-      opening: Opening the image…
-      refusals:
-        dimensions: Agora accepts pictures from 1 to 512 pixels wide. Try framing the image again.
-        format: Agora couldn’t read this picture. Try another image.
-        ratio: Agora accepts only square pictures. Try framing the image again.
-        tooLarge: This picture is over 256 KiB. Try zooming in, or choose a simpler image.
-        unreadable: This file can’t be opened as an image. Choose another one.
-      remove: Remove picture
-      removing: Removing picture…
-      save: Save picture
-      saving: Saving picture…
-      scriptRequired: Framing a picture needs JavaScript. Turn it on in your browser, then reload this page.
-      title: Picture
-    profile:
-      description: Anyone on Agora can see this information.
-      title: Public profile
-    roles:
-      admin: Admin
-      label: Roles
-      superAdmin: Super admin
-      user: User
-    signIn:
-      title: Email and password
-    tabs:
-      devices: Devices
-      information: My information
-      label: Account sections
-      preferences: Preferences
-      privacy: Privacy
-    title: Your account
-    username:
-      changeLabel: Change username
-      counter: "{{glyphs}} / {{limit}}"
-      dialogTitle: Choose your username
-      hint: Leave it empty to remove your username.
-      issues:
-        characters: Remove line breaks, tabs, special spaces and text direction marks.
-        invisible: Use at least one visible character.
-        length: Use {{limit}} characters or fewer.
-        refused: This username can’t be used. Choose another one.
-        size: Remove some invisible characters or stacked accents.
-      label: Username
-      none: Not set
-      submit: Save username
-      submitting: Saving username…
-      title: Username
-  authentication:
-    emailLabel: Email address
-    journeys:
-      login:
-        submit: Log in
-        submitting: Logging in…
-      register:
-        recordedDescription: If this email isn’t registered yet, your invitation will be sent to
-        recordedTitle: Request received
-        submit: Join the list
-        submitting: Joining the list…
-      reset:
-        pendingDescription: If this email is registered, you’ll receive a password reset link at
-        submit: Send link
-        submitting: Sending link…
-    passwordLabel: Password
-    pendingTitle: Check your inbox
-  passwordHint: We recommend at least 15 characters, such as a few words that are easy for you to remember.
-  serviceUnavailable: Temporarily unavailable
-  shortCode:
-    confirmPasswordLabel: Confirm new password
-    continue: Continue to your account
-    journeys:
-      emailUpdate:
-        submit: Update email
-        submitting: Updating email…
-        unavailableTitle: Email update unavailable
-      passwordReset:
-        description: Choose a new password to regain access to your account.
-        submit: Reset password
-        submitting: Resetting password…
-        title: Reset your Agora password
-      register:
-        description: Choose the password you’ll log in with.
-        submit: Create account
-        submitting: Creating account…
-        title: Create your Agora account
-    newPasswordLabel: New password
-    restart: Request a new link
-    states:
-      invalid:
-        description: This link may have expired, already been used, or been copied incorrectly.
-        title: This link is not valid
-      missing:
-        description: Open the complete link from your email or request a new one.
-        title: This link is incomplete
 pageTitles:
   account: Account settings
   accountCreated: Account created
@@ -258,19 +213,31 @@ shell:
     studio: Studio
   auth:
     createAccount: Request an invitation
+    emailLabel: Email address
     forgotPassword: Forgot password?
     hasAccount: Already have an account?
     login:
       authorizationDescription: Log in with your Agora account to return to the app you came from.
+      submit: Log in
+      submitting: Logging in…
       title: Log in
     maintenance: We’ve paused account access until it ends. Please try again afterward.
     noAccount: No account yet?
+    passwordLabel: Password
+    pendingTitle: Check your inbox
     register:
       description: Access is currently by invitation. We’ll contact you when yours is available.
+      recordedDescription: If this email isn’t registered yet, your invitation will be sent to
+      recordedTitle: Request received
+      submit: Join the list
+      submitting: Joining the list…
       title: Join the Agora invitation list
     remembersPassword: Remember your password?
     reset:
       description: You’ll receive an email link to choose a new password.
+      pendingDescription: If this email is registered, you’ll receive a password reset link at
+      submit: Send link
+      submitting: Sending link…
       title: Reset your password
   brand: Agora
   closeAuthentication: Close dialog
@@ -284,6 +251,33 @@ shell:
   register: Register
   signIn: Log in
   skipToContent: Skip to content
+shortCode:
+  confirmPasswordLabel: Confirm new password
+  continue: Continue to your account
+  journeys:
+    emailUpdate:
+      submit: Update email
+      submitting: Updating email…
+      unavailableTitle: Email update unavailable
+    passwordReset:
+      description: Choose a new password to regain access to your account.
+      submit: Reset password
+      submitting: Resetting password…
+      title: Reset your Agora password
+    register:
+      description: Choose the password you’ll log in with.
+      submit: Create account
+      submitting: Creating account…
+      title: Create your Agora account
+  newPasswordLabel: New password
+  restart: Request a new link
+  states:
+    invalid:
+      description: This link may have expired, already been used, or been copied incorrectly.
+      title: This link is not valid
+    missing:
+      description: Open the complete link from your email or request a new one.
+      title: This link is incomplete
 telemetryConsent:
   change: Your answer applies to every Agora app on this device. Change it anytime from the Privacy page.
   message: We sometimes collect error logs and performance metrics to improve our products. No personal information is recorded or shared.

@@ -11,7 +11,7 @@
 </script>
 
 {#if feedback === "serviceUnavailable"}
-  <Alert tone="error" title={t("authUi.serviceUnavailable")}>
+  <Alert tone="error" title={t("form.unavailableTitle")}>
     {translateAuthenticationFeedback(t, feedback)}
   </Alert>
 {:else}

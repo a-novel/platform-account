@@ -1,12 +1,57 @@
-import type {
-  AccountDeviceConfirmation,
-  AccountDevicesActions,
-  AccountDevicesModel,
-} from "#lib/application/auth/types.js";
+import type { AuthenticationFeedback } from "#lib/application/auth/types.js";
 
 import type { DeviceList } from "./device-pages";
 
 import type { OpenController } from "@a-novel-kit/uikit";
+
+/** What a device's User-Agent tells: its browser and system when recognized, and its form factor. */
+export interface DeviceName {
+  browser?: string;
+  system?: string;
+  form: "desktop" | "phone" | "tablet";
+}
+
+/** A device the account logged in on: one session, as the devices tab lists it. */
+export interface AccountDevice extends DeviceName {
+  /** The session the device holds, which logging it out or removing it names. */
+  id: string;
+  /** Marks the device showing the page. */
+  current: boolean;
+  /** Set once the device was logged out or its session ended. */
+  loggedOut: boolean;
+  /** When the device's latest access token was issued, formatted for the reader. */
+  lastActiveAt: string;
+  /** The approximate place, formatted for the reader, when the account records locations. */
+  place?: string;
+  ipAddress?: string;
+}
+
+/** A logout waiting for the reader's confirmation: one device, or every device but this one. */
+export type AccountDeviceConfirmation = { kind: "device"; id: string } | { kind: "others" };
+
+/** The devices tab: the account's devices and the outcome of the latest change. */
+export interface AccountDevicesModel {
+  /** Loading while retries run after a failed read, and unavailable once they run out. */
+  devices: { status: "ready"; devices: AccountDevice[] } | { status: "loading" } | { status: "unavailable" };
+  /** The page each list shows, which the URL owns. The first without one. */
+  pages?: { active: number; loggedOut: number };
+  /** Whether the account records locations, or null when Authentication cannot tell. */
+  locationConsent: boolean | null;
+  /** The logout the open confirmation dialog asks about, which the URL owns. */
+  confirmation: AccountDeviceConfirmation | null;
+  action:
+    | { status: "ready" | "submitting" | "logged-out" | "logged-out-others" | "removed" }
+    | { status: "service-error"; feedback: AuthenticationFeedback };
+}
+
+/** POST destinations of the devices tab. */
+export interface AccountDevicesActions {
+  logoutDevice: string;
+  logoutOtherDevices: string;
+  removeDevice: string;
+  /** Logs this device out, through the shell's logout. */
+  logout: string;
+}
 
 /** State rendered by the devices tab. */
 export interface AccountDevicesControllerState {

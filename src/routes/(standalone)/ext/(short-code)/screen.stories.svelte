@@ -25,28 +25,26 @@
   async function verifyRegistrationForm({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("heading", { name: t("shortCode.journeys.register.title"), level: 1 })).toBeVisible();
     await expect(
-      canvas.getByRole("heading", { name: t("authUi.shortCode.journeys.register.title"), level: 1 })
-    ).toBeVisible();
-    await expect(
-      canvas.getByLabelText(t("authUi.shortCode.newPasswordLabel"), {
+      canvas.getByLabelText(t("shortCode.newPasswordLabel"), {
         exact: false,
         selector: 'input[name="password"]',
       })
     ).toBeVisible();
     await expect(
-      canvas.getByLabelText(t("authUi.shortCode.confirmPasswordLabel"), {
+      canvas.getByLabelText(t("shortCode.confirmPasswordLabel"), {
         exact: false,
         selector: 'input[name="confirmPassword"]',
       })
     ).toBeVisible();
-    await expect(canvas.getByText(t("authUi.shortCode.journeys.register.description"))).toBeVisible();
-    await expect(canvas.getByText(t("authUi.passwordHint"))).toBeVisible();
+    await expect(canvas.getByText(t("shortCode.journeys.register.description"))).toBeVisible();
+    await expect(canvas.getByText(t("form.passwordHint"))).toBeVisible();
     expect(canvasElement.textContent).not.toContain("@");
 
     const pageBounds = canvas.getByRole("main").getBoundingClientRect();
     const actionBounds = canvas
-      .getByRole("region", { name: t("authUi.shortCode.journeys.register.title") })
+      .getByRole("region", { name: t("shortCode.journeys.register.title") })
       .getBoundingClientRect();
     const spaceBefore = actionBounds.top - pageBounds.top;
     const spaceAfter = pageBounds.bottom - actionBounds.bottom;
@@ -56,9 +54,9 @@
   async function verifyEmailConfirmation({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("status")).toHaveTextContent(t("authUi.shortCode.journeys.emailUpdate.submitting"));
+    await expect(canvas.getByRole("status")).toHaveTextContent(t("shortCode.journeys.emailUpdate.submitting"));
     await expect(canvas.queryByRole("button")).not.toBeInTheDocument();
-    await expect(canvas.queryByLabelText(t("authUi.shortCode.newPasswordLabel"))).not.toBeInTheDocument();
+    await expect(canvas.queryByLabelText(t("shortCode.newPasswordLabel"))).not.toBeInTheDocument();
   }
 
   async function verifyValidationFeedback({ canvasElement }: { canvasElement: HTMLElement }) {
@@ -69,11 +67,9 @@
   async function verifySubmittingLocked({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
+    await expect(canvas.getByRole("button", { name: t("shortCode.journeys.passwordReset.submitting") })).toBeDisabled();
     await expect(
-      canvas.getByRole("button", { name: t("authUi.shortCode.journeys.passwordReset.submitting") })
-    ).toBeDisabled();
-    await expect(
-      canvas.getByLabelText(t("authUi.shortCode.newPasswordLabel"), {
+      canvas.getByLabelText(t("shortCode.newPasswordLabel"), {
         exact: false,
         selector: 'input[name="password"]',
       })

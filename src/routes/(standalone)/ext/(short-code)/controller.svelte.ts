@@ -1,14 +1,24 @@
 import { validateNewPassword } from "#lib/application/auth/forms.js";
-import type {
-  AuthenticationFeedback,
-  ShortCodePasswordField,
-  ShortCodeScreenModel,
-  ShortCodeState,
-} from "#lib/application/auth/types.js";
+import type { AuthenticationFeedback, FormState } from "#lib/application/auth/types.js";
 
 import type { ShortCodeActionData, ShortCodePageData } from "./short-code";
 
 import { type PasswordInputController, createPressedController } from "@a-novel-kit/uikit";
+
+/** The journeys an email link completes. */
+export type ShortCodeJourney = "register" | "email-update" | "password-reset";
+
+/** The fields of an email link's password form. */
+export type ShortCodePasswordField = "newPassword" | "confirmPassword";
+
+/** A secure email-link state. No short code or raw target is part of this model. */
+export type ShortCodeState = FormState<ShortCodePasswordField> | { status: "missing" } | { status: "invalid" };
+
+/** Pure standalone completion screen driven by a sanitized server model. */
+export interface ShortCodeScreenModel {
+  journey: ShortCodeJourney;
+  state: ShortCodeState;
+}
 
 /** A link in one of these statuses is completing, completed or unusable, and ignores another submission. */
 const lockedStatuses = new Set(["submitting", "success", "missing", "invalid"]);

@@ -12,10 +12,11 @@
 </script>
 
 <script lang="ts">
-  import type { AuthenticationField } from "#lib/application/auth/types.js";
   import { translateFieldIssue } from "#lib/i18n/auth-feedback.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
+
+  import type { AuthenticationField } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { Alert, Button, Field, FormActions, InlineMessage, Input, PasswordInput } from "@a-novel-kit/uikit";
@@ -40,16 +41,16 @@
 {#if model.state.status === "pending-email"}
   {@const targetHint = model.state.targetHint}
   <InlineMessage tone="success">
-    {t("authUi.authentication.journeys.reset.pendingDescription")} <strong class="pending-target">{targetHint}</strong>
+    {t("shell.auth.reset.pendingDescription")} <strong class="pending-target">{targetHint}</strong>
   </InlineMessage>
 {:else if model.state.status === "recorded"}
   <InlineMessage tone="success">
-    {t("authUi.authentication.journeys.register.recordedDescription")}
+    {t("shell.auth.register.recordedDescription")}
     <strong class="pending-target">{model.state.email}</strong>
   </InlineMessage>
 {:else}
   <form method="POST" {action} aria-busy={submitting} novalidate onsubmit={submit}>
-    <Field controlId={emailId} label={t("authUi.authentication.emailLabel")} error={fieldError("email")} required>
+    <Field controlId={emailId} label={t("shell.auth.emailLabel")} error={fieldError("email")} required>
       {#snippet children(control)}
         <Input
           {...control}
@@ -67,7 +68,7 @@
     {#if model.journey === "login"}
       <Field
         controlId={passwordId}
-        label={t("authUi.authentication.passwordLabel")}
+        label={t("shell.auth.passwordLabel")}
         labelActions={forgotPassword}
         error={fieldError("password")}
         required
@@ -94,17 +95,11 @@
       {/snippet}
       <Button type="submit" disabled={submitting || maintenance}>
         {#if model.journey === "register"}
-          {submitting
-            ? t("authUi.authentication.journeys.register.submitting")
-            : t("authUi.authentication.journeys.register.submit")}
+          {submitting ? t("shell.auth.register.submitting") : t("shell.auth.register.submit")}
         {:else if model.journey === "reset"}
-          {submitting
-            ? t("authUi.authentication.journeys.reset.submitting")
-            : t("authUi.authentication.journeys.reset.submit")}
+          {submitting ? t("shell.auth.reset.submitting") : t("shell.auth.reset.submit")}
         {:else}
-          {submitting
-            ? t("authUi.authentication.journeys.login.submitting")
-            : t("authUi.authentication.journeys.login.submit")}
+          {submitting ? t("shell.auth.login.submitting") : t("shell.auth.login.submit")}
         {/if}
       </Button>
     </FormActions>

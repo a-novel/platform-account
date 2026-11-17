@@ -1,8 +1,8 @@
-import type { ShortCodeState } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { applyAction } from "$app/forms";
 import { goto } from "$app/navigation";
 
+import type { ShortCodeState } from "../../controller.svelte";
 import type { ActionData, PageData } from "./$types";
 import EmailPage from "./+page.svelte";
 

@@ -49,7 +49,7 @@
   }
 
   /* On narrow screens it waits at the bottom, away from where reading starts, and never covers the end. */
-  @media (max-width: 47.999rem) {
+  @media (width < 48rem) {
     .downtime {
       order: 1;
       inset-block-end: 0;

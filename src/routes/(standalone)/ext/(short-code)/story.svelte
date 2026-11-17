@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type { ShortCodeScreenModel } from "#lib/application/auth/types.js";
+  import type { ShortCodeScreenModel } from "./controller.svelte";
 
   /** Fixed-state Storybook harness around the pure secure-link screen. */
   export interface ShortCodeScreenStoryProps {

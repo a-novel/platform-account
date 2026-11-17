@@ -1,7 +1,7 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateNewPassword } from "#lib/application/auth/forms.js";
-import type { ShortCodeState } from "#lib/application/auth/types.js";
 
+import type { ShortCodeState } from "./controller.svelte";
 import { createShortCodeScreenController, shortCodeControllerState } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";

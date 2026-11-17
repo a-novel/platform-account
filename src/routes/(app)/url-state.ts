@@ -1,6 +1,7 @@
-import type { AuthDialogView } from "#lib/application/shell/types.js";
+import type { AuthenticationJourney } from "./controller.svelte";
 
 const authParameter = "auth";
+const menuParameter = "menu";
 
 /** Reads a parameter that appears exactly once. A duplicate counts as absent. */
 export function singleValue(parameters: URLSearchParams, name: string): string | undefined {
@@ -16,22 +17,32 @@ export function withParameter(url: URL, name: string, value: string | null): URL
   return next;
 }
 
-function isAuthDialogView(value: string): value is AuthDialogView {
+function isAuthDialogView(value: string): value is AuthenticationJourney {
   return value === "login" || value === "register" || value === "reset";
 }
 
 /** Reads one canonical authentication view. Duplicate and invalid values close the dialog. */
-export function readAuthView(parameters: URLSearchParams): AuthDialogView | null {
+export function readAuthView(parameters: URLSearchParams): AuthenticationJourney | null {
   const value = singleValue(parameters, authParameter);
   return value !== undefined && isAuthDialogView(value) ? value : null;
 }
 
 /** Returns a URL with canonical authentication state while preserving unrelated state. */
-export function withAuthView(url: URL, view: AuthDialogView | null): URL {
+export function withAuthView(url: URL, view: AuthenticationJourney | null): URL {
   return withParameter(url, authParameter, view);
 }
 
 /** Removes invalid or duplicate authentication values from a shareable URL. */
 export function normalizeAuthUrl(url: URL): URL {
   return readAuthView(url.searchParams) ? new URL(url) : withAuthView(url, null);
+}
+
+/** Reads the mobile navigation's canonical URL state. A duplicate parameter counts as closed. */
+export function readNavigationOpen(parameters: URLSearchParams): boolean {
+  return singleValue(parameters, menuParameter) === "open";
+}
+
+/** Returns a copy of the URL with canonical mobile navigation state, preserving unrelated state. */
+export function withNavigationOpen(url: URL, open: boolean): URL {
+  return withParameter(url, menuParameter, open ? "open" : null);
 }

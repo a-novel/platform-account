@@ -1,7 +1,5 @@
 <script lang="ts">
-  import type { AuthDialogView } from "#lib/application/shell/types.js";
   import { retryWhile } from "#lib/client/retry.svelte.js";
-  import { authenticationPageTitle } from "#lib/i18n/page-titles.js";
   import { setAuthenticationTitle } from "#lib/ui/PageTitle.svelte";
   import { getPlatformDowntime } from "#lib/ui/downtime.svelte.js";
   import { hasTelemetryPreference } from "#lib/ui/telemetry-preference.js";
@@ -11,7 +9,7 @@
   import { page } from "$app/state";
 
   import { readAuthenticationActionModel } from "./action-data";
-  import { normalizeAuthUrl, readAuthView, withAuthView } from "./auth-dialog-state";
+  import type { AuthenticationJourney } from "./controller.svelte";
   import {
     type AuthenticationPanelControllerState,
     createAuthenticationPanelController,
@@ -19,8 +17,9 @@
     readyAuthenticationModel,
   } from "./controller.svelte";
   import { shellSessionData } from "./dependencies";
-  import { withNavigationOpen } from "./navigation-state";
+  import { authenticationPageTitle } from "./page-title";
   import Screen from "./screen.svelte";
+  import { normalizeAuthUrl, readAuthView, withAuthView, withNavigationOpen } from "./url-state";
 
   import { onMount } from "svelte";
 
@@ -102,14 +101,14 @@
   }
 
   /** The authentication form of a view: the latest action result for it, or a blank form. */
-  function authenticationState(view: AuthDialogView): AuthenticationPanelControllerState {
+  function authenticationState(view: AuthenticationJourney): AuthenticationPanelControllerState {
     return {
       model: readAuthenticationActionModel(page.form, view) ?? readyAuthenticationModel(view),
       action: authenticationAction(view),
     };
   }
 
-  function authenticationAction(view: AuthDialogView): string {
+  function authenticationAction(view: AuthenticationJourney): string {
     const current = new URL(currentHref);
     const target = new URL(resolve(""), current);
     target.searchParams.set("auth", view);
@@ -124,7 +123,7 @@
    * Shows an authentication view in the URL. A journey opened from the menu also closes the menu, before the router
    * updates the address bar, so each change builds on the shell's current URL rather than the browser's.
    */
-  function changeAuthView(view: AuthDialogView | null) {
+  function changeAuthView(view: AuthenticationJourney | null) {
     const previousView = readAuthView(new URL(currentHref).searchParams);
     // Opening the dialog adds a history entry. Any other change replaces the current one.
     showShallow(withAuthView(new URL(currentHref), view), previousView !== null || view === null);

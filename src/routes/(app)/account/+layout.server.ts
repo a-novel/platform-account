@@ -1,11 +1,10 @@
-import type { AccountCredentialsState, AccountSummaryState } from "#lib/application/auth/types.js";
-import type { ProfileState } from "#lib/application/profile/types.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import type { AuthenticationEvent } from "#lib/server/auth/context.js";
 import { readTokenExpiry } from "#lib/server/auth/session.js";
 import { type ProfileEvent, getProfileContext, summarizeProfile } from "#lib/server/profile/context.js";
 
 import { accountData } from "../dependencies";
+import type { AccountCredentialsState, AccountSummaryState, ProfileState } from "./controller.svelte";
 
 import { type AuthenticationApi, credentialsGetSelf } from "@a-novel/service-authentication-rest";
 

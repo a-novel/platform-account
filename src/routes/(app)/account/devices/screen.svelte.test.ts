@@ -1,7 +1,7 @@
-import type { AccountDevice, AccountDeviceConfirmation, AccountDevicesModel } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
+import type { AccountDevice, AccountDeviceConfirmation, AccountDevicesModel } from "./controller.svelte";
 import { type AccountDevicesControllerOptions, createAccountDevicesController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 

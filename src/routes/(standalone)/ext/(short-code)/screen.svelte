@@ -1,7 +1,5 @@
 <script module lang="ts">
-  import type { ShortCodePasswordField } from "#lib/application/auth/types.js";
-
-  import type { ShortCodeScreenController } from "./controller.svelte";
+  import type { ShortCodePasswordField, ShortCodeScreenController } from "./controller.svelte";
 
   /** Props for a pure standalone email-link completion screen. */
   export interface ShortCodeScreenProps {
@@ -46,11 +44,11 @@
     {#if !hasOutcome && model.journey !== "email-update"}
       <header class="page-heading">
         {#if model.journey === "register"}
-          <h1 id={`${componentId}-title`}>{t("authUi.shortCode.journeys.register.title")}</h1>
-          <p>{t("authUi.shortCode.journeys.register.description")}</p>
+          <h1 id={`${componentId}-title`}>{t("shortCode.journeys.register.title")}</h1>
+          <p>{t("shortCode.journeys.register.description")}</p>
         {:else}
-          <h1 id={`${componentId}-title`}>{t("authUi.shortCode.journeys.passwordReset.title")}</h1>
-          <p>{t("authUi.shortCode.journeys.passwordReset.description")}</p>
+          <h1 id={`${componentId}-title`}>{t("shortCode.journeys.passwordReset.title")}</h1>
+          <p>{t("shortCode.journeys.passwordReset.description")}</p>
         {/if}
       </header>
     {/if}
@@ -59,18 +57,18 @@
       <StatusState
         tone="error"
         title={unavailableStatus === "missing"
-          ? t("authUi.shortCode.states.missing.title")
-          : t("authUi.shortCode.states.invalid.title")}
+          ? t("shortCode.states.missing.title")
+          : t("shortCode.states.invalid.title")}
         headingLevel={1}
         description={unavailableStatus === "missing"
-          ? t("authUi.shortCode.states.missing.description")
-          : t("authUi.shortCode.states.invalid.description")}
+          ? t("shortCode.states.missing.description")
+          : t("shortCode.states.invalid.description")}
       >
         {#snippet actions()}
           <!-- Invitations are issued by the team, so a dead one leads back to the invitation list. -->
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
           <Link href={restartHref}>
-            {model.journey === "register" ? t("shell.auth.createAccount") : t("authUi.shortCode.restart")}
+            {model.journey === "register" ? t("shell.auth.createAccount") : t("shortCode.restart")}
           </Link>
         {/snippet}
       </StatusState>
@@ -80,7 +78,7 @@
           <!-- A password reset returns no session, so it continues to the login form. -->
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
           <Link href={continueHref}>
-            {model.journey === "password-reset" ? t("shell.signIn") : t("authUi.shortCode.continue")}
+            {model.journey === "password-reset" ? t("shell.signIn") : t("shortCode.continue")}
           </Link>
         {/snippet}
       </StatusState>
@@ -88,20 +86,20 @@
       {#if model.state.status === "service-error"}
         <StatusState
           tone="error"
-          title={t("authUi.shortCode.journeys.emailUpdate.unavailableTitle")}
+          title={t("shortCode.journeys.emailUpdate.unavailableTitle")}
           description={translateAuthenticationFeedback(t, model.state.feedback)}
           headingLevel={1}
         >
           {#snippet actions()}
             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- The pure screen receives app-resolved URLs. -->
-            <Link href={restartHref}>{t("authUi.shortCode.restart")}</Link>
+            <Link href={restartHref}>{t("shortCode.restart")}</Link>
           {/snippet}
         </StatusState>
       {:else}
-        <StatusState tone="loading" title={t("authUi.shortCode.journeys.emailUpdate.submitting")} headingLevel={1} />
+        <StatusState tone="loading" title={t("shortCode.journeys.emailUpdate.submitting")} headingLevel={1} />
         <noscript>
           <form method="POST" {action}>
-            <Button type="submit">{t("authUi.shortCode.journeys.emailUpdate.submit")}</Button>
+            <Button type="submit">{t("shortCode.journeys.emailUpdate.submit")}</Button>
           </form>
         </noscript>
       {/if}
@@ -111,8 +109,8 @@
         <form method="POST" {action} aria-busy={submitting} novalidate onsubmit={submit}>
           <Field
             controlId={newPasswordId}
-            label={t("authUi.shortCode.newPasswordLabel")}
-            hint={t("authUi.passwordHint")}
+            label={t("shortCode.newPasswordLabel")}
+            hint={t("form.passwordHint")}
             error={fieldError("newPassword")}
             required
           >
@@ -128,7 +126,7 @@
           </Field>
           <Field
             controlId={confirmPasswordId}
-            label={t("authUi.shortCode.confirmPasswordLabel")}
+            label={t("shortCode.confirmPasswordLabel")}
             error={fieldError("confirmPassword")}
             required
           >
@@ -151,13 +149,11 @@
             {/snippet}
             <Button type="submit" disabled={submitting}>
               {#if model.journey === "register"}
-                {submitting
-                  ? t("authUi.shortCode.journeys.register.submitting")
-                  : t("authUi.shortCode.journeys.register.submit")}
+                {submitting ? t("shortCode.journeys.register.submitting") : t("shortCode.journeys.register.submit")}
               {:else}
                 {submitting
-                  ? t("authUi.shortCode.journeys.passwordReset.submitting")
-                  : t("authUi.shortCode.journeys.passwordReset.submit")}
+                  ? t("shortCode.journeys.passwordReset.submitting")
+                  : t("shortCode.journeys.passwordReset.submit")}
               {/if}
             </Button>
           </FormActions>
@@ -212,7 +208,7 @@
     line-height: var(--line-height-normal);
   }
 
-  @media (max-width: 34.999rem) {
+  @media (width < 35rem) {
     .standalone-page {
       padding: var(--space-2);
     }

@@ -1,8 +1,8 @@
-import type { AccountDevice, AccountDevicesModel } from "#lib/application/auth/types.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 
 import { devicesData } from "../../dependencies";
 import type { PageServerLoadEvent } from "./$types";
+import type { AccountDevice, AccountDevicesModel } from "./controller.svelte";
 import { readDeviceName } from "./user-agent";
 
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";

@@ -1,6 +1,5 @@
-import type { AccountDeviceConfirmation } from "#lib/application/auth/types.js";
-
-import { singleValue } from "../../auth-dialog-state";
+import { singleValue } from "../../url-state";
+import type { AccountDeviceConfirmation } from "./controller.svelte";
 
 /** The URL parameter naming the logout waiting for confirmation: a session ID, or `others`. */
 export const confirmationParameter = "confirm";

@@ -1,4 +1,3 @@
-import type { AccountCredentialsState } from "#lib/application/auth/types.js";
 import { stubAuthenticationContext } from "#lib/server/auth/context.fixture.js";
 import { getAuthenticationContext } from "#lib/server/auth/context.js";
 import {
@@ -8,6 +7,7 @@ import {
   AuthenticationUnavailableError,
 } from "#lib/server/auth/session.js";
 
+import type { AccountCredentialsState } from "../controller.svelte";
 import type { PageServerLoadEvent } from "./$types";
 import { actions as devicesActions, load as loadDevices } from "./+page.server";
 

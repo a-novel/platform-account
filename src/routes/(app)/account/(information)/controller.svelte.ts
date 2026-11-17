@@ -1,13 +1,9 @@
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type {
-  AccountEditor,
-  AccountInformationActions,
-  AccountInformationModel,
-  AccountPasswordField,
-} from "#lib/application/auth/types.js";
+import type { FormState } from "#lib/application/auth/types.js";
 import { profilePicture } from "#lib/application/profile/picture.js";
-import { usernameIssue } from "#lib/application/profile/username.js";
+import { type UsernameIssue, usernameIssue } from "#lib/application/profile/username.js";
 
+import type { AccountCredentialsState, ProfileState } from "../controller.svelte";
 import { blankEditors } from "./account-action";
 
 import {
@@ -17,12 +13,75 @@ import {
   type PictureFiles,
   type PictureFrameController,
   type PictureFrameState,
+  type PictureSource,
   browserPictureFiles,
   centeredCrop,
   createPressedController,
   panCrop,
   zoomCrop,
 } from "@a-novel-kit/uikit";
+
+/** The fields of the account password form. */
+export type AccountPasswordField = "currentPassword" | "newPassword" | "confirmPassword";
+
+/** The fields of the account email form. */
+export type AccountEmailField = "currentPassword" | "newEmail";
+
+/** The account detail a dialog edits. */
+export type AccountEditor = "email" | "password" | "username" | "picture";
+
+/** The "My information" tab: the public profile, the account's email and password, and their editing dialogs. */
+export interface AccountInformationModel {
+  profile: ProfileState;
+  credentials: AccountCredentialsState;
+  /** The open editing dialog, which the URL owns. */
+  editor: AccountEditor | null;
+  passwordState: FormState<AccountPasswordField>;
+  /** A sent link carries no address: the pending email comes from `credentials` once the page reloads. */
+  emailState: Exclude<FormState<AccountEmailField>, { status: "success" }> | { status: "pending-email" };
+  /** The address a submission the server refused keeps in its field. Passwords are never sent back. */
+  emailDraft: string;
+  /** Cancelling the pending email change. Only the service can refuse it: the form has no field. */
+  emailCancelState: Extract<FormState<never>, { status: "ready" | "submitting" | "service-error" }>;
+  username: UsernameEditor;
+  picture: PictureEditor;
+}
+
+/** POST destinations of the "My information" tab. */
+export interface AccountInformationActions {
+  password: string;
+  email: string;
+  cancelEmail: string;
+  username: string;
+  picture: string;
+  removePicture: string;
+}
+
+/** Why the browser or the profile service refused a picture. */
+export type PictureRefusal = "unreadable" | "format" | "ratio" | "dimensions" | "tooLarge";
+
+/** The failures of a profile change that are the service's, which a later try may get past. */
+export type ProfileServiceFeedback = "serviceUnavailable" | "tooManyAttempts";
+
+/** The username dialog: the name being typed, and the outcome of its latest submission. */
+export interface UsernameEditor {
+  draft: string;
+  state:
+    | { status: "ready" | "submitting" }
+    | { status: "validation-error"; issue: UsernameIssue }
+    | { status: "service-error"; feedback: ProfileServiceFeedback };
+}
+
+/**
+ * The picture dialog's step. Choosing shows the latest refusal of a picture, if any; framing names the file the
+ * picture came from.
+ */
+export type PictureEditor =
+  | { status: "choosing"; refusal?: PictureRefusal }
+  | { status: "opening" }
+  | { status: "cropping" | "saving"; name: string; source: PictureSource; crop: PictureCrop }
+  | { status: "removing" }
+  | { status: "service-error"; feedback: ProfileServiceFeedback };
 
 /** State rendered by the "My information" tab. */
 export interface AccountInformationControllerState {

@@ -1,8 +1,6 @@
 <script lang="ts">
-  import type { AccountDevice } from "#lib/application/auth/types.js";
-
   import { followInPlace } from "../../link-transition";
-  import type { AccountDevicesController } from "./controller.svelte";
+  import type { AccountDevice, AccountDevicesController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { Button, Dialog, FormActions, IconButton } from "@a-novel-kit/uikit";
@@ -35,13 +33,13 @@
 <Dialog
   controller={controller.confirmation}
   title={device
-    ? t("authUi.account.devices.confirm.deviceTitle", { device: deviceName ?? "" })
-    : t("authUi.account.devices.confirm.othersTitle")}
+    ? t("account.devices.confirm.deviceTitle", { device: deviceName ?? "" })
+    : t("account.devices.confirm.othersTitle")}
   size="sm"
 >
   {#snippet headerActions()}
     <IconButton
-      label={t("authUi.account.closeEditor")}
+      label={t("account.closeEditor")}
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -60,17 +58,17 @@
     onsubmit={submit}
   >
     {#if !device}
-      <p>{t("authUi.account.devices.confirm.othersBody")}</p>
+      <p>{t("account.devices.confirm.othersBody")}</p>
     {/if}
-    <p class="secondary">{t("authUi.account.devices.lossDelay")}</p>
+    <p class="secondary">{t("account.devices.lossDelay")}</p>
     {#if device}<input type="hidden" name="sessionID" value={device.id} />{/if}
 
     <FormActions>
       <Button href={controller.confirmationHref(null)} variant="outline" tone="neutral" onclick={close}>
-        {t("authUi.account.devices.confirm.cancel")}
+        {t("account.devices.confirm.cancel")}
       </Button>
       <Button type="submit" tone="danger" disabled={submitting}>
-        {device ? t("authUi.account.devices.logout") : t("authUi.account.devices.logoutOthers")}
+        {device ? t("account.devices.logout") : t("account.devices.logoutOthers")}
       </Button>
     </FormActions>
   </form>

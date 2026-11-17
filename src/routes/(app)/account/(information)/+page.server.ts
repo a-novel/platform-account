@@ -1,6 +1,4 @@
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type { AccountInformationModel } from "#lib/application/auth/types.js";
-import type { PictureEditor, PictureRefusal, UsernameEditor } from "#lib/application/profile/types.js";
 import { usernameIssue } from "#lib/application/profile/username.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 import { emailLanguage } from "#lib/server/auth/context.js";
@@ -8,6 +6,7 @@ import { getProfileContext } from "#lib/server/profile/context.js";
 
 import { dialogUrl, editorParameter, localHref } from "../url-state";
 import type { AccountActionData } from "./account-action";
+import type { AccountInformationModel, PictureEditor, PictureRefusal, UsernameEditor } from "./controller.svelte";
 
 import { isHttpStatusError, isHttpError as isServiceError } from "@a-novel-kit/nodelib-browser/http";
 import {

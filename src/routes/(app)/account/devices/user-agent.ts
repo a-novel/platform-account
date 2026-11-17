@@ -1,4 +1,4 @@
-import type { DeviceName } from "#lib/application/auth/types.js";
+import type { DeviceName } from "./controller.svelte";
 
 // Each User-Agent also names the engines it descends from, so a browser comes before its ancestors:
 // Edge and Opera before Chrome, Chrome before Safari, and Android before Linux.

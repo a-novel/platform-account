@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { AccountEditor } from "#lib/application/auth/types.js";
   import { afterNavigate, goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
 
   import { addressBar, dialogUrl, editorParameter, localHref } from "../url-state";
   import { createInformationModel, mergeAccountAction } from "./account-action";
+  import type { AccountEditor } from "./controller.svelte";
   import { createAccountInformationController } from "./controller.svelte";
   import { readEditor } from "./editor-state";
   import Screen from "./screen.svelte";

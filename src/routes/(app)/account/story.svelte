@@ -1,13 +1,9 @@
 <script module lang="ts">
-  import type {
-    AccountDevicesModel,
-    AccountInformationModel,
-    AccountSummaryState,
-    PrivacyAccountState,
-  } from "#lib/application/auth/types.js";
-
-  import type { AccountTab } from "./controller.svelte";
+  import type { AccountInformationModel } from "./(information)/controller.svelte";
+  import type { AccountSummaryState, AccountTab } from "./controller.svelte";
+  import type { AccountDevicesModel } from "./devices/controller.svelte";
   import type { LanguageChoice } from "./preferences/screen.svelte";
+  import type { PrivacyAccountState } from "./privacy/controller.svelte";
 
   /** Fixed-state Storybook harness: the account layout around one of its tabs. */
   export interface AccountStoryProps {
@@ -30,11 +26,10 @@
 </script>
 
 <script lang="ts">
-  import type { AccountEditor } from "#lib/application/auth/types.js";
   import { profilePicture } from "#lib/application/profile/picture.js";
   import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
-  import type { AccountInformationController } from "./(information)/controller.svelte";
+  import type { AccountEditor, AccountInformationController } from "./(information)/controller.svelte";
   import InformationScreen from "./(information)/screen.svelte";
   import type { AccountLayoutController } from "./controller.svelte";
   import type { AccountDevicesController } from "./devices/controller.svelte";

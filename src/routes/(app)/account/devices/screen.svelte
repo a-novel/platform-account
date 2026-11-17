@@ -8,10 +8,10 @@
 </script>
 
 <script lang="ts">
-  import type { AccountDevice, AccountDeviceConfirmation } from "#lib/application/auth/types.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
 
   import { followInPlace } from "../../link-transition";
+  import type { AccountDevice, AccountDeviceConfirmation } from "./controller.svelte";
   import { type DeviceList, pageOf } from "./device-pages";
   import LogoutDialog from "./logout-dialog.svelte";
 
@@ -44,15 +44,15 @@
 
   function deviceName(device: AccountDevice): string {
     if (device.browser && device.system) {
-      return t("authUi.account.devices.name", { browser: device.browser, system: device.system });
+      return t("account.devices.name", { browser: device.browser, system: device.system });
     }
-    if (device.system) return t("authUi.account.devices.nameUnknownBrowser", { system: device.system });
-    return device.browser ?? t("authUi.account.devices.unknown");
+    if (device.system) return t("account.devices.nameUnknownBrowser", { system: device.system });
+    return device.browser ?? t("account.devices.unknown");
   }
 
   function activity(device: AccountDevice): string {
-    if (device.current) return t("authUi.account.devices.activeNow");
-    return t("authUi.account.devices.lastActive", { date: device.lastActiveAt });
+    if (device.current) return t("account.devices.activeNow");
+    return t("account.devices.lastActive", { date: device.lastActiveAt });
   }
 
   function submitChange(event: SubmitEvent) {
@@ -66,7 +66,7 @@
   <div class="device">
     <p class="name">
       <span>{name}</span>
-      {#if device.current}<Badge tone="brand">{t("authUi.account.devices.current")}</Badge>{/if}
+      {#if device.current}<Badge tone="brand">{t("account.devices.current")}</Badge>{/if}
     </p>
     <p class="secondary">{activity(device)}</p>
     {#if device.place || device.ipAddress}
@@ -114,37 +114,35 @@
 
 <div class="devices-tab">
   {#if model.locationConsent === false}
-    <Alert tone="info" role="note" title={t("authUi.account.devices.locationTip.title")}>
-      {t("authUi.account.devices.locationTip.body")}
-      <Link href={controller.state.privacyHref}>{t("authUi.account.devices.locationTip.link")}</Link>
+    <Alert tone="info" role="note" title={t("account.devices.locationTip.title")}>
+      {t("account.devices.locationTip.body")}
+      <Link href={controller.state.privacyHref}>{t("account.devices.locationTip.link")}</Link>
     </Alert>
   {/if}
 
   <Card surface="raised">
     <section class="group" aria-labelledby={`${componentId}-active`}>
       <header>
-        <h2 id={`${componentId}-active`}>{t("authUi.account.devices.title")}</h2>
-        <p class="secondary">{t("authUi.account.devices.description")}</p>
+        <h2 id={`${componentId}-active`}>{t("account.devices.title")}</h2>
+        <p class="secondary">{t("account.devices.description")}</p>
       </header>
 
       <!-- A change's outcome sits with the list it changed, under the title that names it. -->
       {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
         {@const title =
-          model.action.status === "logged-out"
-            ? t("authUi.account.devices.loggedOut")
-            : t("authUi.account.devices.loggedOutOthers")}
+          model.action.status === "logged-out" ? t("account.devices.loggedOut") : t("account.devices.loggedOutOthers")}
         <Alert tone="success" {title} />
       {:else if model.action.status === "removed"}
-        <Alert tone="success" title={t("authUi.account.devices.removed")} />
+        <Alert tone="success" title={t("account.devices.removed")} />
       {:else if model.action.status === "service-error"}
         <AuthenticationError feedback={model.action.feedback} />
       {/if}
 
       {#if model.devices.status === "unavailable"}
-        <Alert tone="error" title={t("authUi.account.devices.unavailable")} />
+        <Alert tone="error" title={t("account.devices.unavailable")} />
       {:else if model.devices.status === "loading"}
         <!-- Without scripts no retry runs, so the failure shows at once. -->
-        <noscript><Alert tone="error" title={t("authUi.account.devices.unavailable")} /></noscript>
+        <noscript><Alert tone="error" title={t("account.devices.unavailable")} /></noscript>
         <div class="loading">
           <Skeleton shape="rectangle" />
           <Skeleton shape="rectangle" />
@@ -158,25 +156,25 @@
               {#if device.current}
                 {@render deviceAction(
                   actions.logout,
-                  t("authUi.account.devices.logout"),
-                  t("authUi.account.devices.logoutLabel", { device: name })
+                  t("account.devices.logout"),
+                  t("account.devices.logoutLabel", { device: name })
                 )}
               {:else}
                 {@render confirmLink(
                   { kind: "device", id: device.id },
-                  t("authUi.account.devices.logout"),
-                  t("authUi.account.devices.logoutLabel", { device: name })
+                  t("account.devices.logout"),
+                  t("account.devices.logoutLabel", { device: name })
                 )}
               {/if}
             </li>
           {/each}
         </ul>
-        {@render pagination("active", activePage, t("authUi.account.devices.pagination.active"))}
+        {@render pagination("active", activePage, t("account.devices.pagination.active"))}
       {/if}
 
       {#if hasOthers}
         <footer>
-          {@render confirmLink({ kind: "others" }, t("authUi.account.devices.logoutOthers"))}
+          {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
         </footer>
       {/if}
     </section>
@@ -186,9 +184,9 @@
     <Card surface="raised">
       <section class="group" aria-labelledby={`${componentId}-logged-out`}>
         <header>
-          <h2 id={`${componentId}-logged-out`}>{t("authUi.account.devices.loggedOutTitle")}</h2>
-          <p class="secondary">{t("authUi.account.devices.loggedOutDescription")}</p>
-          <p class="hint">{t("authUi.account.devices.lossDelay")}</p>
+          <h2 id={`${componentId}-logged-out`}>{t("account.devices.loggedOutTitle")}</h2>
+          <p class="secondary">{t("account.devices.loggedOutDescription")}</p>
+          <p class="hint">{t("account.devices.lossDelay")}</p>
         </header>
         <ul>
           {#each loggedOutPage.items as device (device.id)}
@@ -197,14 +195,14 @@
               {@render deviceRow(device, name)}
               {@render deviceAction(
                 actions.removeDevice,
-                t("authUi.account.devices.remove"),
-                t("authUi.account.devices.removeLabel", { device: name }),
+                t("account.devices.remove"),
+                t("account.devices.removeLabel", { device: name }),
                 device
               )}
             </li>
           {/each}
         </ul>
-        {@render pagination("loggedOut", loggedOutPage, t("authUi.account.devices.pagination.loggedOut"))}
+        {@render pagination("loggedOut", loggedOutPage, t("account.devices.pagination.loggedOut"))}
       </section>
     </Card>
   {/if}
@@ -307,7 +305,7 @@
    * A narrow card leaves the device's name its full line. Its action takes a full row below, set apart from the
    * details so a scrolling thumb does not land on it.
    */
-  @container (max-width: 28rem) {
+  @container (width <= 28rem) {
     li {
       grid-template-columns: auto minmax(0, 1fr);
       align-items: start;

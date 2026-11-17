@@ -8,11 +8,11 @@
 </script>
 
 <script lang="ts">
-  import type { AccountEditor } from "#lib/application/auth/types.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { followInPlace } from "../../link-transition";
+  import type { AccountEditor } from "./controller.svelte";
   import EmailDialog from "./email-dialog.svelte";
   import PasswordDialog from "./password-dialog.svelte";
   import PictureDialog from "./picture-dialog.svelte";
@@ -53,37 +53,37 @@
   <Card surface="raised">
     <section class="information" aria-labelledby={`${componentId}-profile-title`}>
       <div class="heading">
-        <h2 id={`${componentId}-profile-title`}>{t("authUi.account.profile.title")}</h2>
-        <p class="secondary">{t("authUi.account.profile.description")}</p>
+        <h2 id={`${componentId}-profile-title`}>{t("account.profile.title")}</h2>
+        <p class="secondary">{t("account.profile.description")}</p>
       </div>
       <dl>
         <div>
-          <dt>{t("authUi.account.username.title")}</dt>
+          <dt>{t("account.username.title")}</dt>
           <dd>
             <div class="row">
               {#if profile.status === "ready" && profile.username}
                 <bdi class="value">{profile.username}</bdi>
               {:else if profile.status === "ready"}
-                <span class="secondary">{t("authUi.account.username.none")}</span>
+                <span class="secondary">{t("account.username.none")}</span>
               {:else}
                 <Skeleton class="value-skeleton" />
               {/if}
-              {@render changeButton("username", t("authUi.account.username.changeLabel"))}
+              {@render changeButton("username", t("account.username.changeLabel"))}
             </div>
           </dd>
         </div>
         <div>
-          <dt>{t("authUi.account.picture.title")}</dt>
+          <dt>{t("account.picture.title")}</dt>
           <dd>
             <div class="row">
               {#if profile.status === "ready" && profile.picture}
-                <Avatar src={profile.picture} label={t("authUi.account.picture.current")} size="lg" />
+                <Avatar src={profile.picture} label={t("account.picture.current")} size="lg" />
               {:else if profile.status === "ready"}
-                <span class="secondary">{t("authUi.account.picture.none")}</span>
+                <span class="secondary">{t("account.picture.none")}</span>
               {:else}
                 <Skeleton shape="circle" />
               {/if}
-              {@render changeButton("picture", t("authUi.account.picture.changeLabel"))}
+              {@render changeButton("picture", t("account.picture.changeLabel"))}
             </div>
           </dd>
         </div>
@@ -95,15 +95,15 @@
   <Card surface="raised">
     <section class="information" aria-labelledby={`${componentId}-credentials-title`}>
       <div class="heading">
-        <h2 id={`${componentId}-credentials-title`}>{t("authUi.account.credentials.title")}</h2>
-        <p class="secondary">{t("authUi.account.credentials.description")}</p>
+        <h2 id={`${componentId}-credentials-title`}>{t("account.credentials.title")}</h2>
+        <p class="secondary">{t("account.credentials.description")}</p>
       </div>
       <Card surface="raised">
         <section class="information" aria-labelledby={`${componentId}-title`}>
-          <h3 id={`${componentId}-title`}>{t("authUi.account.signIn.title")}</h3>
+          <h3 id={`${componentId}-title`}>{t("account.signIn.title")}</h3>
           <dl>
             <div>
-              <dt>{t("authUi.account.email.title")}</dt>
+              <dt>{t("account.email.title")}</dt>
               <dd>
                 <div class="row">
                   {#if credentials.status === "ready"}
@@ -111,11 +111,11 @@
                   {:else}
                     <Skeleton class="value-skeleton" />
                   {/if}
-                  {@render changeButton("email", t("authUi.account.email.changeLabel"))}
+                  {@render changeButton("email", t("account.email.changeLabel"))}
                 </div>
                 {#if credentials.status === "ready" && credentials.pendingEmail}
                   {@const pending = credentials.pendingEmail}
-                  <Alert tone="info" role="note" title={t("authUi.account.email.pending")}>
+                  <Alert tone="info" role="note" title={t("account.email.pending")}>
                     {#snippet icon()}
                       <Hourglass size="var(--icon-size-sm)" />
                     {/snippet}
@@ -129,13 +129,13 @@
                           disabled={emailCancel.status === "submitting"}
                         >
                           {emailCancel.status === "submitting"
-                            ? t("authUi.account.email.cancelling")
-                            : t("authUi.account.email.cancel")}
+                            ? t("account.email.cancelling")
+                            : t("account.email.cancel")}
                         </Button>
                       </form>
                     {/snippet}
                     <span class="pending-email">{pending.email}</span>
-                    {t("authUi.account.email.pendingExpiry", { date: pending.expiresAt })}
+                    {t("account.email.pendingExpiry", { date: pending.expiresAt })}
                   </Alert>
                   {#if emailCancel.status === "service-error"}
                     <AuthenticationError feedback={emailCancel.feedback} />
@@ -144,11 +144,11 @@
               </dd>
             </div>
             <div>
-              <dt>{t("authUi.account.password.title")}</dt>
+              <dt>{t("account.password.title")}</dt>
               <dd>
                 <div class="row">
                   <span class="secondary" aria-hidden="true">••••••••</span>
-                  {@render changeButton("password", t("authUi.account.password.changeLabel"))}
+                  {@render changeButton("password", t("account.password.changeLabel"))}
                 </div>
               </dd>
             </div>

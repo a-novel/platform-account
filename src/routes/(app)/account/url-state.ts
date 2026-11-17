@@ -1,4 +1,4 @@
-import { withParameter } from "../auth-dialog-state";
+import { withParameter } from "../url-state";
 
 /** The URL parameter naming the open account editor. */
 export const editorParameter = "edit";

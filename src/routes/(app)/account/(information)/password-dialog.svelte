@@ -1,11 +1,10 @@
 <script lang="ts">
-  import type { AccountPasswordField } from "#lib/application/auth/types.js";
   import { translateFieldIssue } from "#lib/i18n/auth-feedback.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { followInPlace } from "../../link-transition";
-  import type { AccountInformationController } from "./controller.svelte";
+  import type { AccountInformationController, AccountPasswordField } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { Button, Dialog, Field, FormActions, IconButton, Link, PasswordInput } from "@a-novel-kit/uikit";
@@ -29,18 +28,18 @@
 {#snippet changedTitle()}
   <span class="success-title">
     <ShieldCheck size="var(--icon-size-md)" aria-hidden="true" />
-    {t("authUi.account.password.success.title")}
+    {t("account.password.success.title")}
   </span>
 {/snippet}
 
 <Dialog
   controller={controller.editors.password}
-  title={changed ? changedTitle : t("authUi.account.password.dialogTitle")}
+  title={changed ? changedTitle : t("account.password.dialogTitle")}
   size="sm"
 >
   {#snippet headerActions()}
     <IconButton
-      label={t("authUi.account.closeEditor")}
+      label={t("account.closeEditor")}
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -54,24 +53,24 @@
   {#if changed}
     <!-- A password change keeps every session, so the screen says so and offers to end the others. -->
     <div class="success" role="status">
-      <p>{t("authUi.account.password.success.description")}</p>
+      <p>{t("account.password.success.description")}</p>
       <p class="secondary">
-        {t("authUi.account.password.success.devices")}
-        <Link href={controller.state.devicesHref}>{t("authUi.account.password.success.review")}</Link>
+        {t("account.password.success.devices")}
+        <Link href={controller.state.devicesHref}>{t("account.password.success.review")}</Link>
       </p>
       <FormActions>
         <!-- Logging every device out asks for confirmation on the devices tab, as it does there. -->
         <Button href={controller.state.logoutOthersHref} variant="outline" tone="neutral">
-          {t("authUi.account.devices.logoutOthers")}
+          {t("account.devices.logoutOthers")}
         </Button>
-        <Button href={controller.editorHref(null)} onclick={close}>{t("authUi.account.gotIt")}</Button>
+        <Button href={controller.editorHref(null)} onclick={close}>{t("account.gotIt")}</Button>
       </FormActions>
     </div>
   {:else}
     <form method="POST" action={controller.state.actions.password} aria-busy={submitting} novalidate onsubmit={submit}>
       <Field
         controlId={`${componentId}-current-password`}
-        label={t("authUi.account.password.currentLabel")}
+        label={t("account.password.currentLabel")}
         error={error("currentPassword")}
         required
       >
@@ -87,8 +86,8 @@
       </Field>
       <Field
         controlId={`${componentId}-new-password`}
-        label={t("authUi.account.password.newLabel")}
-        hint={t("authUi.account.password.hint")}
+        label={t("account.password.newLabel")}
+        hint={t("account.password.hint")}
         error={error("newPassword")}
         required
       >
@@ -104,7 +103,7 @@
       </Field>
       <Field
         controlId={`${componentId}-confirm-password`}
-        label={t("authUi.account.password.confirmLabel")}
+        label={t("account.password.confirmLabel")}
         error={error("confirmPassword")}
         required
       >
@@ -125,7 +124,7 @@
           {/if}
         {/snippet}
         <Button type="submit" disabled={submitting}>
-          {submitting ? t("authUi.account.password.submitting") : t("authUi.account.password.submit")}
+          {submitting ? t("account.password.submitting") : t("account.password.submit")}
         </Button>
       </FormActions>
     </form>

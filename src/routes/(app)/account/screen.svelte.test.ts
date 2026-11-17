@@ -1,8 +1,8 @@
-import type { AccountSummaryState } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
+import type { AccountSummaryState } from "./controller.svelte";
 import { type AccountTab, createAccountLayoutController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 
