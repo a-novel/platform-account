@@ -2,7 +2,7 @@
   import { validationFixture } from "#lib/application/auth/forms.fixture.js";
   import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
   import { landscapeSource, portraitPicture } from "#lib/application/profile/picture.fixture.js";
-  import { createStorybookTranslator } from "#lib/i18n/storybook.js";
+  import { createStorybookTranslator, storybookLocale } from "#lib/i18n/storybook.js";
 
   import { createInformationModel } from "./(information)/account-action";
   import type { AccountInformationModel } from "./(information)/controller.svelte";
@@ -117,9 +117,16 @@
     await expect(canvas.getByRole("heading", { level: 1, name: summary.email })).toBeVisible();
     const roles = canvas.getByRole("list", { name: t("account.roles.label") });
     await expect(within(roles).getByRole("listitem")).toHaveTextContent(t("account.roles.user"));
-    // The session's end follows its label.
+    // The session's end follows its label, formatted as the harness formats the summary's date.
+    const dates = new Intl.DateTimeFormat(storybookLocale(globals), {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "UTC",
+    });
     const sessionEnd = canvas.getByText(t("account.loggedInUntil")).parentElement;
-    await expect(sessionEnd).toHaveTextContent(new RegExp(`^${t("account.loggedInUntil")}\\s+\\S`));
+    await expect(sessionEnd).toHaveTextContent(
+      `${t("account.loggedInUntil")} ${dates.format(Date.parse(summary.loggedInUntil))}`
+    );
     await expect(canvas.getByRole("button", { name: t("account.logout.submit") })).toBeEnabled();
     const tabs = within(canvas.getByRole("navigation", { name: t("account.tabs.label") }));
     await expect(tabs.getByRole("link", { name: t("account.tabs.information") })).toHaveAttribute(
