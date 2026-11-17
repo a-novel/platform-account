@@ -7,7 +7,7 @@
   export type LanguageChoice = Locale | "browser";
 
   /** Props for the pure "Preferences" tab. */
-  export interface AccountPreferencesScreenProps {
+  interface AccountPreferencesScreenProps {
     /** The language chosen in the form, which saving keeps for this device. */
     language: SelectController<LanguageChoice>;
     /** The language this device keeps now; saving waits for another choice. */

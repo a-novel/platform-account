@@ -46,14 +46,11 @@ export interface ShortCodeScreenController {
 export interface ShortCodeScreenControllerOptions {
   /** The link's state the route loads, or the result its action returns. */
   getState: () => ShortCodeScreenControllerState;
-  /** Allows the browser to submit the form after the controller accepts the transition. */
-  allowNativeSubmission?: boolean;
 }
 
 /** Creates a reactive controller for a standalone secure-link screen. */
 export function createShortCodeScreenController({
   getState,
-  allowNativeSubmission = true,
 }: ShortCodeScreenControllerOptions): ShortCodeScreenController {
   // A submission shows until the route loads the link again or its action returns.
   let state = $derived(getState());
@@ -78,7 +75,7 @@ export function createShortCodeScreenController({
         }
       }
       setStatus({ status: "submitting" });
-      return allowNativeSubmission;
+      return true;
     },
     fail: (feedback) => setStatus({ status: "service-error", feedback }),
   };

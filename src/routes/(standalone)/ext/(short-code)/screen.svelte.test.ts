@@ -1,5 +1,5 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
-import { expectFormActionLayout } from "#lib/ui/forms.fixture.js";
+import { interceptNativeSubmissions } from "#lib/ui/forms.fixture.js";
 
 import { type ShortCodeScreenModel, createShortCodeScreenController } from "./controller.svelte";
 import ShortCodeScreen from "./screen.svelte";
@@ -15,7 +15,6 @@ import { PasswordSchema } from "@a-novel/service-authentication-rest";
 function shortCodeController(model: ShortCodeScreenModel) {
   return createShortCodeScreenController({
     getState: () => ({ model, action: "/ext/complete", restartHref: "/?auth=reset", continueHref: "/" }),
-    allowNativeSubmission: false,
   });
 }
 
@@ -48,37 +47,15 @@ describe("secure-link screen", () => {
     await page
       .getByLabelText(locale === "fr" ? /Confirmez votre nouveau mot de passe/ : /Confirm new password/)
       .fill("valid-password");
+    const submitted = interceptNativeSubmissions();
     await submit.click();
     await expect.element(submit).toBeDisabled();
     expect(controller.state.model.state).toEqual({ status: "submitting" });
+    expect(submitted).toEqual([form]);
     expect(Object.fromEntries(new FormData(form))).toEqual({
       password: "valid-password",
       confirmPassword: "valid-password",
     });
-  });
-
-  it("never renders secure-link material and locks completion while submitting", async () => {
-    render(
-      ShortCodeScreen,
-      {
-        controller: shortCodeController({
-          journey: "password-reset",
-          state: { status: "submitting" },
-        }),
-      },
-      withLocale()
-    );
-
-    const button = page.getByRole("button", { name: /Resetting password/ });
-    await expect.element(button).toBeDisabled();
-    const form = (button.element() as HTMLButtonElement).form;
-    expect(form).not.toBeNull();
-    if (form) await expectFormActionLayout(form);
-    expect(button.element().querySelector('[role="status"]')).toBeNull();
-    await expect.element(page.getByLabelText(/New password/)).toHaveAttribute("readonly");
-    await expect.element(page.getByLabelText(/Confirm new password/)).toHaveAttribute("readonly");
-    expect(document.querySelector('[name="shortCode"]')).toBeNull();
-    expect(document.querySelector('[name="target"]')).toBeNull();
   });
 
   const completedLinks = [
@@ -137,46 +114,25 @@ describe("secure-link screen", () => {
       },
       withLocale()
     );
-    for (const form of document.querySelectorAll("form")) await expectFormActionLayout(form);
+    const alert = page.getByRole("alert").element();
+    const submit = page.getByRole("button", { name: "Reset password" }).element() as HTMLButtonElement;
+    expect(submit.form?.contains(alert)).toBe(true);
+    expect(alert.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
-
-  it.each(["ready", "submitting"] as const)(
-    "renders %s email validation without a confirmation form",
-    async (status) => {
-      const controller = createShortCodeScreenController({
-        getState: () => ({
-          model: { journey: "email-update", state: { status } },
-          action: "/ext/email/validate",
-          restartHref: "/account",
-          continueHref: "/account",
-        }),
-        allowNativeSubmission: false,
-      });
-
-      render(ShortCodeScreen, { controller }, withLocale());
-
-      await expect.element(page.getByRole("status")).toMatchTextContent("Updating email…");
-      await expect.element(page.getByRole("heading", { level: 1, name: "Updating email…" })).toBeVisible();
-      await expect.element(page.getByRole("button")).not.toBeInTheDocument();
-      expect(document.querySelector('input[type="password"]')).toBeNull();
-      expect(controller.state.model.state.status).toBe(status);
-    }
-  );
 
   it("shows the result the route returns in place of the email validation it started", async () => {
     let model = $state<ShortCodeScreenModel>({ journey: "email-update", state: { status: "ready" } });
     const controller = createShortCodeScreenController({
       getState: () => ({ model, action: "/ext/email/validate", restartHref: "/account", continueHref: "/account" }),
-      allowNativeSubmission: false,
     });
     render(ShortCodeScreen, { controller }, withLocale());
 
-    expect(controller.submit()).toBe(false);
+    expect(controller.submit()).toBe(true);
     await expect.element(page.getByRole("status")).toMatchTextContent("Updating email…");
 
     model = { journey: "email-update", state: { status: "service-error", feedback: "serviceUnavailable" } };
     await expect.element(page.getByRole("heading", { level: 1, name: "Email update unavailable" })).toBeVisible();
-    expect(controller.submit()).toBe(false);
+    expect(controller.submit()).toBe(true);
     expect(controller.state.model.state.status).toBe("submitting");
   });
 

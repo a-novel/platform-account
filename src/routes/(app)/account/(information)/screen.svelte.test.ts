@@ -1,6 +1,6 @@
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
-import { submitForm } from "#lib/ui/forms.fixture.js";
+import { interceptNativeSubmissions, submitForm } from "#lib/ui/forms.fixture.js";
 
 import type { AccountCredentialsState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
@@ -45,7 +45,6 @@ function controller(
     },
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
-    allowNativeSubmission: false,
     ...options,
   });
 }
@@ -84,12 +83,12 @@ describe("my information screen", () => {
     await render(Screen, { controller: controller({ credentials: pendingCredentials }) }, withLocale());
 
     const note = page.getByRole("note").filter({ hasText: "Awaiting confirmation" });
-    const cancel = note.getByRole("button", { name: "Cancel change" });
-    expect(cancel.element().closest("form")?.getAttribute("action")).toBe("?/cancelEmail");
+    const submitted = interceptNativeSubmissions();
 
-    await cancel.click();
+    await note.getByRole("button", { name: "Cancel change" }).click();
 
     await expect.element(note.getByRole("button", { name: "Cancelling…" })).toBeDisabled();
+    expect(submitted.map((form) => form.getAttribute("action"))).toEqual(["?/cancelEmail"]);
   });
 
   it("keeps the pending email change cancellable after the service refused it", async () => {

@@ -75,7 +75,7 @@ describe("createShortCodeScreenController", () => {
       model: { journey: "password-reset", state: { status: "ready" } },
       links: { restartHref: "/restart", continueHref: "/" },
     });
-    const controller = createShortCodeScreenController({ getState: () => state, allowNativeSubmission: false });
+    const controller = createShortCodeScreenController({ getState: () => state });
 
     state = shortCodeControllerState(
       {
@@ -93,7 +93,7 @@ describe("createShortCodeScreenController", () => {
     expect(controller.submit(validForm())).toBe(false);
 
     state = { ...state, model: { journey: "register", state: { status: "ready" } } };
-    expect(controller.submit(validForm())).toBe(false);
+    expect(controller.submit(validForm())).toBe(true);
     expect(controller.state.model.state.status).toBe("submitting");
   });
 });

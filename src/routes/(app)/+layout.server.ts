@@ -23,18 +23,15 @@ const shellAuthorization = {
 } as const satisfies Record<ShellSession["status"], AuthorizationStatus>;
 
 /**
- * The rail destination each page belongs to. The account pages are the site's landing page, which the rail's account
- * link opens; the public Privacy page serves logged-out visitors.
+ * The rail destination a page belongs to. The account pages are the site's landing page, which the rail's account link
+ * opens; the public Privacy page serves logged-out visitors.
  */
-const navigation: Record<string, ShellViewModel["activeNavigation"]> = {
-  "/account": "account",
-  "/account/devices": "account",
-  "/account/privacy": "account",
-  "/account/preferences": "account",
-  "/privacy": "privacy",
-};
+function activeNavigation(routeId: string | null): ShellViewModel["activeNavigation"] {
+  if (routeId?.startsWith("/(app)/account")) return "account";
+  return routeId === "/(app)/privacy" ? "privacy" : null;
+}
 
-type ShellEvent = AuthenticationEvent & Pick<ServerLoadEvent, "locals" | "depends">;
+type ShellEvent = AuthenticationEvent & Pick<ServerLoadEvent, "locals" | "depends" | "route">;
 
 /** Loads the shell's navigation state, app list, session display and page authorization. */
 export const load = async (event: ShellEvent) => {
@@ -42,7 +39,7 @@ export const load = async (event: ShellEvent) => {
   const session = await readShellSession(event);
 
   return {
-    activeNavigation: navigation[event.url.pathname] ?? null,
+    activeNavigation: activeNavigation(event.route.id),
     // The browser sends the rail the visitor left on any Agora app, so the page renders it from the start.
     rail: parseNavigationRail(event.cookies.get(NAVIGATION_RAIL_COOKIE)),
     apps: readApps(),

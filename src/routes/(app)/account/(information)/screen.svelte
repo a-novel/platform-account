@@ -2,7 +2,7 @@
   import type { AccountInformationController } from "./controller.svelte";
 
   /** Props for the pure "My information" tab. */
-  export interface AccountInformationScreenProps {
+  interface AccountInformationScreenProps {
     controller: AccountInformationController;
   }
 </script>

@@ -18,7 +18,6 @@ function platformServer(state: string, port: number) {
       SERVICE_TOKEN_PATH: serviceTokenPath,
       STUDIO_URL: "https://studio.example.test",
     },
-    screenshotStyle: "./tests/e2e/screenshots.css",
   });
 }
 

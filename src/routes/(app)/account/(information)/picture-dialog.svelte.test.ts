@@ -30,7 +30,6 @@ function controller(profile: ProfileState = { status: "ready" }, patch: Partial<
     },
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
-    allowNativeSubmission: false,
   });
 }
 

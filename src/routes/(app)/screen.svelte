@@ -4,14 +4,18 @@
   import type { Snippet } from "svelte";
 
   /** Props for the pure account shell. */
-  export interface ShellProps {
+  interface ShellProps {
     controller: ShellController;
     children?: Snippet;
   }
 </script>
 
 <script lang="ts">
+  import { submitThrough } from "#lib/ui/form-submission.js";
+
   import AuthenticationPanel from "./authentication-panel.svelte";
+  import CloseLink from "./close-link.svelte";
+  import { followInPlace } from "./link-transition";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import agoraBanner from "@a-novel-kit/ui-images/files/banner/80h/agora-banner.png";
@@ -21,6 +25,8 @@
   import {
     Avatar,
     Button,
+    type ButtonLinkProps,
+    type ButtonProps,
     Dialog,
     DowntimeBanner,
     IconButton,
@@ -31,7 +37,7 @@
     VisuallyHidden,
   } from "@a-novel-kit/uikit";
 
-  import { LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRoundPlus, X } from "@lucide/svelte";
+  import { LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRoundPlus } from "@lucide/svelte";
 
   let { controller, children }: ShellProps = $props();
 
@@ -51,6 +57,7 @@
   const authenticationId = `${componentId}-authentication`;
   const compactRail = $derived(model.rail === "collapsed");
   const { t } = getI18nContext();
+  const submitLogout = (event: SubmitEvent) => submitThrough(event, () => controller.logout());
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
   const authDialogTitle = $derived.by(() => {
     if (authenticationState === "pending-email") return t("shell.auth.pendingTitle");
@@ -69,22 +76,6 @@
 
   function closeDrawerAfterNavigation(event: MouseEvent) {
     if (event.target instanceof Element && event.target.closest("a")) controller.navigationDialog.close();
-  }
-
-  function submitLogout(event: SubmitEvent) {
-    if (!controller.logout()) event.preventDefault();
-  }
-
-  /** Tells whether a click asks for another tab or window, which the browser opens from the link itself. */
-  function opensElsewhere(event: MouseEvent): boolean {
-    return event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-  }
-
-  /** Runs a shell transition in place of a plain link click. The link's own URL serves every other click. */
-  function navigate(event: MouseEvent, transition: () => void) {
-    if (event.defaultPrevented || opensElsewhere(event)) return;
-    event.preventDefault();
-    transition();
   }
 </script>
 
@@ -125,23 +116,23 @@
   {/if}
 {/snippet}
 
-<!-- A logged-in visitor changes their answer from their account. -->
-{#snippet privacyLink(compact: boolean, href: string)}
+<!-- A control of the rail's account group: its icon and label, or the icon alone, named by its title, on a collapsed
+     rail. -->
+{#snippet railButton(compact: boolean, label: string, Icon: typeof LogIn, props: ButtonProps | ButtonLinkProps)}
   <Button
+    {...props}
     class="shell-account-button {compact ? 'compact-control' : ''}"
     variant="ghost"
     tone="neutral"
     size="sm"
     square={compact}
-    aria-label={compact ? t("shell.privacy") : undefined}
-    aria-current={model.activeNavigation === "privacy" ? "page" : undefined}
-    title={compact ? t("shell.privacy") : undefined}
-    {href}
+    aria-label={compact ? label : undefined}
+    title={compact ? label : undefined}
   >
     <span class="account-action-icon" aria-hidden="true">
-      <ShieldCheck size="var(--icon-size-sm)" />
+      <Icon size="var(--icon-size-sm)" />
     </span>
-    {#if !compact}<span>{t("shell.privacy")}</span>{/if}
+    {#if !compact}<span>{label}</span>{/if}
   </Button>
 {/snippet}
 
@@ -184,57 +175,25 @@
       </Button>
       <Separator decorative />
       <form class="logout-form" method="POST" action={controller.state.logoutAction} onsubmit={submitLogout}>
-        <Button
-          class="shell-account-button {compact ? 'compact-control' : ''}"
-          type="submit"
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          square={compact}
-          aria-label={compact ? t("shell.logout") : undefined}
-          title={compact ? t("shell.logout") : undefined}
-        >
-          <span class="account-action-icon" aria-hidden="true">
-            <LogOut size="var(--icon-size-sm)" />
-          </span>
-          {#if !compact}<span>{t("shell.logout")}</span>{/if}
-        </Button>
+        {@render railButton(compact, t("shell.logout"), LogOut, { type: "submit" })}
       </form>
     {:else}
       <div class="link-group">
-        <Button
-          class="shell-account-button {compact ? 'compact-control' : ''}"
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          square={compact}
-          aria-label={compact ? t("shell.signIn") : undefined}
-          title={compact ? t("shell.signIn") : undefined}
-          href={controller.authenticationHref("login")}
-          onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication("login"))}
-        >
-          <span class="account-action-icon" aria-hidden="true">
-            <LogIn size="var(--icon-size-sm)" />
-          </span>
-          {#if !compact}<span>{t("shell.signIn")}</span>{/if}
-        </Button>
-        <Button
-          class="shell-account-button {compact ? 'compact-control' : ''}"
-          variant="ghost"
-          tone="neutral"
-          size="sm"
-          square={compact}
-          aria-label={compact ? t("shell.register") : undefined}
-          title={compact ? t("shell.register") : undefined}
-          href={controller.authenticationHref("register")}
-          onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication("register"))}
-        >
-          <span class="account-action-icon" aria-hidden="true">
-            <UserRoundPlus size="var(--icon-size-sm)" />
-          </span>
-          {#if !compact}<span>{t("shell.register")}</span>{/if}
-        </Button>
-        {#if privacyHref}{@render privacyLink(compact, privacyHref)}{/if}
+        {@render railButton(compact, t("shell.signIn"), LogIn, {
+          href: controller.authenticationHref("login"),
+          onclick: (event: MouseEvent) => followInPlace(event, () => controller.openAuthentication("login")),
+        })}
+        {@render railButton(compact, t("shell.register"), UserRoundPlus, {
+          href: controller.authenticationHref("register"),
+          onclick: (event: MouseEvent) => followInPlace(event, () => controller.openAuthentication("register")),
+        })}
+        <!-- A logged-in visitor changes their answer from their account. -->
+        {#if privacyHref}
+          {@render railButton(compact, t("shell.privacy"), ShieldCheck, {
+            href: privacyHref,
+            "aria-current": model.activeNavigation === "privacy" ? "page" : undefined,
+          })}
+        {/if}
       </div>
     {/if}
   </div>
@@ -247,7 +206,7 @@
     tone="brand"
     size="sm"
     href={controller.authenticationHref(view)}
-    onclick={(event: MouseEvent) => navigate(event, () => controller.openAuthentication(view))}
+    onclick={(event: MouseEvent) => followInPlace(event, () => controller.openAuthentication(view))}
   >
     {label}
   </Button>
@@ -273,16 +232,11 @@
 {/snippet}
 
 {#snippet closeAuthentication()}
-  <IconButton
+  <CloseLink
     label={t("shell.closeAuthentication")}
-    variant="ghost"
-    tone="neutral"
-    size="sm"
     href={controller.authenticationHref(null)}
-    onclick={(event: MouseEvent) => navigate(event, () => controller.authenticationDialog.close())}
-  >
-    <X size="var(--icon-size-sm)" aria-hidden="true" />
-  </IconButton>
+    onclose={controller.authenticationDialog.close}
+  />
 {/snippet}
 
 <div class="shell-viewport">
@@ -331,7 +285,7 @@
           aria-controls={drawerId}
           aria-expanded={controller.navigationDialog.state.open}
           href={controller.navigationHref(true)}
-          onclick={(event: MouseEvent) => navigate(event, () => controller.navigationDialog.open())}
+          onclick={(event: MouseEvent) => followInPlace(event, () => controller.navigationDialog.open())}
         >
           <Menu size="var(--icon-size-sm)" aria-hidden="true" />
         </IconButton>
@@ -358,16 +312,11 @@
        closing the dialog returns focus to the menu control. -->
   <Dialog id={drawerId} controller={controller.navigationDialog} title={navigationTitle} presentation="fullscreen">
     {#snippet headerActions()}
-      <IconButton
+      <CloseLink
         label={t("shell.closeNavigation")}
-        variant="ghost"
-        tone="neutral"
-        size="sm"
         href={controller.navigationHref(false)}
-        onclick={(event: MouseEvent) => navigate(event, () => controller.navigationDialog.close())}
-      >
-        <X size="var(--icon-size-sm)" aria-hidden="true" />
-      </IconButton>
+        onclose={controller.navigationDialog.close}
+      />
     {/snippet}
     <div class="drawer-content">
       <div class="drawer-navigation">
@@ -644,6 +593,8 @@
 
     .workspace {
       --shell-sticky-top: var(--shell-header-block-size);
+      /* The banner waits at the bottom, so a page's bottom bar sits above it. */
+      --shell-sticky-bottom: var(--shell-banner-block-size);
 
       padding-block-start: var(--shell-header-block-size);
     }

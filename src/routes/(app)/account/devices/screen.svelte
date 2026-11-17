@@ -2,13 +2,14 @@
   import type { AccountDevicesController } from "./controller.svelte";
 
   /** Props for the pure devices tab. */
-  export interface AccountDevicesScreenProps {
+  interface AccountDevicesScreenProps {
     controller: AccountDevicesController;
   }
 </script>
 
 <script lang="ts">
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
+  import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { followInPlace } from "../../link-transition";
   import type { AccountDevice, AccountDeviceConfirmation } from "./controller.svelte";
@@ -26,6 +27,7 @@
   const actions = $derived(controller.state.actions);
   const componentId = $props.id();
   const { t } = getI18nContext();
+  const submitChange = (event: SubmitEvent) => submitThrough(event, () => controller.submitChange());
 
   const submitting = $derived(model.action.status === "submitting");
   const devices = $derived(model.devices.status === "ready" ? model.devices.devices : []);
@@ -53,10 +55,6 @@
   function activity(device: AccountDevice): string {
     if (device.current) return t("account.devices.activeNow");
     return t("account.devices.lastActive", { date: device.lastActiveAt });
-  }
-
-  function submitChange(event: SubmitEvent) {
-    if (!controller.submitChange()) event.preventDefault();
   }
 </script>
 

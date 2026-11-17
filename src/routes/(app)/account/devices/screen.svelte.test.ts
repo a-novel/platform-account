@@ -1,5 +1,5 @@
 import { withLocale } from "#lib/i18n/provider.fixture.js";
-import { submitForm } from "#lib/ui/forms.fixture.js";
+import { interceptNativeSubmissions, submitForm } from "#lib/ui/forms.fixture.js";
 
 import {
   type AccountDevice,
@@ -70,7 +70,6 @@ function controller(patch: Partial<AccountDevicesModel> = {}, options: Partial<A
       logout: "/auth/logout",
     },
     privacyHref: "/account/privacy",
-    allowNativeSubmission: false,
     ...options,
   });
 }
@@ -258,11 +257,11 @@ describe("logout dialog", () => {
     const danger = getComputedStyle(page.getByTestId("danger").element()).backgroundColor;
     expect(getComputedStyle(submit.element()).backgroundColor).toBe(danger);
 
+    const submitted = interceptNativeSubmissions();
     await submit.click();
 
-    const form = (submit.element() as HTMLButtonElement).form;
-    expect(form?.getAttribute("action")).toBe("?/logoutDevice");
-    expect(form && Object.fromEntries(new FormData(form))).toEqual({ sessionID: phone.id });
+    expect(submitted.map((form) => form.getAttribute("action"))).toEqual(["?/logoutDevice"]);
+    expect(Object.fromEntries(new FormData(submitted[0]))).toEqual({ sessionID: phone.id });
     expect(tab.state.model.action).toEqual({ status: "submitting" });
     await expect.element(submit).toBeDisabled();
   });

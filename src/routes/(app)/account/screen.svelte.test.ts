@@ -21,6 +21,7 @@ const summary: AccountSummaryState = {
   status: "ready",
   roles: ["auth:user"],
   email: "maya.chen@example.test",
+  initials: "MC",
   profile: {},
   loggedInUntil: "Nov 10, 2026, 6:40 PM",
 };

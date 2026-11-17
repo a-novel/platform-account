@@ -95,6 +95,7 @@ describe("account layout", () => {
         status: "ready",
         roles: [Role.Admin, Role.User],
         email: "creator@example.test",
+        initials: "C",
         loggedInUntil: dates.format(sessionEnd),
         profile: {},
       },
@@ -127,7 +128,7 @@ describe("account layout", () => {
 
     const { summary } = await loadAccount(event());
 
-    expect(summary).toEqual({ status: "ready", roles: [], email: "creator@example.test", profile: {} });
+    expect(summary).toEqual({ status: "ready", roles: [], email: "creator@example.test", initials: "C", profile: {} });
   });
 
   it("keeps the header and the tabs when the credentials cannot be read", async () => {

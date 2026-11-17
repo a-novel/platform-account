@@ -15,7 +15,7 @@ function declined(): TelemetryPreference {
   return { choice: "declined", choose: vi.fn() };
 }
 
-async function screen(account: PrivacyAccountState | null, telemetry: TelemetryPreference | null = declined()) {
+async function screen(account: PrivacyAccountState, telemetry: TelemetryPreference | null = declined()) {
   const location = createLocationConsentController(() => account);
   await render(Screen, { telemetry, location }, withLocale());
   return location;

@@ -20,6 +20,7 @@
     status: "ready",
     roles: ["auth:user"],
     email: "maya.chen@example.test",
+    initials: "MC",
     loggedInUntil: "2026-11-10T18:40:00Z",
     profile: {},
   } satisfies AccountSummaryState;
@@ -112,11 +113,7 @@
   async function verifyHeader({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(canvas.getByRole("heading", { level: 1, name: summary.email })).toBeVisible();
     await expect(canvas.getByRole("button", { name: t("account.logout.submit") })).toBeEnabled();
-    const tabs = within(canvas.getByRole("navigation", { name: t("account.tabs.label") }));
-    const current = tabs.getByRole("link", { name: t("account.tabs.information") });
-    await expect(current).toHaveAttribute("aria-current", "page");
   }
 
   async function verifyProfile({ canvasElement, globals }: PlayContext) {

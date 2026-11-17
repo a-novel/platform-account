@@ -87,7 +87,6 @@ account:
     confirmLabel: Confirmez votre nouveau mot de passe
     currentLabel: Mot de passe actuel
     dialogTitle: Modifiez votre mot de passe
-    hint: Choisissez un mot de passe long et facile à retenir.
     newLabel: Nouveau mot de passe
     submit: Changer mon mot de passe
     submitting: Modification du mot de passe…

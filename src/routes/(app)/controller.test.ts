@@ -45,7 +45,6 @@ describe("createShellController", () => {
     let url = new URL("https://account.example.test/base/?document=42&returnTo=%2Faccount&auth=login#selection");
     const controller = shell({
       getData: () => data,
-      allowNativeLogout: false,
       // The layout shows each view in the URL, which the shell then reads back.
       onAuthViewChange: (view) => {
         onAuthViewChange(view);
@@ -158,7 +157,7 @@ describe("createShellController", () => {
   it("derives the menu, the dialog and the authorization request from the URL, the rest from the load data", () => {
     let data: ShellData = { ...anonymous, rail: "collapsed" };
     let url = new URL("https://account.example.test/?menu=open");
-    const controller = shell({ getData: () => data, allowNativeLogout: false, getUrl: () => url });
+    const controller = shell({ getData: () => data, getUrl: () => url });
 
     expect(controller.state.model).toEqual({
       activeNavigation: null,
@@ -191,18 +190,16 @@ describe("createShellController", () => {
       apps: null,
       platformDowntime: undefined,
     });
-
-    expect(controller.logout()).toBe(false);
-    expect(controller.state.model.session.status).toBe("anonymous");
   });
 
-  it("allows native logout without replacing the authenticated session", () => {
+  it("submits the logout of an account natively, and refuses one without a session", () => {
     const controller = shell({
       getData: () => ({ ...anonymous, session: { status: "authenticated", displayName: "Maya Chen" } }),
     });
 
     expect(controller.logout()).toBe(true);
     expect(controller.state.model.session.status).toBe("authenticated");
+    expect(shell({ getData: () => anonymous }).logout()).toBe(false);
   });
 });
 
@@ -228,12 +225,12 @@ describe("createAuthenticationPanelController", () => {
 
   it("shows the route's form, then owns its submission without owning form fields", () => {
     let state: AuthenticationPanelControllerState = { model: readyAuthenticationModel("login"), action: "/auth" };
-    const controller = createAuthenticationPanelController({ getState: () => state, allowNativeSubmission: false });
+    const controller = createAuthenticationPanelController({ getState: () => state });
 
     state = { model: readyAuthenticationModel("register"), action: "/register" };
     expect(controller.state).toEqual(state);
 
-    expect(controller.submit(validForm())).toBe(false);
+    expect(controller.submit(validForm())).toBe(true);
     expect(controller.state.model).toEqual({ journey: "register", state: { status: "submitting" } });
     expect(controller.submit(validForm())).toBe(false);
   });

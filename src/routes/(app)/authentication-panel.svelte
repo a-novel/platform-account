@@ -4,7 +4,7 @@
   import type { Snippet } from "svelte";
 
   /** Props for the pure form rendered inside the shell authentication dialog. */
-  export interface AuthenticationPanelProps {
+  interface AuthenticationPanelProps {
     controller: AuthenticationPanelController;
     /** Link beside the password label that leads to the password reset journey. */
     forgotPassword?: Snippet;

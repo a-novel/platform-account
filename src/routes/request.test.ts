@@ -81,6 +81,14 @@ const password = { password: "replacement-password", confirmPassword: "replaceme
 const encodedEmail = Buffer.from("maya.chen@example.com").toString("base64url");
 const registrationLink = `/ext/account/create?shortCode=private-code&target=${encodedEmail}`;
 
+/** The route SvelteKit matches for each path the suite requests by its address. */
+const routes: Record<string, string> = {
+  "/account": "/(app)/account/(information)",
+  "/account/devices": "/(app)/account/devices",
+  "/account/privacy": "/(app)/account/privacy",
+  "/privacy": "/(app)/privacy",
+};
+
 function request(
   path: string,
   cookieValues: Record<string, string> = {},
@@ -99,6 +107,7 @@ function request(
   };
   const url = new URL(path, "https://account.test");
   const event = {
+    route: { id: routes[url.pathname] ?? null },
     cookies,
     getClientAddress: () => "192.0.2.1",
     url,
@@ -505,6 +514,7 @@ describe("account session at the request boundary", () => {
         status: "ready",
         roles: [Role.User],
         email: credentials.email,
+        initials: "MC",
         loggedInUntil: new Intl.DateTimeFormat("fr", { dateStyle: "medium", timeStyle: "short" }).format(sessionEnd),
         profile: {},
       },

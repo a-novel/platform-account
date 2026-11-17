@@ -30,7 +30,6 @@ function controller(patch: Partial<AccountInformationModel> = {}) {
     },
     devicesHref: "/account/devices",
     logoutOthersHref: "/account/devices?confirm=others",
-    allowNativeSubmission: false,
   });
 }
 

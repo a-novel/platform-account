@@ -2,7 +2,7 @@
   import type { ShortCodeScreenModel } from "./controller.svelte";
 
   /** Fixed-state Storybook harness around the pure secure-link screen. */
-  export interface ShortCodeScreenStoryProps {
+  interface ShortCodeScreenStoryProps {
     initialModel: ShortCodeScreenModel;
     /** Whether the password fields show their text. */
     passwordsShown?: boolean;

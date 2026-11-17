@@ -3,13 +3,14 @@
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
+  import CloseLink from "../../close-link.svelte";
   import { followInPlace } from "../../link-transition";
   import type { AccountInformationController } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Dialog, Field, FormActions, IconButton, Input, PasswordInput } from "@a-novel-kit/uikit";
+  import { Button, Dialog, Field, FormActions, Input, PasswordInput } from "@a-novel-kit/uikit";
 
-  import { MailCheck, X } from "@lucide/svelte";
+  import { MailCheck } from "@lucide/svelte";
 
   let { controller }: { controller: AccountInformationController } = $props();
 
@@ -45,16 +46,11 @@
   size="sm"
 >
   {#snippet headerActions()}
-    <IconButton
+    <CloseLink
       label={t("account.closeEditor")}
-      variant="ghost"
-      tone="neutral"
-      size="sm"
       href={controller.editorHref(null)}
-      onclick={close}
-    >
-      <X size="var(--icon-size-sm)" aria-hidden="true" />
-    </IconButton>
+      onclose={controller.editors.email.close}
+    />
   {/snippet}
 
   {#if sent}

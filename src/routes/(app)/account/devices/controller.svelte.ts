@@ -82,8 +82,6 @@ export interface AccountDevicesControllerOptions extends Omit<AccountDevicesCont
   getModel: () => Omit<AccountDevicesModel, "confirmation">;
   /** The logout the URL asks to confirm, which Back and Forward change. */
   getConfirmation: () => AccountDeviceConfirmation | null;
-  /** Allows the browser to submit forms after the controller accepts their transition. */
-  allowNativeSubmission?: boolean;
   /** Observes accepted confirmation changes, which the route mirrors in the URL. */
   onConfirmationChange?: (confirmation: AccountDeviceConfirmation | null) => void;
   /** Builds the URL of a confirmation change, from the current route. */
@@ -98,7 +96,6 @@ export function createAccountDevicesController({
   getConfirmation,
   actions,
   privacyHref,
-  allowNativeSubmission = true,
   onConfirmationChange,
   confirmationUrl = (confirmation) =>
     confirmation ? `?confirm=${confirmation.kind === "others" ? "others" : confirmation.id}` : "?",
@@ -133,7 +130,7 @@ export function createAccountDevicesController({
     submitChange() {
       if (action.status === "submitting") return false;
       action = { status: "submitting" };
-      return allowNativeSubmission;
+      return true;
     },
   };
 }

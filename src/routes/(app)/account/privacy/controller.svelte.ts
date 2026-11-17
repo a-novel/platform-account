@@ -8,8 +8,7 @@ export type PrivacyAccountState =
 
 /** The account's location consent and its switch, which submits each change. */
 export interface LocationConsentController {
-  /** The account's consent, or null for a logged-out visitor. */
-  readonly account: PrivacyAccountState | null;
+  readonly account: PrivacyAccountState;
   /** Set while a change is on its way to the server. */
   readonly pending: boolean;
   readonly consent: SwitchController;
@@ -19,14 +18,12 @@ export interface LocationConsentController {
  * Creates the controller of the privacy page's account section, from the consent the route loads or the
  * result its last change returned.
  */
-export function createLocationConsentController(
-  getAccount: () => PrivacyAccountState | null
-): LocationConsentController {
+export function createLocationConsentController(getAccount: () => PrivacyAccountState): LocationConsentController {
   // The switch's answer shows, pending, until the next load or action result replaces it.
   let answer = $derived({ account: getAccount(), pending: false });
 
   function setChecked(checked: boolean) {
-    if (answer.account?.status !== "ready" || answer.pending) return;
+    if (answer.account.status !== "ready" || answer.pending) return;
     answer = { account: { status: "ready", locationConsent: checked }, pending: true };
   }
 
@@ -39,10 +36,10 @@ export function createLocationConsentController(
     },
     consent: {
       get state() {
-        return { checked: answer.account?.status === "ready" && answer.account.locationConsent };
+        return { checked: answer.account.status === "ready" && answer.account.locationConsent };
       },
       setChecked,
-      toggle: () => setChecked(!(answer.account?.status === "ready" && answer.account.locationConsent)),
+      toggle: () => setChecked(!(answer.account.status === "ready" && answer.account.locationConsent)),
     },
   };
 }

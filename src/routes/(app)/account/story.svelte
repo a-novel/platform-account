@@ -6,7 +6,7 @@
   import type { PrivacyAccountState } from "./privacy/controller.svelte";
 
   /** Fixed-state Storybook harness: the account layout around one of its tabs. */
-  export interface AccountStoryProps {
+  interface AccountStoryProps {
     summary: AccountSummaryState;
     tab: AccountTab;
     information?: AccountInformationModel;
