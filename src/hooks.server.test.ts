@@ -91,25 +91,57 @@ describe("request hook", () => {
     expect(response.headers.get("referrer-policy")).toBe("strict-origin");
   });
 
-  it.each<{ name: string; headers: Record<string, string>; want: string }>([
-    { name: "a page without a policy", headers: {}, want: "private, no-store" },
+  const session = (name: string) => (name === "__Host-account_refresh_token" ? "refresh" : undefined);
+  const picture = "/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=1";
+
+  it.each<{
+    name: string;
+    path: string;
+    cookies: (name: string) => string | undefined;
+    headers: Record<string, string>;
+    want: string;
+  }>([
+    { name: "a page without a policy", path: "/", cookies: () => undefined, headers: {}, want: "private, no-store" },
+    { name: "a signed-in page without a policy", path: "/", cookies: session, headers: {}, want: "private, no-store" },
     {
-      name: "a refreshed session",
-      headers: { "cache-control": "public, max-age=60", "set-cookie": "__Host-account_access_token=new" },
+      name: "a login redirect that sets the session",
+      path: "/?auth=login",
+      cookies: () => undefined,
+      headers: {
+        "cache-control": "public, max-age=60",
+        location: "/account",
+        "set-cookie": "__Host-account_access_token=new",
+      },
+      want: "private, no-store",
+    },
+    {
+      name: "a picture that refreshes the session",
+      path: picture,
+      cookies: session,
+      headers: {
+        "cache-control": "public, max-age=31536000, immutable",
+        "set-cookie": "__Host-account_access_token=new",
+      },
       want: "private, no-store",
     },
     {
       name: "a shared picture",
+      path: picture,
+      cookies: session,
       headers: { "cache-control": "public, max-age=31536000, immutable" },
       want: "public, max-age=31536000, immutable",
     },
-  ])("caches $name rendered with a session as $want", async ({ headers, want }) => {
-    const signedIn = {
-      ...event("/profile/picture/019a4e2c-7d1f-7c3a-9b2e-5f1d0c8a4b21?v=1", undefined, "/profile/picture/[id]"),
-      cookies: { get: (name: string) => (name === "__Host-account_refresh_token" ? "refresh" : undefined) },
-    } as RequestEvent;
+    {
+      name: "a page with its own policy",
+      path: "/",
+      cookies: () => undefined,
+      headers: { "cache-control": "private" },
+      want: "private",
+    },
+  ])("caches $name as $want", async ({ path, cookies, headers, want }) => {
+    const request = { ...event(path), cookies: { get: cookies } } as RequestEvent;
     const response = await handle({
-      event: signedIn,
+      event: request,
       resolve: vi.fn().mockResolvedValue(new Response("", { headers })),
     });
     expect(response.headers.get("cache-control")).toBe(want);
@@ -123,12 +155,8 @@ describe("request hook", () => {
     expect(response.headers.get("x-frame-options")).toBe("DENY");
   });
 
-  it("preserves caching policy on ordinary pages", async () => {
-    const response = await handle({
-      event: event("/"),
-      resolve: vi.fn().mockResolvedValue(new Response("home", { headers: { "cache-control": "private" } })),
-    });
-    expect(response.headers.get("cache-control")).toBe("private");
+  it("keeps ordinary pages out of search-engine directives", async () => {
+    const response = await handle({ event: event("/"), resolve: vi.fn().mockResolvedValue(new Response("home")) });
     expect(response.headers.has("x-robots-tag")).toBe(false);
   });
 

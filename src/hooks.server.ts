@@ -1,5 +1,4 @@
 import { resolveLocale, supportedLocales } from "#lib/i18n/config.js";
-import { hasSession } from "#lib/server/auth/session.js";
 
 import { LANGUAGE_COOKIE, parseLanguage } from "@a-novel-kit/nodelib-browser/preferences";
 
@@ -24,9 +23,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Any page can open the login dialog, so no page may be framed by a site overlaying it (RFC 9700 §4.16).
   // Pages refuse framing in their CSP, set in vite.config.ts; this header covers every response.
   response.headers.set("x-frame-options", "DENY");
-  // A response rendered with a session is the visitor's alone, so no cache may keep it (RFC 9111 §5.2.2.5).
-  // A route's own policy stands while the response sets no cookie, as a profile picture's does.
-  if (hasSession(event.cookies) && (response.headers.has("set-cookie") || !response.headers.has("cache-control"))) {
+  // A response that sets cookies, or whose route chose no policy, may hold the visitor's session, so no cache
+  // may keep it (RFC 9111 §5.2.2.5). A route's own policy stands otherwise, as a profile picture's does.
+  if (response.headers.has("set-cookie") || !response.headers.has("cache-control")) {
     response.headers.set("cache-control", "private, no-store");
   }
   if (isEmailLinkPage(event)) {
