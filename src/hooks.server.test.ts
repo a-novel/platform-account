@@ -95,7 +95,7 @@ describe("request hook", () => {
   it.each<{ name: string; headers: Record<string, string>; want: string }>([
     { name: "a response without a policy", headers: {}, want: "private, no-store" },
     {
-      name: "a login redirect that sets the session",
+      name: "a response that sets cookies, as a session refresh or a started sign-in does",
       headers: {
         "cache-control": "public, max-age=60",
         location: "/account",

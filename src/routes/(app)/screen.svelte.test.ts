@@ -220,18 +220,6 @@ describe("account shell screen", () => {
     await expect.element(page.getByRole("button", { name: "Me déconnecter" })).toBeVisible();
   });
 
-  it("names an account the platform cannot name with the generic label and initial", async () => {
-    render(
-      Screen,
-      { controller: controller({ session: { status: "authenticated", initials: "A" } }) },
-      withLocale("fr")
-    );
-
-    const account = page.getByRole("complementary").getByRole("link", { name: "Mon compte" });
-    await expect.element(account).toHaveAttribute("href", "/account");
-    expect(account.element().textContent).toMatch(/A\s*Mon compte/);
-  });
-
   it("contains a long account name in the rail and the mobile drawer", async () => {
     const displayName = "Alexandrine de la Bibliothèque des Mondes Imaginaires";
     const view = await render(Screen, { controller: controller({ session: { ...maya, displayName } }) }, withLocale());

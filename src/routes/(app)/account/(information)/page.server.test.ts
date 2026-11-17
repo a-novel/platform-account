@@ -246,11 +246,11 @@ describe("username action", () => {
 
   // Profile refuses a name with 422 from its 1.2 release, and with 400 before it.
   it.each([
-    ["the rule the platform's mirror finds", "Maya\tChen", "characters", 400],
-    ["the rule the platform's mirror finds", "Maya\tChen", "characters", 422],
-    ["a refusal only the service could tell", "Maya", "refused", 400],
-    ["a refusal only the service could tell", "Maya", "refused", 422],
-  ])("keeps a refused name in the field, with %s, after a %i", async (_, username, issue, refusal) => {
+    [400, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
+    [422, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
+    [400, "a refusal only the service could tell", "Maya", "refused"],
+    [422, "a refusal only the service could tell", "Maya", "refused"],
+  ])("keeps a refused name in the field after a %i, with %s", async (refusal, _, username, issue) => {
     authenticated.mockResolvedValue(signedIn);
     vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(refusal, "private service detail"));
 
