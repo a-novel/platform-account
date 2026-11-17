@@ -2,9 +2,9 @@
   import { validationFixture } from "#lib/application/auth/forms.fixture.js";
   import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
   import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
-  import type { ShellViewModel } from "#lib/application/shell/types.js";
   import { createStorybookTranslator } from "#lib/i18n/storybook.js";
 
+  import type { ShellViewModel } from "./controller.svelte";
   import StoryHarness from "./story.svelte";
 
   import { reviewStoryGlobals } from "@a-novel-kit/uikit-storybook";
@@ -193,12 +193,8 @@
   async function verifySubmittingIsLocked({ canvasElement, globals }: PlayContext) {
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
-    await expect(
-      canvas.getByRole("button", { name: t("authUi.authentication.journeys.login.submitting") })
-    ).toBeDisabled();
-    await expect(canvas.getByRole("textbox", { name: t("authUi.authentication.emailLabel") })).toHaveAttribute(
-      "readonly"
-    );
+    await expect(canvas.getByRole("button", { name: t("shell.auth.login.submitting") })).toBeDisabled();
+    await expect(canvas.getByRole("textbox", { name: t("shell.auth.emailLabel") })).toHaveAttribute("readonly");
   }
 
   async function verifyRecordedInvitation({ canvasElement, globals }: PlayContext) {
@@ -208,9 +204,7 @@
     const dialog = canvas.getByRole("dialog");
     await expect(status).toBeVisible();
     await expect(within(dialog).getAllByRole("heading")).toHaveLength(1);
-    await expect(
-      within(dialog).getByRole("heading", { name: t("authUi.authentication.journeys.register.recordedTitle") })
-    ).toBeVisible();
+    await expect(within(dialog).getByRole("heading", { name: t("shell.auth.register.recordedTitle") })).toBeVisible();
     expect(getComputedStyle(status).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     await expect(within(dialog).queryByRole("link", { name: t("shell.signIn") })).not.toBeInTheDocument();
   }

@@ -1,8 +1,8 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-import type { AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
 
 import { createInformationModel } from "./account-action";
+import type { AccountEditor, AccountInformationModel } from "./controller.svelte";
 import { type AccountInformationControllerOptions, createAccountInformationController } from "./controller.svelte";
 
 import { describe, expect, it, vi } from "vitest";

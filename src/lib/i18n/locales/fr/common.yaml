@@ -20,7 +20,137 @@ access:
   unavailable:
     description: Votre session est conservée. Veuillez recharger cette page dans quelques minutes.
     title: Accès temporairement indisponible
-authFlow:
+account:
+  closeEditor: Fermer la fenêtre
+  credentials:
+    description: Les informations avec lesquelles vous vous authentifiez.
+    title: Identifiants
+  devices:
+    activeNow: Actif maintenant
+    confirm:
+      cancel: Annuler
+      deviceTitle: Déconnecter {{device}} ?
+      othersBody: Tous vos appareils seront déconnectés, sauf celui-ci.
+      othersTitle: Déconnecter tous mes appareils ?
+    current: Cet appareil
+    description: Les appareils connectés à votre compte Agora.
+    lastActive: Dernière activité le {{date}}
+    locationTip:
+      body: Activez « Enregistrer d’où mes appareils se connectent » dans Confidentialité pour voir l’adresse IP et le lieu approximatif de chaque appareil.
+      link: Ouvrir Confidentialité
+      title: La localisation est désactivée
+    loggedOut: Cet appareil est déconnecté
+    loggedOutDescription: Les appareils que vous avez déconnectés, ou dont la session a pris fin. Chacun disparaît environ un mois plus tard.
+    loggedOutOthers: Vos autres appareils sont déconnectés
+    loggedOutTitle: Déconnectés
+    logout: Déconnecter
+    logoutLabel: Déconnecter {{device}}
+    logoutOthers: Déconnecter tous mes appareils
+    lossDelay: Un appareil déconnecté peut garder l’accès jusqu’à 15 minutes.
+    name: "{{browser}} sur {{system}}"
+    nameUnknownBrowser: Navigateur sur {{system}}
+    pagination:
+      active: Pages de vos appareils actifs
+      loggedOut: Pages de vos appareils déconnectés
+    remove: Retirer
+    removed: Appareil retiré
+    removeLabel: Retirer {{device}}
+    title: Appareils
+    unavailable: Vos appareils ne peuvent pas être affichés pour le moment.
+    unknown: Appareil inconnu
+  email:
+    cancel: Annuler la modification
+    cancelling: Annulation…
+    changeLabel: Modifier mon courriel
+    description: Nous enverrons un lien de confirmation à votre nouveau courriel.
+    dialogTitle: Modifiez votre courriel
+    hint: Votre courriel actuel reste actif jusqu’à confirmation.
+    label: Nouveau courriel
+    pending: En attente de confirmation
+    pendingDescription: Si aucun autre compte n’utilise la nouvelle adresse, vous y recevrez un lien de confirmation.
+    pendingExpiry: Le lien expire le {{date}}
+    submit: M’envoyer le lien
+    submitting: Envoi du lien…
+    success:
+      expiry: Le lien expire le {{date}}.
+      keep: Jusqu’à confirmation, continuez à vous connecter avec {{email}}.
+      sent: Si aucun autre compte n’utilise {{email}}, un lien de confirmation devrait y arriver sous peu.
+      title: Consultez votre messagerie
+    title: Courriel
+  gotIt: J’ai compris
+  loggedInUntil: Connecté jusqu’au
+  logout:
+    submit: Me déconnecter
+    submitting: Déconnexion…
+  password:
+    changeLabel: Modifier mon mot de passe
+    confirmLabel: Confirmez votre nouveau mot de passe
+    currentLabel: Mot de passe actuel
+    dialogTitle: Modifiez votre mot de passe
+    hint: Choisissez un mot de passe long et facile à retenir.
+    newLabel: Nouveau mot de passe
+    submit: Changer mon mot de passe
+    submitting: Modification du mot de passe…
+    success:
+      description: Utilisez votre nouveau mot de passe lors de votre prochaine connexion.
+      devices: Vos autres appareils restent connectés.
+      review: Voir mes appareils
+      title: Mot de passe modifié
+    title: Mot de passe
+  picture:
+    changeLabel: Modifier ma photo
+    choose: Choisir une image
+    current: Votre photo actuelle
+    dialogTitle: Modifiez votre photo
+    frameLabel: Cadre de la photo
+    none: Aucune photo
+    opening: Ouverture de l’image…
+    refusals:
+      dimensions: Agora accepte les photos de 1 à 512 pixels de côté. Essayez de recadrer l’image.
+      format: Agora n’a pas pu lire cette photo. Essayez une autre image.
+      ratio: Agora n’accepte que les photos carrées. Essayez de recadrer l’image.
+      tooLarge: Cette photo dépasse 256 Kio. Essayez de zoomer, ou choisissez une image plus simple.
+      unreadable: Ce fichier ne peut pas être ouvert comme une image. Choisissez-en un autre.
+    remove: Retirer ma photo
+    removing: Retrait de la photo…
+    save: Enregistrer ma photo
+    saving: Enregistrement de la photo…
+    scriptRequired: Le cadrage d’une photo nécessite JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.
+    title: Photo
+  profile:
+    description: Tout le monde sur Agora peut voir ces informations.
+    title: Profil public
+  roles:
+    admin: Administrateur
+    label: Rôles
+    superAdmin: Super administrateur
+    user: Utilisateur
+  signIn:
+    title: Courriel et mot de passe
+  tabs:
+    devices: Appareils
+    information: Mes informations
+    label: Sections du compte
+    preferences: Préférences
+    privacy: Confidentialité
+  title: Votre compte
+  username:
+    changeLabel: Modifier mon nom d’utilisateur
+    counter: "{{glyphs}} / {{limit}}"
+    dialogTitle: Choisissez votre nom d’utilisateur
+    hint: Laissez-le vide pour retirer votre nom d’utilisateur.
+    issues:
+      characters: Retirez les retours à la ligne, les tabulations, les espaces spéciaux et les marques de direction du texte.
+      invisible: Utilisez au moins un caractère visible.
+      length: Utilisez au maximum {{limit}} caractères.
+      refused: Ce nom d’utilisateur ne peut pas être utilisé. Choisissez-en un autre.
+      size: Retirez quelques caractères invisibles ou accents empilés.
+    label: Nom d’utilisateur
+    none: Non défini
+    submit: Enregistrer mon nom d’utilisateur
+    submitting: Enregistrement du nom d’utilisateur…
+    title: Nom d’utilisateur
+form:
   feedback:
     emailUpdated: Votre courriel a été mis à jour.
     invalidCredentials: Votre courriel ou votre mot de passe est incorrect.
@@ -30,6 +160,8 @@ authFlow:
     registrationCompleted: Votre compte est prêt.
     serviceUnavailable: Veuillez réessayer dans quelques minutes.
     tooManyAttempts: Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.
+  passwordHint: Nous vous recommandons au moins 15 caractères, par exemple quelques mots faciles à retenir pour vous.
+  unavailableTitle: Temporairement indisponible
   validation:
     confirmPassword: Confirmez votre nouveau mot de passe.
     currentPassword: Saisissez votre mot de passe actuel.
@@ -42,183 +174,6 @@ authFlow:
     minLength_other: Utilisez au moins {{count}} caractères.
     password: Saisissez votre mot de passe.
     passwordMismatch: Les mots de passe ne correspondent pas.
-authUi:
-  account:
-    closeEditor: Fermer la fenêtre
-    credentials:
-      description: Les informations avec lesquelles vous vous authentifiez.
-      title: Identifiants
-    devices:
-      activeNow: Actif maintenant
-      confirm:
-        cancel: Annuler
-        deviceTitle: Déconnecter {{device}} ?
-        othersBody: Tous vos appareils seront déconnectés, sauf celui-ci.
-        othersTitle: Déconnecter tous mes appareils ?
-      current: Cet appareil
-      description: Les appareils connectés à votre compte Agora.
-      lastActive: Dernière activité le {{date}}
-      locationTip:
-        body: Activez « Enregistrer d’où mes appareils se connectent » dans Confidentialité pour voir l’adresse IP et le lieu approximatif de chaque appareil.
-        link: Ouvrir Confidentialité
-        title: La localisation est désactivée
-      loggedOut: Cet appareil est déconnecté
-      loggedOutDescription: Les appareils que vous avez déconnectés, ou dont la session a pris fin. Chacun disparaît environ un mois plus tard.
-      loggedOutOthers: Vos autres appareils sont déconnectés
-      loggedOutTitle: Déconnectés
-      logout: Déconnecter
-      logoutLabel: Déconnecter {{device}}
-      logoutOthers: Déconnecter tous mes appareils
-      lossDelay: Un appareil déconnecté peut garder l’accès jusqu’à 15 minutes.
-      name: "{{browser}} sur {{system}}"
-      nameUnknownBrowser: Navigateur sur {{system}}
-      pagination:
-        active: Pages de vos appareils actifs
-        loggedOut: Pages de vos appareils déconnectés
-      remove: Retirer
-      removed: Appareil retiré
-      removeLabel: Retirer {{device}}
-      title: Appareils
-      unavailable: Vos appareils ne peuvent pas être affichés pour le moment.
-      unknown: Appareil inconnu
-    email:
-      cancel: Annuler la modification
-      cancelling: Annulation…
-      changeLabel: Modifier mon courriel
-      description: Nous enverrons un lien de confirmation à votre nouveau courriel.
-      dialogTitle: Modifiez votre courriel
-      hint: Votre courriel actuel reste actif jusqu’à confirmation.
-      label: Nouveau courriel
-      pending: En attente de confirmation
-      pendingDescription: Si aucun autre compte n’utilise la nouvelle adresse, vous y recevrez un lien de confirmation.
-      pendingExpiry: Le lien expire le {{date}}
-      submit: M’envoyer le lien
-      submitting: Envoi du lien…
-      success:
-        expiry: Le lien expire le {{date}}.
-        keep: Jusqu’à confirmation, continuez à vous connecter avec {{email}}.
-        sent: Si aucun autre compte n’utilise {{email}}, un lien de confirmation devrait y arriver sous peu.
-        title: Consultez votre messagerie
-      title: Courriel
-    gotIt: J’ai compris
-    loggedInUntil: Connecté jusqu’au
-    logout:
-      submit: Me déconnecter
-      submitting: Déconnexion…
-    password:
-      changeLabel: Modifier mon mot de passe
-      confirmLabel: Confirmez votre nouveau mot de passe
-      currentLabel: Mot de passe actuel
-      dialogTitle: Modifiez votre mot de passe
-      hint: Choisissez un mot de passe long et facile à retenir.
-      newLabel: Nouveau mot de passe
-      submit: Changer mon mot de passe
-      submitting: Modification du mot de passe…
-      success:
-        description: Utilisez votre nouveau mot de passe lors de votre prochaine connexion.
-        devices: Vos autres appareils restent connectés.
-        review: Voir mes appareils
-        title: Mot de passe modifié
-      title: Mot de passe
-    picture:
-      changeLabel: Modifier ma photo
-      choose: Choisir une image
-      current: Votre photo actuelle
-      dialogTitle: Modifiez votre photo
-      frameLabel: Cadre de la photo
-      none: Aucune photo
-      opening: Ouverture de l’image…
-      refusals:
-        dimensions: Agora accepte les photos de 1 à 512 pixels de côté. Essayez de recadrer l’image.
-        format: Agora n’a pas pu lire cette photo. Essayez une autre image.
-        ratio: Agora n’accepte que les photos carrées. Essayez de recadrer l’image.
-        tooLarge: Cette photo dépasse 256 Kio. Essayez de zoomer, ou choisissez une image plus simple.
-        unreadable: Ce fichier ne peut pas être ouvert comme une image. Choisissez-en un autre.
-      remove: Retirer ma photo
-      removing: Retrait de la photo…
-      save: Enregistrer ma photo
-      saving: Enregistrement de la photo…
-      scriptRequired: Le cadrage d’une photo nécessite JavaScript. Activez-le dans votre navigateur, puis rechargez cette page.
-      title: Photo
-    profile:
-      description: Tout le monde sur Agora peut voir ces informations.
-      title: Profil public
-    roles:
-      admin: Administrateur
-      label: Rôles
-      superAdmin: Super administrateur
-      user: Utilisateur
-    signIn:
-      title: Courriel et mot de passe
-    tabs:
-      devices: Appareils
-      information: Mes informations
-      label: Sections du compte
-      preferences: Préférences
-      privacy: Confidentialité
-    title: Votre compte
-    username:
-      changeLabel: Modifier mon nom d’utilisateur
-      counter: "{{glyphs}} / {{limit}}"
-      dialogTitle: Choisissez votre nom d’utilisateur
-      hint: Laissez-le vide pour retirer votre nom d’utilisateur.
-      issues:
-        characters: Retirez les retours à la ligne, les tabulations, les espaces spéciaux et les marques de direction du texte.
-        invisible: Utilisez au moins un caractère visible.
-        length: Utilisez au maximum {{limit}} caractères.
-        refused: Ce nom d’utilisateur ne peut pas être utilisé. Choisissez-en un autre.
-        size: Retirez quelques caractères invisibles ou accents empilés.
-      label: Nom d’utilisateur
-      none: Non défini
-      submit: Enregistrer mon nom d’utilisateur
-      submitting: Enregistrement du nom d’utilisateur…
-      title: Nom d’utilisateur
-  authentication:
-    emailLabel: Courriel
-    journeys:
-      login:
-        submit: Me connecter
-        submitting: Connexion…
-      register:
-        recordedDescription: Si ce courriel n’est pas encore associé à un compte, votre invitation sera envoyée à
-        recordedTitle: Demande reçue
-        submit: Rejoindre la liste
-        submitting: Inscription à la liste…
-      reset:
-        pendingDescription: Si ce courriel est associé à un compte, vous recevrez un lien de réinitialisation à
-        submit: M’envoyer le lien
-        submitting: Envoi du lien…
-    passwordLabel: Mot de passe
-    pendingTitle: Consultez votre messagerie
-  passwordHint: Nous vous recommandons au moins 15 caractères, par exemple quelques mots faciles à retenir pour vous.
-  serviceUnavailable: Temporairement indisponible
-  shortCode:
-    confirmPasswordLabel: Confirmez votre nouveau mot de passe
-    continue: Continuer vers mon compte
-    journeys:
-      emailUpdate:
-        submit: Mettre à jour mon courriel
-        submitting: Mise à jour du courriel…
-        unavailableTitle: Mise à jour du courriel indisponible
-      passwordReset:
-        description: Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.
-        submit: Réinitialiser mon mot de passe
-        submitting: Réinitialisation du mot de passe…
-        title: Réinitialisez votre mot de passe Agora
-      register:
-        description: Choisissez un mot de passe pour vous connecter.
-        submit: Créer mon compte
-        submitting: Création du compte…
-        title: Créez votre compte Agora
-    newPasswordLabel: Nouveau mot de passe
-    restart: Demander un nouveau lien
-    states:
-      invalid:
-        description: Ce lien a peut-être expiré ou a déjà été utilisé. Il peut aussi être incomplet.
-        title: Ce lien n’est pas valide
-      missing:
-        description: Ouvrez le lien complet reçu par courriel ou demandez-en un nouveau.
-        title: Ce lien est incomplet
 pageTitles:
   account: Paramètres du compte
   accountCreated: Compte créé
@@ -260,19 +215,31 @@ shell:
     studio: Studio
   auth:
     createAccount: Demander une invitation
+    emailLabel: Courriel
     forgotPassword: Mot de passe oublié ?
     hasAccount: Vous avez déjà un compte ?
     login:
       authorizationDescription: Connectez-vous avec votre compte Agora pour revenir à l’application d’où vous venez.
+      submit: Me connecter
+      submitting: Connexion…
       title: Connectez-vous
     maintenance: Nous avons suspendu l’accès aux comptes jusqu’à sa fin. Veuillez réessayer ensuite.
     noAccount: Pas encore de compte ?
+    passwordLabel: Mot de passe
+    pendingTitle: Consultez votre messagerie
     register:
       description: L’accès se fait actuellement sur invitation. Vous recevrez un courriel lorsque la vôtre sera disponible.
+      recordedDescription: Si ce courriel n’est pas encore associé à un compte, votre invitation sera envoyée à
+      recordedTitle: Demande reçue
+      submit: Rejoindre la liste
+      submitting: Inscription à la liste…
       title: Rejoignez la liste d’invitation Agora
     remembersPassword: Vous vous souvenez de votre mot de passe ?
     reset:
       description: Vous recevrez un lien par courriel pour choisir un nouveau mot de passe.
+      pendingDescription: Si ce courriel est associé à un compte, vous recevrez un lien de réinitialisation à
+      submit: M’envoyer le lien
+      submitting: Envoi du lien…
       title: Réinitialisez votre mot de passe
   brand: Agora
   closeAuthentication: Fermer la fenêtre
@@ -286,6 +253,33 @@ shell:
   register: M’inscrire
   signIn: Me connecter
   skipToContent: Aller au contenu
+shortCode:
+  confirmPasswordLabel: Confirmez votre nouveau mot de passe
+  continue: Continuer vers mon compte
+  journeys:
+    emailUpdate:
+      submit: Mettre à jour mon courriel
+      submitting: Mise à jour du courriel…
+      unavailableTitle: Mise à jour du courriel indisponible
+    passwordReset:
+      description: Choisissez un nouveau mot de passe pour retrouver l’accès à votre compte.
+      submit: Réinitialiser mon mot de passe
+      submitting: Réinitialisation du mot de passe…
+      title: Réinitialisez votre mot de passe Agora
+    register:
+      description: Choisissez un mot de passe pour vous connecter.
+      submit: Créer mon compte
+      submitting: Création du compte…
+      title: Créez votre compte Agora
+  newPasswordLabel: Nouveau mot de passe
+  restart: Demander un nouveau lien
+  states:
+    invalid:
+      description: Ce lien a peut-être expiré ou a déjà été utilisé. Il peut aussi être incomplet.
+      title: Ce lien n’est pas valide
+    missing:
+      description: Ouvrez le lien complet reçu par courriel ou demandez-en un nouveau.
+      title: Ce lien est incomplet
 telemetryConsent:
   change: Votre choix s’applique à toutes les applications Agora sur cet appareil. Vous pouvez le modifier à tout moment depuis la page Confidentialité.
   message: Nous collectons parfois des journaux d’erreurs et des métriques de performances, à des fins d’amélioration de nos produits. Aucune information personnelle n’est enregistrée ou partagée.

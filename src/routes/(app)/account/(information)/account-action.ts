@@ -1,5 +1,5 @@
-import type { AccountCredentialsState, AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
-import type { PictureEditor, ProfileState, UsernameEditor } from "#lib/application/profile/types.js";
+import type { AccountCredentialsState, ProfileState } from "../controller.svelte";
+import type { AccountEditor, AccountInformationModel, PictureEditor, UsernameEditor } from "./controller.svelte";
 
 /** AccountActionData is the result an account form action returns to the page. */
 export type AccountActionData =

@@ -1,15 +1,83 @@
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
 import { returnsToAuthorization } from "#lib/application/auth/navigation.js";
-import type { AuthenticationJourney, AuthenticationPanelModel } from "#lib/application/auth/types.js";
-import type { AuthDialogView, ShellApps, ShellViewModel } from "#lib/application/shell/types.js";
+import type { FormState } from "#lib/application/auth/types.js";
 import type { PlatformDowntime } from "#lib/ui/downtime.svelte.js";
 
-import { readAuthView, withAuthView } from "./auth-dialog-state";
-import { readNavigationOpen, withNavigationOpen } from "./navigation-state";
+import { readAuthView, readNavigationOpen, withAuthView, withNavigationOpen } from "./url-state";
 
 import { SvelteURL } from "svelte/reactivity";
 
 import type { OpenController, PasswordInputController } from "@a-novel-kit/uikit";
+
+/** The journeys the shell authentication dialog offers. */
+export type AuthenticationJourney = "login" | "register" | "reset";
+
+/** The fields of the shell authentication forms. */
+export type AuthenticationField = "email" | "password";
+
+/** Email delivery acknowledgement that deliberately does not disclose account existence. */
+export interface PendingEmailState {
+  status: "pending-email";
+  targetHint: string;
+}
+
+/** What every shell authentication form keeps across a submission the server refused. */
+interface AuthenticationPanelDraft {
+  /** The address the visitor typed. Passwords are never sent back. */
+  email?: string;
+}
+
+/** Pure login form state. */
+export interface LoginPanelModel extends AuthenticationPanelDraft {
+  journey: "login";
+  state: Exclude<FormState<AuthenticationField>, { status: "success" }>;
+}
+
+/** Pure password-recovery request state. */
+export interface EmailRequestPanelModel extends AuthenticationPanelDraft {
+  journey: "reset";
+  state: Exclude<FormState<"email">, { status: "success" }> | PendingEmailState;
+}
+
+/** Invitation requests acknowledge list membership without implying email delivery. */
+export interface InvitationRequestPanelModel extends AuthenticationPanelDraft {
+  journey: "register";
+  state: Exclude<FormState<"email">, { status: "success" }> | { status: "recorded"; email: string };
+}
+
+/** Every state rendered inside the shell authentication dialog. */
+export type AuthenticationPanelModel = LoginPanelModel | EmailRequestPanelModel | InvitationRequestPanelModel;
+
+/** Session states the shell can render without owning session logic. */
+export type ShellSession =
+  | { status: "anonymous" }
+  /** A session whose account could not be read yet. The shell shows a placeholder and asks again. */
+  | { status: "loading" }
+  | {
+      status: "authenticated";
+      displayName: string;
+      initials?: string;
+      /** The address of the account's picture, which replaces the initials. */
+      picture?: string;
+    };
+
+/** The address of each Agora app the shell's app list opens. */
+export interface ShellApps {
+  studio: string;
+}
+
+/** Serializable state consumed by the pure application shell. */
+export interface ShellViewModel {
+  activeNavigation: "account" | "privacy" | null;
+  rail: "expanded" | "collapsed";
+  drawerOpen: boolean;
+  authView: AuthenticationJourney | null;
+  session: ShellSession;
+  /** Set while the dialog logs the visitor in for another Agora app's authorization request. */
+  authorizationRequest?: boolean;
+  /** Set on a page that needs a login, whose dialog stays open. */
+  authLocked?: boolean;
+}
 
 /** State rendered by the account shell component. */
 export interface ShellControllerState {
@@ -38,9 +106,9 @@ export interface ShellController {
   /** Native navigation destination for the mobile menu. */
   navigationHref(open: boolean): string;
   /** Native navigation destination for an authentication view or its dismissal, with the mobile menu closed. */
-  authenticationHref(view: AuthDialogView | null): string;
+  authenticationHref(view: AuthenticationJourney | null): string;
   /** Shows one authentication journey in place of the mobile menu. */
-  openAuthentication(view: AuthDialogView): void;
+  openAuthentication(view: AuthenticationJourney): void;
   /** Switches between the expanded and collapsed navigation rail. */
   toggleRail(): void;
   /** Requests logout and reports whether native form submission should continue. */
@@ -55,7 +123,7 @@ export interface ShellControllerOptions extends Omit<ShellControllerState, "mode
   /** Allows the browser to submit the logout form after the controller accepts it. */
   allowNativeLogout?: boolean;
   /** Observes accepted authentication-view changes. */
-  onAuthViewChange?: (view: AuthDialogView | null) => void;
+  onAuthViewChange?: (view: AuthenticationJourney | null) => void;
   /** Observes accepted navigation-rail changes. */
   onRailChange?: (rail: ShellViewModel["rail"]) => void;
   /** Observes accepted mobile-menu changes. */
@@ -122,7 +190,7 @@ export function createShellController({
     onDrawerChange?.(open);
   }
 
-  function setAuthentication(view: AuthDialogView | null) {
+  function setAuthentication(view: AuthenticationJourney | null) {
     if (authView === view || (view === null && getAuthLocked())) return;
     authView = view;
     onAuthViewChange?.(view);
@@ -176,7 +244,7 @@ export function createShellController({
 }
 
 /** Creates the ready authentication model shared by shell controllers and stories. */
-export function readyAuthenticationModel(view: AuthDialogView): AuthenticationPanelModel {
+export function readyAuthenticationModel(view: AuthenticationJourney): AuthenticationPanelModel {
   return { journey: view, state: { status: "ready" } } as AuthenticationPanelModel;
 }
 

@@ -1,5 +1,4 @@
 import type { ProfileSummary } from "#lib/application/profile/types.js";
-import type { ShellApps, ShellSession, ShellViewModel } from "#lib/application/shell/types.js";
 import { type AuthenticationEvent, getAuthenticationContext } from "#lib/server/auth/context.js";
 import { type ResolvedSession, hasAccountSession } from "#lib/server/auth/session.js";
 import { readPlatformDowntime } from "#lib/server/downtime.js";
@@ -7,6 +6,7 @@ import { getProfileContext, summarizeProfile } from "#lib/server/profile/context
 import { getRuntimeConfig } from "#lib/server/runtime-config.server.js";
 
 import { type AccountDisplay, accountDisplayFromHandle } from "./account-display";
+import type { ShellApps, ShellSession, ShellViewModel } from "./controller.svelte";
 import { shellSessionData } from "./dependencies";
 
 import { NAVIGATION_RAIL_COOKIE, parseNavigationRail } from "@a-novel-kit/nodelib-browser/preferences";

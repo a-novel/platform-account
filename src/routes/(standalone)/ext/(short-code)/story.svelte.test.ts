@@ -1,6 +1,6 @@
-import type { ShortCodeScreenModel } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
+import type { ShortCodeScreenModel } from "./controller.svelte";
 import ShortCodeStory from "./story.svelte";
 
 import { describe, expect, it } from "vitest";

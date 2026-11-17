@@ -1,8 +1,8 @@
-import type { AccountInformationModel } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
 import { createInformationModel } from "./account-action";
+import type { AccountInformationModel } from "./controller.svelte";
 import { createAccountInformationController } from "./controller.svelte";
 import UsernameDialog from "./username-dialog.svelte";
 

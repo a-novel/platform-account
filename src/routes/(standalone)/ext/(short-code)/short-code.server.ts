@@ -1,13 +1,9 @@
 import { validateNewPassword } from "#lib/application/auth/forms.js";
-import type {
-  AuthenticationFeedback,
-  ShortCodeJourney,
-  ShortCodeScreenModel,
-  ShortCodeState,
-} from "#lib/application/auth/types.js";
+import type { AuthenticationFeedback } from "#lib/application/auth/types.js";
 import { emailLanguage, getAuthenticationContext } from "#lib/server/auth/context.js";
 import { refuseDuringDowntime } from "#lib/server/downtime.js";
 
+import type { ShortCodeJourney, ShortCodeScreenModel, ShortCodeState } from "./controller.svelte";
 import type { ShortCodePageData } from "./short-code";
 import { type ParsedShortCodeLink, parseShortCodeLink } from "./short-code-link.server";
 

@@ -1,7 +1,8 @@
-import type { AccountDevicesModel, AccountSummaryState } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
 import { createInformationModel } from "./(information)/account-action";
+import type { AccountSummaryState } from "./controller.svelte";
+import type { AccountDevicesModel } from "./devices/controller.svelte";
 import AccountStory from "./story.svelte";
 
 import { describe, expect, it } from "vitest";

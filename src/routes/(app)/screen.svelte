@@ -1,7 +1,5 @@
 <script module lang="ts">
-  import type { AuthDialogView } from "#lib/application/shell/types.js";
-
-  import type { ShellController } from "./controller.svelte";
+  import type { AuthenticationJourney, ShellController } from "./controller.svelte";
 
   import type { Snippet } from "svelte";
 
@@ -55,8 +53,8 @@
   const { t } = getI18nContext();
   const authenticatedSession = $derived(model.session.status === "authenticated" ? model.session : null);
   const authDialogTitle = $derived.by(() => {
-    if (authenticationState === "pending-email") return t("authUi.authentication.pendingTitle");
-    if (authenticationState === "recorded") return t("authUi.authentication.journeys.register.recordedTitle");
+    if (authenticationState === "pending-email") return t("shell.auth.pendingTitle");
+    if (authenticationState === "recorded") return t("shell.auth.register.recordedTitle");
     if (model.authView === "register") return t("shell.auth.register.title");
     if (model.authView === "reset") return t("shell.auth.reset.title");
     return t("shell.auth.login.title");
@@ -244,7 +242,7 @@
 {/snippet}
 
 <!-- A quiet text button: the journey reads as text, without a box until it is hovered. -->
-{#snippet authLink(view: AuthDialogView, label: string)}
+{#snippet authLink(view: AuthenticationJourney, label: string)}
   <Button
     variant="text"
     tone="brand"
@@ -636,7 +634,7 @@
     min-inline-size: 0;
   }
 
-  @container app-shell (max-width: 47.999rem) {
+  @container app-shell (width < 48rem) {
     .shell {
       grid-template-columns: minmax(0, 1fr);
     }

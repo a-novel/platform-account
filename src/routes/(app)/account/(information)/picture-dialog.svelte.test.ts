@@ -1,9 +1,9 @@
-import type { AccountInformationModel } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
-import type { ProfileState } from "#lib/application/profile/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
+import type { ProfileState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
+import type { AccountInformationModel } from "./controller.svelte";
 import { createAccountInformationController } from "./controller.svelte";
 import PictureDialog from "./picture-dialog.svelte";
 

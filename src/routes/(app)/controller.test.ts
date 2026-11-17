@@ -1,7 +1,6 @@
 import { validForm } from "#lib/application/auth/forms.fixture.js";
 import { validateEmailRequest, validateInvitationRequest, validateLogin } from "#lib/application/auth/forms.js";
 
-import { withAuthView } from "./auth-dialog-state";
 import {
   type AuthenticationPanelControllerState,
   type ShellControllerOptions,
@@ -10,6 +9,7 @@ import {
   createShellController,
   readyAuthenticationModel,
 } from "./controller.svelte";
+import { withAuthView } from "./url-state";
 
 import { describe, expect, it, vi } from "vitest";
 

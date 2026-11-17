@@ -1,7 +1,7 @@
-import type { PrivacyAccountState } from "#lib/application/auth/types.js";
 import { requireAuthorization } from "#lib/server/auth/authorization.js";
 
 import type { PageServerLoadEvent } from "./$types";
+import type { PrivacyAccountState } from "./controller.svelte";
 
 import { isHttpStatusError } from "@a-novel-kit/nodelib-browser/http";
 import { credentialsUpdateLocationConsent } from "@a-novel/service-authentication-rest";

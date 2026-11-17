@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { shortCodePageTitle } from "#lib/i18n/page-titles.js";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { applyAction, deserialize } from "$app/forms";
   import { goto } from "$app/navigation";
 
   import { createShortCodeScreenController, shortCodeControllerState } from "../../controller.svelte";
   import Screen from "../../screen.svelte";
+  import { shortCodePageTitle } from "../../short-code";
 
   import { onMount } from "svelte";
 

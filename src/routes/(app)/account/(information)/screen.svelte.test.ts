@@ -1,9 +1,10 @@
-import type { AccountCredentialsState, AccountEditor, AccountInformationModel } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import { submitForm } from "#lib/ui/forms.fixture.js";
 
+import type { AccountCredentialsState } from "../controller.svelte";
 import { createInformationModel } from "./account-action";
+import type { AccountEditor, AccountInformationModel } from "./controller.svelte";
 import { type AccountInformationControllerOptions, createAccountInformationController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 

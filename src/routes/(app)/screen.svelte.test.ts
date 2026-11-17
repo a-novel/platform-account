@@ -1,18 +1,16 @@
-import type { AuthenticationPanelModel } from "#lib/application/auth/types.js";
 import { portraitPicture } from "#lib/application/profile/picture.fixture.js";
-import type { ShellApps, ShellViewModel } from "#lib/application/shell/types.js";
 import { createI18n } from "#lib/i18n/instance.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 
-import { readAuthView, withAuthView } from "./auth-dialog-state";
+import type { AuthenticationPanelModel, ShellApps, ShellViewModel } from "./controller.svelte";
 import {
   createAuthenticationPanelController,
   createShellController,
   readyAuthenticationModel,
 } from "./controller.svelte";
-import { withNavigationOpen } from "./navigation-state";
 import Screen from "./screen.svelte";
 import ShellStory from "./story.svelte";
+import { readAuthView, withAuthView, withNavigationOpen } from "./url-state";
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";

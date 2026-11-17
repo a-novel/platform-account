@@ -1,7 +1,7 @@
-import type { PrivacyAccountState } from "#lib/application/auth/types.js";
 import { withLocale } from "#lib/i18n/provider.fixture.js";
 import type { TelemetryPreference } from "#lib/ui/telemetry-preference.js";
 
+import type { PrivacyAccountState } from "./controller.svelte";
 import { createLocationConsentController } from "./controller.svelte";
 import Screen from "./screen.svelte";
 

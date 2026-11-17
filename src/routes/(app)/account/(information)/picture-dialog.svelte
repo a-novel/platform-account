@@ -1,10 +1,9 @@
 <script lang="ts">
-  import type { PictureRefusal } from "#lib/application/profile/types.js";
   import AuthenticationError from "#lib/ui/auth/AuthenticationError.svelte";
   import { submitThrough } from "#lib/ui/form-submission.js";
 
   import { followInPlace } from "../../link-transition";
-  import type { AccountInformationController } from "./controller.svelte";
+  import type { AccountInformationController, PictureRefusal } from "./controller.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import {
@@ -45,15 +44,15 @@
   function refusalMessage(refusal: PictureRefusal): string {
     switch (refusal) {
       case "unreadable":
-        return t("authUi.account.picture.refusals.unreadable");
+        return t("account.picture.refusals.unreadable");
       case "format":
-        return t("authUi.account.picture.refusals.format");
+        return t("account.picture.refusals.format");
       case "ratio":
-        return t("authUi.account.picture.refusals.ratio");
+        return t("account.picture.refusals.ratio");
       case "dimensions":
-        return t("authUi.account.picture.refusals.dimensions");
+        return t("account.picture.refusals.dimensions");
       case "tooLarge":
-        return t("authUi.account.picture.refusals.tooLarge");
+        return t("account.picture.refusals.tooLarge");
     }
   }
 
@@ -84,10 +83,10 @@
   }
 </script>
 
-<Dialog controller={controller.editors.picture} title={t("authUi.account.picture.dialogTitle")} size="sm">
+<Dialog controller={controller.editors.picture} title={t("account.picture.dialogTitle")} size="sm">
   {#snippet headerActions()}
     <IconButton
-      label={t("authUi.account.closeEditor")}
+      label={t("account.closeEditor")}
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -100,27 +99,22 @@
 
   <div class="picture-editor">
     {#if !controller.state.scripted}
-      <Alert tone="info" title={t("authUi.account.picture.scriptRequired")} />
+      <Alert tone="info" title={t("account.picture.scriptRequired")} />
     {:else}
       {#if frame}
-        <PictureFrame
-          controller={frame}
-          label={t("authUi.account.picture.frameLabel")}
-          shape="circle"
-          disabled={busy}
-        />
+        <PictureFrame controller={frame} label={t("account.picture.frameLabel")} shape="circle" disabled={busy} />
       {/if}
 
       <!-- The frame above shows what was chosen, so the field needs no visible label. -->
       <Field
         controlId={`${componentId}-file`}
-        hint={picture.status === "opening" ? t("authUi.account.picture.opening") : undefined}
+        hint={picture.status === "opening" ? t("account.picture.opening") : undefined}
         error={picture.status === "choosing" && picture.refusal ? refusalMessage(picture.refusal) : undefined}
       >
         {#snippet children(control)}
           <FileInput
             {...control}
-            aria-label={t("authUi.account.picture.choose")}
+            aria-label={t("account.picture.choose")}
             accept="image/*"
             disabled={busy}
             controller={files}
@@ -139,7 +133,7 @@
       <form method="POST" action={controller.state.actions.picture} enctype="multipart/form-data" onsubmit={save}>
         <input type="file" name="picture" hidden />
         <Button type="submit" disabled={busy}>
-          {picture.status === "saving" ? t("authUi.account.picture.saving") : t("authUi.account.picture.save")}
+          {picture.status === "saving" ? t("account.picture.saving") : t("account.picture.save")}
         </Button>
       </form>
     {/if}
@@ -147,7 +141,7 @@
     {#if hasPicture}
       <form method="POST" action={controller.state.actions.removePicture} onsubmit={remove}>
         <Button type="submit" variant="ghost" tone="danger" disabled={busy}>
-          {picture.status === "removing" ? t("authUi.account.picture.removing") : t("authUi.account.picture.remove")}
+          {picture.status === "removing" ? t("account.picture.removing") : t("account.picture.remove")}
         </Button>
       </form>
     {/if}

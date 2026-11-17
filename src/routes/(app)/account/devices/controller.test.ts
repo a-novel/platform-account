@@ -1,5 +1,4 @@
-import type { AccountDeviceConfirmation, AccountDevicesModel } from "#lib/application/auth/types.js";
-
+import type { AccountDeviceConfirmation, AccountDevicesModel } from "./controller.svelte";
 import { type AccountDevicesControllerOptions, createAccountDevicesController } from "./controller.svelte";
 
 import { describe, expect, it, vi } from "vitest";

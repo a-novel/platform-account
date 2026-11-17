@@ -1,5 +1,4 @@
-import type { PrivacyAccountState } from "#lib/application/auth/types.js";
-
+import type { PrivacyAccountState } from "./controller.svelte";
 import { createLocationConsentController } from "./controller.svelte";
 
 import { describe, expect, it } from "vitest";

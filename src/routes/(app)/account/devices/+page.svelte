@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { AccountDeviceConfirmation } from "#lib/application/auth/types.js";
   import { retryWhile } from "#lib/client/retry.svelte.js";
   import { afterNavigate, goto, invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
@@ -9,6 +8,7 @@
   import { addressBar, dialogUrl, localHref } from "../url-state";
   import type { DevicesActionData } from "./+page.server";
   import { confirmationParameter, confirmationValue, readConfirmation } from "./confirmation-state";
+  import type { AccountDeviceConfirmation } from "./controller.svelte";
   import { createAccountDevicesController } from "./controller.svelte";
   import { devicePageUrl, readPages } from "./device-pages";
   import Screen from "./screen.svelte";

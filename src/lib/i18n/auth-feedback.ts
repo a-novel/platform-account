@@ -6,19 +6,19 @@ import type { TFunction } from "i18next";
 export function translateAuthenticationFeedback(t: TFunction<"common">, feedback: AuthenticationFeedback): string {
   switch (feedback) {
     case "emailUpdated":
-      return t("authFlow.feedback.emailUpdated");
+      return t("form.feedback.emailUpdated");
     case "invalidCredentials":
-      return t("authFlow.feedback.invalidCredentials");
+      return t("form.feedback.invalidCredentials");
     case "passwordChanged":
-      return t("authFlow.feedback.passwordChanged");
+      return t("form.feedback.passwordChanged");
     case "passwordReset":
-      return t("authFlow.feedback.passwordReset");
+      return t("form.feedback.passwordReset");
     case "registrationCompleted":
-      return t("authFlow.feedback.registrationCompleted");
+      return t("form.feedback.registrationCompleted");
     case "serviceUnavailable":
-      return t("authFlow.feedback.serviceUnavailable");
+      return t("form.feedback.serviceUnavailable");
     case "tooManyAttempts":
-      return t("authFlow.feedback.tooManyAttempts");
+      return t("form.feedback.tooManyAttempts");
   }
 }
 
@@ -36,20 +36,20 @@ export function translateFieldIssue<Field extends string>(
 function translateAuthenticationValidation(t: TFunction<"common">, issue: AuthenticationValidation): string {
   switch (issue.feedback) {
     case "invalidCurrentPassword":
-      return t("authFlow.feedback.invalidCurrentPassword");
+      return t("form.feedback.invalidCurrentPassword");
     case "confirmPassword":
-      return t("authFlow.validation.confirmPassword");
+      return t("form.validation.confirmPassword");
     case "currentPassword":
-      return t("authFlow.validation.currentPassword");
+      return t("form.validation.currentPassword");
     case "email":
-      return t("authFlow.validation.email");
+      return t("form.validation.email");
     case "minLength":
-      return t("authFlow.validation.minLength", { count: issue.limit });
+      return t("form.validation.minLength", { count: issue.limit });
     case "maxLength":
-      return t("authFlow.validation.maxLength", { count: issue.limit });
+      return t("form.validation.maxLength", { count: issue.limit });
     case "password":
-      return t("authFlow.validation.password");
+      return t("form.validation.password");
     case "passwordMismatch":
-      return t("authFlow.validation.passwordMismatch");
+      return t("form.validation.passwordMismatch");
   }
 }

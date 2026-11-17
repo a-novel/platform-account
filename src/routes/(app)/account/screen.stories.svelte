@@ -1,17 +1,13 @@
 <script module lang="ts">
   import { validationFixture } from "#lib/application/auth/forms.fixture.js";
   import { validateEmailUpdate, validatePasswordChange } from "#lib/application/auth/forms.js";
-  import type {
-    AccountDevice,
-    AccountDevicesModel,
-    AccountInformationModel,
-    AccountSummaryState,
-  } from "#lib/application/auth/types.js";
   import { landscapeSource, portraitPicture } from "#lib/application/profile/picture.fixture.js";
-  import type { ProfileState } from "#lib/application/profile/types.js";
   import { createStorybookTranslator } from "#lib/i18n/storybook.js";
 
   import { createInformationModel } from "./(information)/account-action";
+  import type { AccountInformationModel } from "./(information)/controller.svelte";
+  import type { AccountSummaryState, ProfileState } from "./controller.svelte";
+  import type { AccountDevice, AccountDevicesModel } from "./devices/controller.svelte";
   import StoryHarness from "./story.svelte";
 
   import { reviewStoryGlobals } from "@a-novel-kit/uikit-storybook";
@@ -117,9 +113,9 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     await expect(canvas.getByRole("heading", { level: 1, name: summary.email })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: t("authUi.account.logout.submit") })).toBeEnabled();
-    const tabs = within(canvas.getByRole("navigation", { name: t("authUi.account.tabs.label") }));
-    const current = tabs.getByRole("link", { name: t("authUi.account.tabs.information") });
+    await expect(canvas.getByRole("button", { name: t("account.logout.submit") })).toBeEnabled();
+    const tabs = within(canvas.getByRole("navigation", { name: t("account.tabs.label") }));
+    const current = tabs.getByRole("link", { name: t("account.tabs.information") });
     await expect(current).toHaveAttribute("aria-current", "page");
   }
 
@@ -127,17 +123,17 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     await expect(canvas.getByRole("heading", { level: 1, name: "Maya Chen" })).toBeVisible();
-    const pictureLinks = canvas.getAllByRole("link", { name: t("authUi.account.picture.changeLabel") });
+    const pictureLinks = canvas.getAllByRole("link", { name: t("account.picture.changeLabel") });
     for (const link of pictureLinks) await expect(link).toHaveAttribute("href", "?edit=picture");
-    const profile = within(canvas.getByRole("region", { name: t("authUi.account.profile.title") }));
+    const profile = within(canvas.getByRole("region", { name: t("account.profile.title") }));
     await expect(profile.getByText("Maya Chen")).toBeVisible();
-    await expect(profile.getByRole("img", { name: t("authUi.account.picture.current") })).toBeVisible();
+    await expect(profile.getByRole("img", { name: t("account.picture.current") })).toBeVisible();
   }
 
   async function verifyCounterAtLimit({ globals }: PlayContext) {
     const dialog = within(document.body).getByRole("dialog");
     const t = createStorybookTranslator(globals);
-    const field = within(dialog).getByLabelText(t("authUi.account.username.label"));
+    const field = within(dialog).getByLabelText(t("account.username.label"));
     await expect(field).toHaveAccessibleDescription(new RegExp("32 / 32"));
   }
 </script>

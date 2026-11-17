@@ -34,19 +34,19 @@
 {#snippet sentTitle()}
   <span class="success-title">
     <MailCheck size="var(--icon-size-md)" aria-hidden="true" />
-    {t("authUi.account.email.success.title")}
+    {t("account.email.success.title")}
   </span>
 {/snippet}
 
 <Dialog
   controller={controller.editors.email}
-  title={sent ? sentTitle : t("authUi.account.email.dialogTitle")}
-  description={sent ? undefined : t("authUi.account.email.description")}
+  title={sent ? sentTitle : t("account.email.dialogTitle")}
+  description={sent ? undefined : t("account.email.description")}
   size="sm"
 >
   {#snippet headerActions()}
     <IconButton
-      label={t("authUi.account.closeEditor")}
+      label={t("account.closeEditor")}
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -62,34 +62,28 @@
     <div class="success" role="status">
       {#if credentials.status === "ready" && credentials.pendingEmail}
         {@const pending = credentials.pendingEmail}
-        <p
-          >{@render emphasized(
-            t("authUi.account.email.success.sent", { email: pending.email }),
-            pending.email,
-            "accent"
-          )}</p
-        >
-        <p class="secondary">{t("authUi.account.email.success.expiry", { date: pending.expiresAt })}</p>
+        <p>{@render emphasized(t("account.email.success.sent", { email: pending.email }), pending.email, "accent")}</p>
+        <p class="secondary">{t("account.email.success.expiry", { date: pending.expiresAt })}</p>
       {:else}
-        <p>{t("authUi.account.email.pendingDescription")}</p>
+        <p>{t("account.email.pendingDescription")}</p>
       {/if}
       {#if credentials.status === "ready"}
         <p class="secondary">
           {@render emphasized(
-            t("authUi.account.email.success.keep", { email: credentials.email }),
+            t("account.email.success.keep", { email: credentials.email }),
             credentials.email,
             "strong"
           )}
         </p>
       {/if}
-      <Button href={controller.editorHref(null)} onclick={close}>{t("authUi.account.gotIt")}</Button>
+      <Button href={controller.editorHref(null)} onclick={close}>{t("account.gotIt")}</Button>
     </div>
   {:else}
     <form method="POST" action={controller.state.actions.email} aria-busy={submitting} novalidate onsubmit={submit}>
       <Field
         controlId={`${componentId}-new-email`}
-        label={t("authUi.account.email.label")}
-        hint={t("authUi.account.email.hint")}
+        label={t("account.email.label")}
+        hint={t("account.email.hint")}
         error={translateFieldIssue(t, issues, "newEmail")}
         required
       >
@@ -108,7 +102,7 @@
       </Field>
       <Field
         controlId={`${componentId}-current-password`}
-        label={t("authUi.account.password.currentLabel")}
+        label={t("account.password.currentLabel")}
         error={translateFieldIssue(t, issues, "currentPassword")}
         required
       >
@@ -129,7 +123,7 @@
           {/if}
         {/snippet}
         <Button type="submit" disabled={submitting}>
-          {submitting ? t("authUi.account.email.submitting") : t("authUi.account.email.submit")}
+          {submitting ? t("account.email.submitting") : t("account.email.submit")}
         </Button>
       </FormActions>
     </form>
