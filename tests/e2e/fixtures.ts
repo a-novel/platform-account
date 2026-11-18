@@ -54,7 +54,13 @@ interface PerRunValues {
  * ends. The page then renders again from scratch, focus kept: Chromium can keep a layer's earlier
  * raster when the shorter text moves it, a pixel off a fresh paint.
  */
-export async function stableScreenshot(page: Page, info: TestInfo, name: string) {
+export async function stableScreenshot(
+  page: Page,
+  info: TestInfo,
+  name: string,
+  // DIAGNOSTIC ONLY: reads the page once the text is fixed, and once the capture ends.
+  onStage?: (stage: "swapped" | "captured") => Promise<void>
+) {
   await page.evaluate(() => {
     const originals = new Map<Text, string>();
     const fix = (text: Text) => {
@@ -82,8 +88,10 @@ export async function stableScreenshot(page: Page, info: TestInfo, name: string)
     document.documentElement.style.removeProperty("display");
     if (focused instanceof HTMLElement) focused.focus({ preventScroll: true });
   });
+  await onStage?.("swapped");
   try {
     await screenshot(page, info, name);
+    await onStage?.("captured");
   } finally {
     await page.evaluate(() => {
       const { perRunValues } = window as unknown as { perRunValues?: PerRunValues };

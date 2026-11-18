@@ -1,3 +1,4 @@
+import { emailRowState, recordTimeline, reportMismatch } from "./diagnose";
 import { compose, emailLink, endSessionCheckWindow, expect, login, stableScreenshot, test } from "./fixtures";
 import { accountCaller } from "./service-token";
 
@@ -181,6 +182,7 @@ test("account forms change the password and confirm an email update", async ({ p
 });
 
 test("a cancelled email update leaves its link invalid", async ({ page, account }, info) => {
+  await recordTimeline(page);
   await page.goto("/?auth=login&returnTo=%2Faccount");
   await login(page, account);
 
@@ -195,7 +197,12 @@ test("a cancelled email update leaves its link invalid", async ({ page, account 
 
   const pending = page.getByRole("note").filter({ hasText: "Awaiting confirmation" });
   await expect(pending).toContainText(email);
-  await stableScreenshot(page, info, "email-change-pending");
+  const states = [await emailRowState(page, "loaded")];
+  const errors = info.errors.length;
+  await stableScreenshot(page, info, "email-change-pending", async (stage) => {
+    states.push(await emailRowState(page, stage));
+  });
+  if (info.errors.length > errors || process.env.EMAIL_ROW_DIAGNOSTIC_ALWAYS) await reportMismatch(info, states);
   await pending.getByRole("button", { name: "Cancel change", exact: true }).click();
   await expect(page).toHaveURL("/account");
   await expect(pending).toHaveCount(0);
