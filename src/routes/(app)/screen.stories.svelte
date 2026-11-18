@@ -320,7 +320,7 @@
 </Story>
 
 <Story
-  name="Maintenance — mobile"
+  name="Maintenance on mobile"
   exportName="MaintenanceMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
