@@ -219,10 +219,6 @@
     min-inline-size: 0;
   }
 
-  .group {
-    container-type: inline-size;
-  }
-
   header {
     gap: var(--space-2);
   }
@@ -263,8 +259,8 @@
 
   li {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     gap: var(--space-3);
     padding-block: var(--space-3);
   }
@@ -300,23 +296,30 @@
   }
 
   /*
-   * A narrow card leaves the device's name its full line. Its action takes a full row below, set apart from the
-   * details so a scrolling thumb does not land on it.
+   * Below 35rem, as uikit's ActionGroup lays out actions, the device's name keeps its full line and the action takes
+   * a full row below, set apart from the details so a scrolling thumb does not land on it.
    */
-  @container (width <= 28rem) {
+  .action {
+    display: grid;
+    grid-column: 1 / -1;
+    margin-block-start: var(--space-2);
+  }
+
+  .action > :global(*) {
+    justify-content: center;
+  }
+
+  /* From 35rem an action fits its label at the end of its row. */
+  @media (min-width: 35rem) {
     li {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: start;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
     }
 
     .action {
-      display: grid;
-      grid-column: 1 / -1;
-      margin-block-start: var(--space-2);
-    }
-
-    .action > :global(*) {
-      justify-content: center;
+      grid-column: auto;
+      justify-items: end;
+      margin-block-start: 0;
     }
   }
 </style>

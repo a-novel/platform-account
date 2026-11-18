@@ -149,7 +149,7 @@
 
   .account-header {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: var(--space-4) var(--space-6);
   }
@@ -240,9 +240,29 @@
     color: var(--color-text-muted);
   }
 
-  /* The top corner, away from the details, so it reads as apart from the account. */
+  /* Below 35rem, as uikit's ActionGroup lays out actions, logging out takes a full row set apart from the details,
+     so a thumb heading for the tabs does not land on it. */
   .logout {
-    align-self: start;
+    display: grid;
+    grid-column: 1 / -1;
+    margin-block-start: var(--space-2);
+  }
+
+  .logout :global(button) {
+    justify-content: center;
+  }
+
+  /* From 35rem it takes the top corner, away from the details, so it reads as apart from the account. */
+  @media (min-width: 35rem) {
+    .account-header {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .logout {
+      grid-column: auto;
+      align-self: start;
+      margin-block-start: 0;
+    }
   }
 
   /* The tabs stay in view under the shell's sticky top while a tab scrolls; the profile above scrolls away. They
@@ -264,12 +284,7 @@
     flex-wrap: nowrap;
   }
 
-  /* On a phone logging out moves under the details. */
   @container (width <= 34rem) {
-    .account-header {
-      grid-template-columns: auto minmax(0, 1fr);
-    }
-
     /* The tabs span the phone's whole width, over the page's gutters, and center while they fit. Auto
        margins drop to nothing once they overflow, so the bar then scrolls from its first tab. */
     .account-layout :global(.tabs) {
@@ -288,17 +303,6 @@
       inset-inline-end: calc(-1 * var(--space-1));
       inline-size: var(--space-6);
       block-size: var(--space-6);
-    }
-
-    /* A full row, set apart from the details, so a thumb heading for the tabs does not land on it. */
-    .logout {
-      display: grid;
-      grid-column: 1 / -1;
-      margin-block-start: var(--space-2);
-    }
-
-    .logout :global(button) {
-      justify-content: center;
     }
   }
 </style>

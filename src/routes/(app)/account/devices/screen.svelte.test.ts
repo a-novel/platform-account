@@ -102,6 +102,22 @@ describe("devices screen", () => {
       .toBeVisible();
   });
 
+  it("puts a device's action on a full row under its details below 35rem, and fits it to its row's end from 35rem", async () => {
+    // Just under 35rem, where the card is still wide enough to fit the action beside the device.
+    await page.viewport(540, 800);
+    await render(Screen, { controller: controller() }, withLocale());
+
+    const row = page.getByRole("region", { name: "Devices" }).getByRole("listitem").nth(1).element();
+    const details = page.getByText("Last active Nov 2, 2026, 9:15 PM").element();
+    const action = page.getByRole("link", { name: "Log out Safari on iOS" }).element();
+    expect(action.getBoundingClientRect().top).toBeGreaterThan(details.getBoundingClientRect().bottom);
+    expect(action.getBoundingClientRect().width).toBeGreaterThan(details.getBoundingClientRect().width);
+
+    await page.viewport(560, 800);
+    await expect.poll(() => action.getBoundingClientRect().left).toBeGreaterThan(details.getBoundingClientRect().right);
+    expect(action.getBoundingClientRect().right).toBeCloseTo(row.getBoundingClientRect().right, 0);
+  });
+
   it("asks before logging another device out, and logs this one out through the shell", async () => {
     await render(Screen, { controller: controller() }, withLocale());
 

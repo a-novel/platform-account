@@ -167,4 +167,18 @@ describe("account layout screen", () => {
     expect(logout.width).toBeGreaterThan(heading.width);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
   });
+
+  it("keeps the logout in the header's corner from 35rem, fit to its label", async () => {
+    await page.viewport(560, 800);
+    await render(Screen, { props: { controller: controller(), children }, target: shellColumn() }, withLocale());
+
+    const details = page
+      .getByText(/^Logged in until/)
+      .element()
+      .getBoundingClientRect();
+    const logout = page.getByRole("button", { name: "Log out" }).element().getBoundingClientRect();
+    const heading = page.getByRole("heading", { level: 1 }).element().getBoundingClientRect();
+    expect(logout.top).toBeLessThan(details.top);
+    expect(logout.left).toBeGreaterThan(heading.right);
+  });
 });
