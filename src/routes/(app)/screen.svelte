@@ -515,7 +515,7 @@
     text-align: center;
   }
 
-  /* One control tall on narrow screens, where the shell shows it. */
+  /* Puts the brand at one end of the header and the menu control at the other; the shell sizes the header and shows it on narrow screens. */
   .mobile-header {
     display: flex;
     justify-content: space-between;
