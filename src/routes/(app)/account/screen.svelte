@@ -275,14 +275,6 @@
     scrollbar-width: none;
   }
 
-  /* The header and the tabs end on whole pixels, so every row of a tab starts on one. Their text gives them a
-     fractional height, and a text a hair from a pixel edge moves a whole pixel on a sub-pixel difference. A browser
-     without calc-size keeps their auto height. */
-  .account-header,
-  .account-layout :global(.tabs) {
-    block-size: calc-size(auto, round(up, size, 1px));
-  }
-
   .account-layout :global(.tabs)::-webkit-scrollbar {
     display: none;
   }
