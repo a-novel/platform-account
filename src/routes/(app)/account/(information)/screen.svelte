@@ -115,7 +115,7 @@
                 </div>
                 {#if credentials.status === "ready" && credentials.pendingEmail}
                   {@const pending = credentials.pendingEmail}
-                  <Alert tone="info" role="note" title={t("account.email.pending")}>
+                  <Alert class="pending" tone="info" role="note" title={t("account.email.pending")}>
                     {#snippet icon()}
                       <Hourglass size="var(--icon-size-sm)" />
                     {/snippet}
@@ -175,10 +175,11 @@
     gap: var(--space-1);
   }
 
+  /* A whole-pixel line, so the rows under the description stay on whole pixels, as the account layout keeps them. */
   .heading p {
     margin: 0;
     font-size: var(--font-size-sm);
-    line-height: var(--line-height-normal);
+    line-height: round(var(--line-height-normal) * 1em, 1px);
   }
 
   .information,
@@ -204,6 +205,11 @@
 
   dd {
     gap: var(--space-3);
+  }
+
+  /* Ends on a whole pixel, so the password row below starts on one. */
+  dd :global(.pending) {
+    block-size: calc-size(auto, round(up, size, 1px));
   }
 
   h2,
