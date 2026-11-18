@@ -28,7 +28,7 @@ services:
     healthcheck: *postgres-healthcheck
 
   postgres-profile:
-    image: ghcr.io/a-novel/service-profile/database:v1.1.0@sha256:76b689469848223dee4198144d423f6f5b12807e17c436cbcbb1d81955869f81
+    image: ghcr.io/a-novel/service-profile/database:v1.2.0@sha256:33759d01f926f18efff3bd5cd64597f0f10a2b9214fc8402bb3b2fa6531f0c9a
     environment: *postgres-environment
     healthcheck: *postgres-healthcheck
 
@@ -157,7 +157,7 @@ services:
 
   # Stores each user's username and picture. Its image migrates the database before it serves.
   profile:
-    image: ghcr.io/a-novel/service-profile/standalone-rest:v1.1.0@sha256:bc24e03176999fb8f5ef62079fb07fd44fe478ec35972027ebb5049f145b63f5
+    image: ghcr.io/a-novel/service-profile/standalone-rest:v1.2.0@sha256:15368431439560e3a55ba9be1dd56dd583bc9d793e7167fa38a21ba2a9a79fc7
     ports:
       - "127.0.0.1:14104:8080"
     # Podman ignores the image's own check, so the journeys' wait needs this one.
