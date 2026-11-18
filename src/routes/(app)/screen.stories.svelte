@@ -12,7 +12,7 @@
 
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import type { StoryContext } from "@storybook/sveltekit";
-  import { expect, within } from "storybook/test";
+  import { expect, waitFor, within } from "storybook/test";
 
   const anonymous: ShellViewModel = {
     activeNavigation: null,
@@ -197,6 +197,28 @@
     expect(getComputedStyle(status).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     await expect(within(dialog).queryByRole("link", { name: t("shell.signIn") })).not.toBeInTheDocument();
   }
+
+  /**
+   * Checks that the maintenance banner sits atop the workspace on a wide screen and at its foot on a phone, and
+   * that the shell hands its height to a page's sticky parts on that edge.
+   */
+  function verifyMaintenanceBanner(edge: "top" | "bottom") {
+    return async ({ canvasElement }: PlayContext) => {
+      const canvas = within(canvasElement);
+      const banner = canvas.getByRole("status");
+      const main = canvas.getByRole("main");
+      const bounds = banner.getBoundingClientRect();
+      if (edge === "top") await expect(bounds.bottom).toBeLessThanOrEqual(main.getBoundingClientRect().top + 1);
+      else await expect(bounds.top).toBeGreaterThan(main.getBoundingClientRect().top);
+
+      // The page inherits the offset the shell sets.
+      await waitFor(() =>
+        expect(getComputedStyle(main).getPropertyValue(`--shell-sticky-${edge}`).trim()).toBe(
+          `${banner.offsetHeight}px`
+        )
+      );
+    };
+  }
 </script>
 
 <Story
@@ -293,11 +315,17 @@
   <StoryHarness model={withOpenMobileNavigation(loadingAccount)} />
 </Story>
 
-<Story name="Maintenance" asChild>
+<Story name="Maintenance" asChild play={verifyMaintenanceBanner("top")}>
   <StoryHarness model={anonymous} {downtime}><ScrollPreview /></StoryHarness>
 </Story>
 
-<Story name="Maintenance — mobile" exportName="MaintenanceMobile" globals={reviewStoryGlobals.mobile} asChild>
+<Story
+  name="Maintenance — mobile"
+  exportName="MaintenanceMobile"
+  globals={reviewStoryGlobals.mobile}
+  asChild
+  play={verifyMaintenanceBanner("bottom")}
+>
   <StoryHarness model={anonymous} {downtime}><ScrollPreview /></StoryHarness>
 </Story>
 
