@@ -1,5 +1,4 @@
 <script lang="ts">
-  import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
   import PageTitle from "#lib/ui/PageTitle.svelte";
   import { invalidate } from "$app/navigation";
   import { resolve } from "$app/paths";
@@ -12,6 +11,7 @@
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import { retryWhile } from "@a-novel-kit/nodelib-svelte";
+  import { ProtectedPage } from "@a-novel-kit/uikit";
 
   let { data, children } = $props();
   const { t } = getI18nContext();
@@ -75,4 +75,4 @@
   <Screen {controller}>{@render children()}</Screen>
 {/snippet}
 
-<AccessBoundary homeHref={resolve("")} retryHref={currentPath} children={frame} unavailable={frame} />
+<ProtectedPage homeHref={resolve("")} retryHref={currentPath} children={frame} unavailable={frame} />

@@ -13,7 +13,6 @@ import {
 } from "./controller.svelte";
 import { withNavigationOpen } from "./navigation-state";
 import Screen from "./screen.svelte";
-import ShellStory from "./story.svelte";
 import { readAuthView, withAuthView } from "./url-state";
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -75,6 +74,15 @@ function controller(
   return shell;
 }
 
+/** Reads the color painted behind an element: its own, or else its nearest ancestor's, as the shell's surface. */
+function paintedBackground(element: Element | null): string {
+  for (; element; element = element.parentElement) {
+    const color = getComputedStyle(element).backgroundColor;
+    if (color !== "rgba(0, 0, 0, 0)") return color;
+  }
+  return "rgba(0, 0, 0, 0)";
+}
+
 /** Reads the styles that tell a control's states apart, once its transitions have settled. */
 async function settledStyle(element: Element) {
   await new Promise(requestAnimationFrame);
@@ -119,18 +127,21 @@ describe("account shell screen", () => {
   });
 
   it("lists Privacy under the sign-in links only while it collects browser telemetry", async () => {
-    const view = await render(ShellStory, { model: model() }, withLocale());
+    const view = await render(Screen, { controller: controller() }, withLocale());
     await expect.element(page.getByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
     await view.unmount();
 
-    render(ShellStory, { model: model({ activeNavigation: "privacy" }), collectsTelemetry: true }, withLocale("fr"));
+    render(
+      Screen,
+      { controller: controller({ activeNavigation: "privacy" }, { privacyHref: "/privacy" }) },
+      withLocale("fr")
+    );
     await expect.element(page.getByRole("link", { name: "Confidentialité" })).toHaveAttribute("aria-current", "page");
     await expect.element(page.getByRole("link", { name: "Me connecter" })).not.toHaveAttribute("aria-current");
   });
 
   it("marks the account link current on the account pages, with its picture in full color", async () => {
-    const maya = { status: "authenticated", displayName: "Maya Chen", initials: "MC" } as const;
-    render(ShellStory, { model: model({ activeNavigation: "account", session: maya }) }, withLocale());
+    render(Screen, { controller: controller({ activeNavigation: "account", session: maya }) }, withLocale());
 
     const account = page.getByRole("link", { name: "Maya Chen" });
     await expect.element(account).toHaveAttribute("aria-current", "page");
@@ -140,8 +151,7 @@ describe("account shell screen", () => {
   });
 
   it("leaves Privacy to the account's tab once the visitor is logged in", async () => {
-    const authenticated = model({ session: { status: "authenticated", displayName: "Maya Chen", initials: "MC" } });
-    render(ShellStory, { model: authenticated, collectsTelemetry: true }, withLocale());
+    render(Screen, { controller: controller({ session: maya }, { privacyHref: "/privacy" }) }, withLocale());
 
     await expect.element(page.getByRole("button", { name: "Log out" })).toBeVisible();
     await expect.element(page.getByRole("link", { name: "Privacy" })).not.toBeInTheDocument();
@@ -236,8 +246,9 @@ describe("account shell screen", () => {
         }
         expect(hovered[1]?.background).toBe(hovered[2]?.background);
         expect(hovered[1]?.background).not.toBe(resting[1]?.background);
-        expect(hovered[1]?.background).not.toBe(getComputedStyle(surface.element()).backgroundColor);
-        presentations.push({ background: getComputedStyle(surface.element()).backgroundColor, resting, hovered });
+        const background = paintedBackground(surface.element());
+        expect(hovered[1]?.background).not.toBe(background);
+        presentations.push({ background, resting, hovered });
         await view.unmount();
       }
       expect(presentations[1]).toEqual(presentations[0]);

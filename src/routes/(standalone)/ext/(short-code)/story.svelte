@@ -13,22 +13,18 @@
   import type { ShortCodeScreenController } from "./controller.svelte";
   import ShortCodeScreen from "./screen.svelte";
 
-  import type { PasswordInputController } from "@a-novel-kit/uikit";
+  import { fixedPressed } from "@a-novel-kit/uikit-storybook";
 
   let { initialModel, passwordsShown = false }: ShortCodeScreenStoryProps = $props();
 
-  const visibility: PasswordInputController = {
-    get state() {
-      return { pressed: passwordsShown };
-    },
-    setPressed: () => {},
-    toggle: () => {},
-  };
   const controller: ShortCodeScreenController = {
     get state() {
       return { model: initialModel, action: "#complete", restartHref: "#restart", continueHref: "#continue" };
     },
-    passwordVisibility: { newPassword: visibility, confirmPassword: visibility },
+    get passwordVisibility() {
+      const visibility = fixedPressed(passwordsShown);
+      return { newPassword: visibility, confirmPassword: visibility };
+    },
     fail: () => {},
     submit: () => false,
   };
