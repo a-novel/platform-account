@@ -40,7 +40,7 @@
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
-  import type { OpenController, PasswordInputController } from "@a-novel-kit/uikit";
+  import { fixedChecked, fixedOpen, fixedPressed } from "@a-novel-kit/uikit-storybook";
 
   let props: AccountStoryProps = $props();
   const i18n = getI18nContext();
@@ -75,13 +75,7 @@
     return value;
   });
   const telemetry: TelemetryPreference = { choice: "declined", choose: noop };
-  const visibility: PasswordInputController = {
-    get state() {
-      return { pressed: passwordsShown };
-    },
-    setPressed: noop,
-    toggle: noop,
-  };
+  const visibility = $derived(fixedPressed(passwordsShown));
 
   const layout: AccountLayoutController = {
     get state() {
@@ -97,14 +91,7 @@
     submitLogout: () => false,
   };
 
-  const editor = (name: AccountEditor): OpenController => ({
-    get state() {
-      return { open: information?.editor === name };
-    },
-    open: noop,
-    close: noop,
-    toggle: noop,
-  });
+  const editor = (name: AccountEditor) => fixedOpen(information?.editor === name);
 
   const informationController: AccountInformationController | null = $derived(
     information
@@ -175,12 +162,7 @@
             },
             privacyHref: "#privacy",
           },
-          confirmation: {
-            state: { open: devices.confirmation !== null },
-            open: noop,
-            close: noop,
-            toggle: noop,
-          },
+          confirmation: fixedOpen(devices.confirmation !== null),
           confirmationHref: (confirmation) =>
             confirmation ? `?confirm=${confirmation.kind === "others" ? "others" : confirmation.id}` : "?",
           pageHref: (list, page) => `?${list}=${page}`,
@@ -195,11 +177,7 @@
       ? {
           account: privacy,
           pending: false,
-          consent: {
-            state: { checked: privacy.status === "ready" && privacy.locationConsent },
-            setChecked: noop,
-            toggle: noop,
-          },
+          consent: fixedChecked(privacy.status === "ready" && privacy.locationConsent),
         }
       : null
   );

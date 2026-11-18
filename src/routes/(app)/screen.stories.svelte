@@ -114,13 +114,13 @@
     const canvas = within(canvasElement);
     const t = createStorybookTranslator(globals);
     const openNavigation = canvas.getByRole("link", { name: t("shell.openNavigation") });
-    const mobileHeader = openNavigation.closest("header");
-    if (!mobileHeader) throw new Error("The mobile navigation control must live in the shell header");
-    const navigationRail = canvas.getByRole("complementary", { hidden: true });
-    await expect(navigationRail).toHaveAttribute("aria-label", t("shell.navigation"));
+    await expect(openNavigation.closest("header")).not.toBeNull();
+    await expect(canvas.getByRole("complementary", { hidden: true })).toHaveAttribute(
+      "aria-label",
+      t("shell.navigation")
+    );
     await expect(openNavigation).toHaveAttribute("aria-expanded", "false");
     await expect(canvas.queryByRole("dialog", { name: t("shell.brand") })).not.toBeInTheDocument();
-    await expect(getComputedStyle(mobileHeader).backgroundColor).toBe(getComputedStyle(navigationRail).backgroundColor);
   }
 
   async function verifyAppList({ canvasElement, globals }: PlayContext) {

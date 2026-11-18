@@ -26,6 +26,8 @@
   import { type ShellController, readyAuthenticationModel } from "./controller.svelte";
   import Screen from "./screen.svelte";
 
+  import { fixedOpen, fixedPressed } from "@a-novel-kit/uikit-storybook";
+
   let {
     model,
     authenticationModel,
@@ -61,30 +63,16 @@
           maintenance: downtime !== undefined && started,
         };
       },
-      passwordVisibility: {
-        get state() {
-          return { pressed: passwordShown };
-        },
-        setPressed: () => {},
-        toggle: () => {},
+      get passwordVisibility() {
+        return fixedPressed(passwordShown);
       },
       submit: () => false,
     },
-    authenticationDialog: {
-      get state() {
-        return { open: model.authView !== null };
-      },
-      open: () => {},
-      close: () => {},
-      toggle: () => {},
+    get authenticationDialog() {
+      return fixedOpen(model.authView !== null);
     },
-    navigationDialog: {
-      get state() {
-        return { open: model.drawerOpen };
-      },
-      open: () => {},
-      close: () => {},
-      toggle: () => {},
+    get navigationDialog() {
+      return fixedOpen(model.drawerOpen);
     },
     navigationHref: (open) => (open ? "#menu" : "#"),
     openAuthentication: () => {},

@@ -1,7 +1,18 @@
+import type { Messages } from "@a-novel-kit/uikit";
+
 import type { TFunction } from "i18next";
 
-/** Uses a readable error description instead of a bare HTTP status in the tab. */
-export function errorPageTitle(t: TFunction<"common">, status: number, downtime = false, authorizationRequest = false) {
+/**
+ * Uses a readable error description instead of a bare HTTP status in the tab. uikit ships the access and page
+ * states' copy, so `uikitText` reads it.
+ */
+export function errorPageTitle(
+  t: TFunction<"common">,
+  uikitText: Messages["t"],
+  status: number,
+  downtime = false,
+  authorizationRequest = false
+) {
   if (downtime) return t("access.downtime.title");
   if (authorizationRequest) return t("access.authorizationRequest.title");
 
@@ -9,12 +20,12 @@ export function errorPageTitle(t: TFunction<"common">, status: number, downtime 
     case 401:
       return t("shell.auth.login.title");
     case 404:
-      return t("access.notFound.title");
+      return uikitText("access.notFound.title");
     case 403:
-      return t("access.forbidden.title");
+      return uikitText("access.forbidden.title");
     case 503:
-      return t("access.unavailable.title");
+      return uikitText("access.unavailable.title");
     default:
-      return t("access.error.title");
+      return uikitText("access.error.title");
   }
 }

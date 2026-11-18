@@ -1,8 +1,15 @@
 <script lang="ts">
-  import AccessBoundary from "#lib/ui/AccessBoundary.svelte";
-
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { DowntimeState, Link, StatusState } from "@a-novel-kit/uikit";
+  import {
+    AccessForbiddenState,
+    AccessUnavailableState,
+    DowntimeState,
+    Link,
+    PageErrorState,
+    PageNotFoundState,
+    StatusState,
+    useMessages,
+  } from "@a-novel-kit/uikit";
 
   let {
     status,
@@ -20,51 +27,41 @@
     authorizationRequest?: boolean;
   } = $props();
   const { t } = getI18nContext();
+  // uikit ships the access and page states' copy; a name other than `t` keeps its keys out of the app's catalog.
+  const uikitText = useMessages().t;
 </script>
 
-{#if downtime}
+<!-- A page that needs a login shows nothing of its own: the shell's login dialog covers it. -->
+{#if downtime || authorizationRequest || status !== 401}
   <div class="error-page">
-    <DowntimeState end={downtime.end} timeZone={downtime.timeZone} headingLevel={1}>
-      {#snippet actions()}
-        <Link href={homeHref}>{t("access.home")}</Link>
-      {/snippet}
-    </DowntimeState>
-  </div>
-{:else if authorizationRequest}
-  <div class="error-page">
-    <StatusState
-      tone="error"
-      title={t("access.authorizationRequest.title")}
-      description={t("access.authorizationRequest.description")}
-      headingLevel={1}
-    >
-      {#snippet actions()}
-        <Link href={homeHref}>{t("access.home")}</Link>
-      {/snippet}
-    </StatusState>
-  </div>
-{:else if status === 403 || status === 503}
-  <AccessBoundary
-    controller={{ state: { status: status === 403 ? "forbidden" : "unavailable" } }}
-    {homeHref}
-    {retryHref}
-  />
-{:else if status !== 401}
-  <div class="error-page">
-    <StatusState
-      tone="error"
-      title={status === 404 ? t("access.notFound.title") : t("access.error.title")}
-      description={status === 404 ? t("access.notFound.description") : t("access.error.description")}
-      headingLevel={1}
-    >
-      {#snippet actions()}
-        <Link href={homeHref}>{t("access.home")}</Link>
-      {/snippet}
-    </StatusState>
+    {#if downtime}
+      <DowntimeState end={downtime.end} timeZone={downtime.timeZone} headingLevel={1}>
+        {#snippet actions()}
+          <Link href={homeHref}>{uikitText("access.home")}</Link>
+        {/snippet}
+      </DowntimeState>
+    {:else if authorizationRequest}
+      <StatusState
+        tone="error"
+        title={t("access.authorizationRequest.title")}
+        description={t("access.authorizationRequest.description")}
+        headingLevel={1}
+      >
+        {#snippet actions()}
+          <Link href={homeHref}>{uikitText("access.home")}</Link>
+        {/snippet}
+      </StatusState>
+    {:else if status === 403}
+      <AccessForbiddenState {homeHref} headingLevel={1} />
+    {:else if status === 503}
+      <AccessUnavailableState {retryHref} headingLevel={1} />
+    {:else if status === 404}
+      <PageNotFoundState {homeHref} headingLevel={1} />
+    {:else}
+      <PageErrorState {homeHref} headingLevel={1} />
+    {/if}
   </div>
 {/if}
-
-<!-- A page that needs a login shows nothing of its own: the shell's login dialog covers it. -->
 
 <style>
   .error-page {
