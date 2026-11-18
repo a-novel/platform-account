@@ -223,6 +223,7 @@ describe("email action", () => {
 });
 
 const profileFailures = [
+  ["a malformed request", new HttpError(400, "private service detail"), 503, "serviceUnavailable"],
   ["too many attempts", new HttpError(429, "private service detail"), 429, "tooManyAttempts"],
   ["an outage", new HttpError(503, "private service detail"), 503, "serviceUnavailable"],
   ["a network failure", new Error("private service detail"), 503, "serviceUnavailable"],
@@ -244,15 +245,12 @@ describe("username action", () => {
     });
   });
 
-  // Profile refuses a name with 422 from its 1.2 release, and with 400 before it.
   it.each([
-    [400, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
-    [422, "the rule the platform's mirror finds", "Maya\tChen", "characters"],
-    [400, "a refusal only the service could tell", "Maya", "refused"],
-    [422, "a refusal only the service could tell", "Maya", "refused"],
-  ])("keeps a refused name in the field after a %i, with %s", async (refusal, _, username, issue) => {
+    ["the rule the platform's mirror finds", "Maya\tChen", "characters"],
+    ["a refusal only the service could tell", "Maya", "refused"],
+  ])("keeps a refused name in the field, with %s", async (_, username, issue) => {
     authenticated.mockResolvedValue(signedIn);
-    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(refusal, "private service detail"));
+    vi.mocked(profileUsernameUpdate).mockRejectedValue(new HttpError(422, "private service detail"));
 
     await expect(informationActions.username(event("username", { username }))).resolves.toEqual({
       status: 400,
