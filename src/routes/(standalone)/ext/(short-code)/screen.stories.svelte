@@ -99,7 +99,7 @@
 </script>
 
 <Story
-  name="Complete registration — desktop"
+  name="Complete registration on desktop"
   exportName="CompleteRegistrationDesktop"
   globals={reviewStoryGlobals.desktop}
   asChild
@@ -109,7 +109,7 @@
 </Story>
 
 <Story
-  name="Complete registration — mobile"
+  name="Complete registration on mobile"
   exportName="CompleteRegistrationMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -119,7 +119,7 @@
 </Story>
 
 <Story
-  name="Updating email — desktop"
+  name="Updating email on desktop"
   exportName="UpdatingEmailDesktop"
   globals={reviewStoryGlobals.desktop}
   asChild
@@ -129,7 +129,7 @@
 </Story>
 
 <Story
-  name="Updating email — mobile"
+  name="Updating email on mobile"
   exportName="UpdatingEmailMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -145,7 +145,7 @@
 </Story>
 
 <Story
-  name="Complete password reset — desktop"
+  name="Complete password reset on desktop"
   exportName="CompletePasswordResetDesktop"
   globals={reviewStoryGlobals.desktop}
   asChild
@@ -154,7 +154,7 @@
 </Story>
 
 <Story
-  name="Complete password reset — mobile"
+  name="Complete password reset on mobile"
   exportName="CompletePasswordResetMobile"
   globals={reviewStoryGlobals.mobile}
   asChild

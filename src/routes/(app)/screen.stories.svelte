@@ -222,7 +222,7 @@
 </script>
 
 <Story
-  name="Anonymous — desktop"
+  name="Anonymous on desktop"
   exportName="AnonymousDesktop"
   globals={reviewStoryGlobals.desktop}
   asChild
@@ -232,7 +232,7 @@
 </Story>
 
 <Story
-  name="Anonymous — mobile"
+  name="Anonymous on mobile"
   exportName="AnonymousMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -276,7 +276,7 @@
 </Story>
 
 <Story
-  name="Authenticated — mobile"
+  name="Authenticated on mobile"
   exportName="AuthenticatedMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -306,7 +306,7 @@
 </Story>
 
 <Story
-  name="Loading account — mobile"
+  name="Loading account on mobile"
   exportName="LoadingAccountMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -345,12 +345,12 @@
   <StoryHarness model={{ ...anonymous, authView: "login", authLocked: true }} collectsTelemetry />
 </Story>
 
-<Story name="Login modal — desktop" exportName="LoginModalDesktop" globals={reviewStoryGlobals.desktop} asChild>
+<Story name="Login modal on desktop" exportName="LoginModalDesktop" globals={reviewStoryGlobals.desktop} asChild>
   <StoryHarness model={{ ...anonymous, authView: "login" }} />
 </Story>
 
 <Story
-  name="Login modal — mobile"
+  name="Login modal on mobile"
   exportName="LoginModalMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -406,11 +406,16 @@
   />
 </Story>
 
-<Story name="Invitation list — desktop" exportName="InvitationListDesktop" globals={reviewStoryGlobals.desktop} asChild>
+<Story
+  name="Invitation list on desktop"
+  exportName="InvitationListDesktop"
+  globals={reviewStoryGlobals.desktop}
+  asChild
+>
   <StoryHarness model={{ ...anonymous, authView: "register" }} />
 </Story>
 
-<Story name="Invitation list — mobile" exportName="InvitationListMobile" globals={reviewStoryGlobals.mobile} asChild>
+<Story name="Invitation list on mobile" exportName="InvitationListMobile" globals={reviewStoryGlobals.mobile} asChild>
   <StoryHarness model={{ ...anonymous, authView: "register" }} />
 </Story>
 
@@ -425,7 +430,7 @@
 </Story>
 
 <Story
-  name="Password reset modal — desktop"
+  name="Password reset modal on desktop"
   exportName="PasswordResetModalDesktop"
   globals={reviewStoryGlobals.desktop}
   asChild
@@ -434,7 +439,7 @@
 </Story>
 
 <Story
-  name="Password reset modal — mobile"
+  name="Password reset modal on mobile"
   exportName="PasswordResetModalMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
@@ -534,7 +539,7 @@
 </Story>
 
 <Story
-  name="Long account name — mobile"
+  name="Long account name on mobile"
   exportName="LongAccountNameMobile"
   globals={reviewStoryGlobals.mobile}
   asChild
