@@ -21,7 +21,16 @@
   import { localeNames, supportedLocales } from "#lib/i18n/config.js";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Button, Card, Field, FormActions, LanguageName, Select, type SelectOption } from "@a-novel-kit/uikit";
+  import {
+    Button,
+    Card,
+    Field,
+    FormActions,
+    LanguageName,
+    Section,
+    Select,
+    type SelectOption,
+  } from "@a-novel-kit/uikit";
 
   import { AppWindow } from "@lucide/svelte";
 
@@ -49,11 +58,7 @@
   {/if}
 {/snippet}
 
-<section class="group" aria-labelledby={`${componentId}-device`}>
-  <div class="heading">
-    <h2 id={`${componentId}-device`}>{t("preferences.device.title")}</h2>
-    <p>{t("preferences.device.description")}</p>
-  </div>
+<Section title={t("preferences.device.title")} description={t("preferences.device.description")}>
   <Card surface="raised">
     <!-- Saving reloads the page in the chosen language, so the choice waits for the button. -->
     <form method="POST" action={languageAction}>
@@ -68,21 +73,11 @@
       </FormActions>
     </form>
   </Card>
-</section>
+</Section>
 
 <style>
-  .group,
-  .heading,
   form {
     display: grid;
-    gap: var(--space-3);
-  }
-
-  .heading {
-    gap: var(--space-1);
-  }
-
-  form {
     gap: var(--space-4);
   }
 
@@ -91,18 +86,5 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-  }
-
-  h2 {
-    margin: 0;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-xl);
-    font-family: var(--font-family-display);
-  }
-
-  p {
-    margin: 0;
-    color: var(--color-text-secondary);
-    line-height: var(--line-height-normal);
   }
 </style>
