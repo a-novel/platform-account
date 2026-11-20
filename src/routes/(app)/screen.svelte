@@ -503,7 +503,7 @@
   /* Switching journeys closes the form: a hairline sets it apart from the submission. */
   .auth-switch {
     margin: var(--space-6) 0 0;
-    border-block-start: var(--border-width-thin) solid var(--color-border-default);
+    border-block-start: var(--border-width-thin) solid var(--color-border-divider);
     padding-block-start: var(--space-4);
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
