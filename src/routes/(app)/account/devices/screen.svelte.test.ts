@@ -98,7 +98,9 @@ describe("devices screen", () => {
       .element(loggedOut.getByText("Each one disappears about a month later.", { exact: false }))
       .toBeVisible();
     await expect
-      .element(loggedOut.getByText("It can take up to 15 minutes for a logged-out device to lose access."))
+      .element(
+        loggedOut.getByText("It can take up to 15 minutes for a logged-out device to lose access.", { exact: false })
+      )
       .toBeVisible();
   });
 
