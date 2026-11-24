@@ -356,10 +356,10 @@ describe("account shell screen", () => {
     const passwordInput = submit.form.querySelector('input[type="password"]');
     if (!passwordInput) throw new Error("Login form must hold a password input");
     const password = passwordInput.getBoundingClientRect();
-    const forgot = dialog
-      .getByRole("link", { name: t("shell.auth.forgotPassword") })
-      .element()
-      .getBoundingClientRect();
+    const forgotAction = dialog.getByRole("link", { name: t("shell.auth.forgotPassword") }).element();
+    const forgot = forgotAction.getBoundingClientRect();
+    const forgotStyle = getComputedStyle(forgotAction);
+    const forgotInset = parseFloat(forgotStyle.paddingInlineEnd) + parseFloat(forgotStyle.borderInlineEndWidth);
     const register = dialog
       .getByRole("link", { name: t("shell.register") })
       .element()
@@ -375,7 +375,9 @@ describe("account shell screen", () => {
     expect(heading.left).toBeCloseTo(form.left);
     expect(close.top + close.height / 2).toBeCloseTo(heading.top + heading.height / 2);
     expect(close.right).toBeCloseTo(form.right);
-    expect(forgot.right).toBeCloseTo(form.right);
+    // uikit ends a label's action at the form's edge: its box there, or its label once the box overhangs by its inset.
+    expect(forgot.right - form.right).toBeGreaterThanOrEqual(-0.5);
+    expect(forgot.right - form.right).toBeLessThanOrEqual(forgotInset + 0.5);
     expect(forgot.bottom).toBeLessThanOrEqual(password.top);
     // The action ends the line: across it on a phone, at its own width elsewhere, as every form's and dialog's do.
     if (width < 560) expect(action.width).toBeCloseTo(form.width);

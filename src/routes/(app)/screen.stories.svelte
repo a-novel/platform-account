@@ -168,7 +168,13 @@
     const submitBounds = submit.getBoundingClientRect();
 
     await expect(forgotPasswordBounds.bottom).toBeLessThanOrEqual(passwordBounds.top);
-    await expect(Math.abs(forgotPasswordBounds.right - submitBounds.right)).toBeLessThanOrEqual(1);
+    // uikit ends a label's action at the form's edge: its box there, or its label once the box overhangs by its inset.
+    const forgotPasswordStyle = getComputedStyle(forgotPassword);
+    const forgotPasswordInset =
+      parseFloat(forgotPasswordStyle.paddingInlineEnd) + parseFloat(forgotPasswordStyle.borderInlineEndWidth);
+    const overhang = forgotPasswordBounds.right - submitBounds.right;
+    await expect(overhang).toBeGreaterThanOrEqual(-1);
+    await expect(overhang).toBeLessThanOrEqual(forgotPasswordInset + 1);
     await expect(register.getBoundingClientRect().top).toBeGreaterThanOrEqual(submitBounds.bottom);
     await expect(forgotPassword.scrollWidth).toBeLessThanOrEqual(forgotPassword.clientWidth);
     await expect(register.scrollWidth).toBeLessThanOrEqual(register.clientWidth);
