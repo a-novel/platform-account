@@ -19,7 +19,7 @@
   import UsernameDialog from "./username-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Avatar, Button, Card, IconButton, Skeleton } from "@a-novel-kit/uikit";
+  import { Alert, Avatar, Button, Card, IconButton, Section, Skeleton } from "@a-novel-kit/uikit";
 
   import { Hourglass, Pencil } from "@lucide/svelte";
 
@@ -28,7 +28,6 @@
   const credentials = $derived(controller.state.model.credentials);
   const profile = $derived(controller.state.model.profile);
   const emailCancel = $derived(controller.state.model.emailCancelState);
-  const componentId = $props.id();
   const { t } = getI18nContext();
 
   const openEditor = (editor: AccountEditor) => (event: MouseEvent) =>
@@ -49,13 +48,9 @@
   </IconButton>
 {/snippet}
 
-<div class="cards">
-  <Card surface="raised">
-    <section class="information" aria-labelledby={`${componentId}-profile-title`}>
-      <div class="heading">
-        <h2 id={`${componentId}-profile-title`}>{t("account.profile.title")}</h2>
-        <p class="secondary">{t("account.profile.description")}</p>
-      </div>
+<div class="sections">
+  <Section title={t("account.profile.title")} description={t("account.profile.description")}>
+    <Card surface="raised">
       <dl>
         <div>
           <dt>{t("account.username.title")}</dt>
@@ -88,75 +83,68 @@
           </dd>
         </div>
       </dl>
-    </section>
-  </Card>
+    </Card>
+  </Section>
 
-  <!-- Each way to log in sits on a card of its own inside the credentials. -->
-  <Card surface="raised">
-    <section class="information" aria-labelledby={`${componentId}-credentials-title`}>
-      <div class="heading">
-        <h2 id={`${componentId}-credentials-title`}>{t("account.credentials.title")}</h2>
-        <p class="secondary">{t("account.credentials.description")}</p>
-      </div>
-      <Card surface="raised">
-        <section class="information" aria-labelledby={`${componentId}-title`}>
-          <h3 id={`${componentId}-title`}>{t("account.signIn.title")}</h3>
-          <dl>
-            <div>
-              <dt>{t("account.email.title")}</dt>
-              <dd>
-                <div class="row">
-                  {#if credentials.status === "ready"}
-                    <span class="value">{credentials.email}</span>
-                  {:else}
-                    <Skeleton class="value-skeleton" />
-                  {/if}
-                  {@render changeButton("email", t("account.email.changeLabel"))}
-                </div>
-                {#if credentials.status === "ready" && credentials.pendingEmail}
-                  {@const pending = credentials.pendingEmail}
-                  <Alert tone="info" role="note" title={t("account.email.pending")}>
-                    {#snippet icon()}
-                      <Hourglass size="var(--icon-size-sm)" />
-                    {/snippet}
-                    {#snippet actions()}
-                      <form method="POST" action={controller.state.actions.cancelEmail} onsubmit={cancelEmail}>
-                        <Button
-                          type="submit"
-                          variant="text"
-                          tone="neutral"
-                          size="sm"
-                          disabled={emailCancel.status === "submitting"}
-                        >
-                          {emailCancel.status === "submitting"
-                            ? t("account.email.cancelling")
-                            : t("account.email.cancel")}
-                        </Button>
-                      </form>
-                    {/snippet}
-                    <span class="pending-email">{pending.email}</span>
-                    {t("account.email.pendingExpiry", { date: pending.expiresAt })}
-                  </Alert>
-                  {#if emailCancel.status === "service-error"}
-                    <AuthenticationError feedback={emailCancel.feedback} />
-                  {/if}
+  <!-- Each way to log in sits on a card of its own, which names it. -->
+  <Section title={t("account.credentials.title")} description={t("account.credentials.description")}>
+    <Card surface="raised">
+      <Section title={t("account.signIn.title")}>
+        <dl>
+          <div>
+            <dt>{t("account.email.title")}</dt>
+            <dd>
+              <div class="row">
+                {#if credentials.status === "ready"}
+                  <span class="value">{credentials.email}</span>
+                {:else}
+                  <Skeleton class="value-skeleton" />
                 {/if}
-              </dd>
-            </div>
-            <div>
-              <dt>{t("account.password.title")}</dt>
-              <dd>
-                <div class="row">
-                  <span class="secondary" aria-hidden="true">••••••••</span>
-                  {@render changeButton("password", t("account.password.changeLabel"))}
-                </div>
-              </dd>
-            </div>
-          </dl>
-        </section>
-      </Card>
-    </section>
-  </Card>
+                {@render changeButton("email", t("account.email.changeLabel"))}
+              </div>
+              {#if credentials.status === "ready" && credentials.pendingEmail}
+                {@const pending = credentials.pendingEmail}
+                <Alert tone="info" role="note" title={t("account.email.pending")}>
+                  {#snippet icon()}
+                    <Hourglass size="var(--icon-size-sm)" />
+                  {/snippet}
+                  {#snippet actions()}
+                    <form method="POST" action={controller.state.actions.cancelEmail} onsubmit={cancelEmail}>
+                      <Button
+                        type="submit"
+                        variant="text"
+                        tone="neutral"
+                        size="sm"
+                        disabled={emailCancel.status === "submitting"}
+                      >
+                        {emailCancel.status === "submitting"
+                          ? t("account.email.cancelling")
+                          : t("account.email.cancel")}
+                      </Button>
+                    </form>
+                  {/snippet}
+                  <span class="pending-email">{pending.email}</span>
+                  {t("account.email.pendingExpiry", { date: pending.expiresAt })}
+                </Alert>
+                {#if emailCancel.status === "service-error"}
+                  <AuthenticationError feedback={emailCancel.feedback} />
+                {/if}
+              {/if}
+            </dd>
+          </div>
+          <div>
+            <dt>{t("account.password.title")}</dt>
+            <dd>
+              <div class="row">
+                <span class="secondary" aria-hidden="true">••••••••</span>
+                {@render changeButton("password", t("account.password.changeLabel"))}
+              </div>
+            </dd>
+          </div>
+        </dl>
+      </Section>
+    </Card>
+  </Section>
 </div>
 
 <UsernameDialog {controller} />
@@ -165,33 +153,17 @@
 <PasswordDialog {controller} />
 
 <style>
-  .cards {
+  .sections {
     display: grid;
-    gap: var(--space-6);
+    gap: var(--space-8);
   }
 
-  .heading {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .heading p {
-    margin: 0;
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-normal);
-  }
-
-  .information,
   dl,
   dd,
   dl > div {
     display: grid;
     margin: 0;
     min-inline-size: 0;
-  }
-
-  .information {
-    gap: var(--space-4);
   }
 
   dl {
@@ -206,24 +178,9 @@
     gap: var(--space-3);
   }
 
-  h2,
-  h3 {
-    margin: 0;
-    color: var(--color-text-primary);
-    font-family: var(--font-family-display);
-  }
-
-  h2 {
-    font-size: var(--font-size-xl);
-  }
-
-  h3 {
-    font-size: var(--font-size-lg);
-  }
-
   dt {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font: var(--text-ui);
   }
 
   .row {
@@ -250,8 +207,7 @@
   .pending-email {
     display: block;
     color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-compact);
+    font: var(--text-ui);
     overflow-wrap: anywhere;
   }
 </style>

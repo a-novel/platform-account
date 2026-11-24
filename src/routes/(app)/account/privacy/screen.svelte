@@ -6,7 +6,7 @@
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
   import type { TelemetryPreference } from "@a-novel-kit/nodelib-svelte";
-  import { Button, Card, Skeleton, Switch } from "@a-novel-kit/uikit";
+  import { Button, Card, Section, Skeleton, Switch } from "@a-novel-kit/uikit";
 
   let {
     telemetry,
@@ -21,7 +21,6 @@
     locationConsentAction?: string;
   } = $props();
 
-  const componentId = $props.id();
   const { t } = getI18nContext();
 
   /** The switch's own change runs first, so the form submits the answer it just recorded. */
@@ -31,8 +30,7 @@
 </script>
 
 <div class="privacy-tab">
-  <section class="group" aria-labelledby={`${componentId}-account`}>
-    <h2 id={`${componentId}-account`}>{t("privacy.account.title")}</h2>
+  <Section title={t("privacy.account.title")}>
     <Card surface="raised">
       {#if location.account.status === "ready"}
         {@const account = location.account}
@@ -58,37 +56,28 @@
         </div>
       {/if}
     </Card>
-  </section>
+  </Section>
 
-  <section class="group" aria-labelledby={`${componentId}-device`}>
-    <h2 id={`${componentId}-device`}>{t("privacy.device.title")}</h2>
+  <Section title={t("privacy.device.title")}>
     <Card surface="raised">
       <TelemetrySetting {telemetry} />
     </Card>
-  </section>
+  </Section>
 </div>
 
 <style>
   .privacy-tab,
-  .group,
   form {
     display: grid;
     gap: var(--space-3);
   }
 
   .privacy-tab {
-    gap: var(--space-6);
+    gap: var(--space-8);
   }
 
   .privacy-tab :global(.setting) {
     display: flex;
-  }
-
-  h2 {
-    margin: 0;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-xl);
-    font-family: var(--font-family-display);
   }
 
   .setting-skeleton {

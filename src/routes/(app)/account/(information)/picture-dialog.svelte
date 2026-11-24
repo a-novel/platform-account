@@ -71,7 +71,33 @@
   }
 </script>
 
-<Dialog controller={controller.editors.picture} title={t("account.picture.dialogTitle")} size="sm">
+<!-- Each action is a form of its own. They sit in the dialog's actions, as every dialog's do: removing first,
+     saving last. -->
+{#snippet pictureActions()}
+  {#if hasPicture}
+    <form method="POST" action={controller.state.actions.removePicture} onsubmit={remove}>
+      <Button type="submit" variant="ghost" tone="danger" disabled={busy}>
+        {picture.status === "removing" ? t("account.picture.removing") : t("account.picture.remove")}
+      </Button>
+    </form>
+  {/if}
+
+  {#if frame}
+    <form method="POST" action={controller.state.actions.picture} enctype="multipart/form-data" onsubmit={save}>
+      <input type="file" name="picture" hidden />
+      <Button type="submit" disabled={busy}>
+        {picture.status === "saving" ? t("account.picture.saving") : t("account.picture.save")}
+      </Button>
+    </form>
+  {/if}
+{/snippet}
+
+<Dialog
+  controller={controller.editors.picture}
+  title={t("account.picture.dialogTitle")}
+  size="sm"
+  actions={hasPicture || frame ? pictureActions : undefined}
+>
   {#snippet headerActions()}
     <CloseLink
       label={t("account.closeEditor")}
@@ -110,23 +136,6 @@
 
     {#if picture.status === "service-error"}
       <AuthenticationError feedback={picture.feedback} />
-    {/if}
-
-    {#if frame}
-      <form method="POST" action={controller.state.actions.picture} enctype="multipart/form-data" onsubmit={save}>
-        <input type="file" name="picture" hidden />
-        <Button type="submit" disabled={busy}>
-          {picture.status === "saving" ? t("account.picture.saving") : t("account.picture.save")}
-        </Button>
-      </form>
-    {/if}
-
-    {#if hasPicture}
-      <form method="POST" action={controller.state.actions.removePicture} onsubmit={remove}>
-        <Button type="submit" variant="ghost" tone="danger" disabled={busy}>
-          {picture.status === "removing" ? t("account.picture.removing") : t("account.picture.remove")}
-        </Button>
-      </form>
     {/if}
   </div>
 </Dialog>

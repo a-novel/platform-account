@@ -17,7 +17,7 @@
   import LogoutDialog from "./logout-dialog.svelte";
 
   import { getI18nContext } from "@a-novel-kit/nodelib-i18n/svelte";
-  import { Alert, Badge, Button, Card, Link, Pagination, Skeleton } from "@a-novel-kit/uikit";
+  import { Alert, Badge, Button, Card, Link, Pagination, Section, Skeleton } from "@a-novel-kit/uikit";
 
   import { Monitor, Smartphone, Tablet } from "@lucide/svelte";
 
@@ -25,7 +25,6 @@
 
   const model = $derived(controller.state.model);
   const actions = $derived(controller.state.actions);
-  const componentId = $props.id();
   const { t } = getI18nContext();
   const submitChange = (event: SubmitEvent) => submitThrough(event, () => controller.submitChange());
 
@@ -84,18 +83,21 @@
 
 <!-- Logging another device out takes effect within 15 minutes, so it asks first and says so. -->
 {#snippet confirmLink(confirmation: AccountDeviceConfirmation, label: string, accessibleName?: string)}
-  <div class="action">
-    <Button
-      href={controller.confirmationHref(confirmation)}
-      variant="outline"
-      tone="neutral"
-      size="sm"
-      aria-label={accessibleName}
-      onclick={(event: MouseEvent) => followInPlace(event, () => controller.openConfirmation(confirmation))}
-    >
-      {label}
-    </Button>
-  </div>
+  <Button
+    href={controller.confirmationHref(confirmation)}
+    variant="outline"
+    tone="neutral"
+    size="sm"
+    aria-label={accessibleName}
+    onclick={(event: MouseEvent) => followInPlace(event, () => controller.openConfirmation(confirmation))}
+  >
+    {label}
+  </Button>
+{/snippet}
+
+<!-- Logging every other device out acts on the whole list, so it sits beside the list's title. -->
+{#snippet logoutOthers()}
+  {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
 {/snippet}
 
 {#snippet pagination(list: DeviceList, current: { page: number; totalPages: number }, label: string)}
@@ -118,91 +120,90 @@
     </Alert>
   {/if}
 
-  <Card surface="raised">
-    <section class="group" aria-labelledby={`${componentId}-active`}>
-      <header>
-        <h2 id={`${componentId}-active`}>{t("account.devices.title")}</h2>
-        <p class="secondary">{t("account.devices.description")}</p>
-      </header>
+  <Section
+    title={t("account.devices.title")}
+    description={t("account.devices.description")}
+    actions={hasOthers ? logoutOthers : undefined}
+  >
+    <!-- A change's outcome sits with the list it changed, under the title that names it. -->
+    {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
+      {@const title =
+        model.action.status === "logged-out" ? t("account.devices.loggedOut") : t("account.devices.loggedOutOthers")}
+      <Alert tone="success" {title} />
+    {:else if model.action.status === "removed"}
+      <Alert tone="success" title={t("account.devices.removed")} />
+    {:else if model.action.status === "service-error"}
+      <AuthenticationError feedback={model.action.feedback} />
+    {/if}
 
-      <!-- A change's outcome sits with the list it changed, under the title that names it. -->
-      {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
-        {@const title =
-          model.action.status === "logged-out" ? t("account.devices.loggedOut") : t("account.devices.loggedOutOthers")}
-        <Alert tone="success" {title} />
-      {:else if model.action.status === "removed"}
-        <Alert tone="success" title={t("account.devices.removed")} />
-      {:else if model.action.status === "service-error"}
-        <AuthenticationError feedback={model.action.feedback} />
-      {/if}
-
-      {#if model.devices.status === "unavailable"}
-        <Alert tone="error" title={t("account.devices.unavailable")} />
-      {:else if model.devices.status === "loading"}
-        <!-- Without scripts no retry runs, so the failure shows at once. -->
-        <noscript><Alert tone="error" title={t("account.devices.unavailable")} /></noscript>
-        <div class="loading">
-          <Skeleton shape="rectangle" />
-          <Skeleton shape="rectangle" />
+    {#if model.devices.status === "unavailable"}
+      <Alert tone="error" title={t("account.devices.unavailable")} />
+    {:else}
+      <Card surface="raised">
+        <div class="group">
+          {#if model.devices.status === "loading"}
+            <!-- Without scripts no retry runs, so the failure shows at once. -->
+            <noscript><Alert tone="error" title={t("account.devices.unavailable")} /></noscript>
+            <div class="loading">
+              <Skeleton shape="rectangle" />
+              <Skeleton shape="rectangle" />
+            </div>
+          {:else}
+            <ul>
+              {#each activePage.items as device (device.id)}
+                {@const name = deviceName(device)}
+                <li>
+                  {@render deviceRow(device, name)}
+                  {#if device.current}
+                    {@render deviceAction(
+                      actions.logout,
+                      t("account.devices.logout"),
+                      t("account.devices.logoutLabel", { device: name })
+                    )}
+                  {:else}
+                    <div class="action">
+                      {@render confirmLink(
+                        { kind: "device", id: device.id },
+                        t("account.devices.logout"),
+                        t("account.devices.logoutLabel", { device: name })
+                      )}
+                    </div>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+            {@render pagination("active", activePage, t("account.devices.pagination.active"))}
+          {/if}
         </div>
-      {:else}
-        <ul>
-          {#each activePage.items as device (device.id)}
-            {@const name = deviceName(device)}
-            <li>
-              {@render deviceRow(device, name)}
-              {#if device.current}
-                {@render deviceAction(
-                  actions.logout,
-                  t("account.devices.logout"),
-                  t("account.devices.logoutLabel", { device: name })
-                )}
-              {:else}
-                {@render confirmLink(
-                  { kind: "device", id: device.id },
-                  t("account.devices.logout"),
-                  t("account.devices.logoutLabel", { device: name })
-                )}
-              {/if}
-            </li>
-          {/each}
-        </ul>
-        {@render pagination("active", activePage, t("account.devices.pagination.active"))}
-      {/if}
-
-      {#if hasOthers}
-        <footer>
-          {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
-        </footer>
-      {/if}
-    </section>
-  </Card>
+      </Card>
+    {/if}
+  </Section>
 
   {#if loggedOut.length > 0}
-    <Card surface="raised">
-      <section class="group" aria-labelledby={`${componentId}-logged-out`}>
-        <header>
-          <h2 id={`${componentId}-logged-out`}>{t("account.devices.loggedOutTitle")}</h2>
-          <p class="secondary">{t("account.devices.loggedOutDescription")}</p>
-          <p class="hint">{t("account.devices.lossDelay")}</p>
-        </header>
-        <ul>
-          {#each loggedOutPage.items as device (device.id)}
-            {@const name = deviceName(device)}
-            <li class="logged-out">
-              {@render deviceRow(device, name)}
-              {@render deviceAction(
-                actions.removeDevice,
-                t("account.devices.remove"),
-                t("account.devices.removeLabel", { device: name }),
-                device
-              )}
-            </li>
-          {/each}
-        </ul>
-        {@render pagination("loggedOut", loggedOutPage, t("account.devices.pagination.loggedOut"))}
-      </section>
-    </Card>
+    <Section
+      title={t("account.devices.loggedOutTitle")}
+      description={`${t("account.devices.loggedOutDescription")} ${t("account.devices.lossDelay")}`}
+    >
+      <Card surface="raised">
+        <div class="group">
+          <ul>
+            {#each loggedOutPage.items as device (device.id)}
+              {@const name = deviceName(device)}
+              <li class="logged-out">
+                {@render deviceRow(device, name)}
+                {@render deviceAction(
+                  actions.removeDevice,
+                  t("account.devices.remove"),
+                  t("account.devices.removeLabel", { device: name }),
+                  device
+                )}
+              </li>
+            {/each}
+          </ul>
+          {@render pagination("loggedOut", loggedOutPage, t("account.devices.pagination.loggedOut"))}
+        </div>
+      </Card>
+    </Section>
   {/if}
 </div>
 
@@ -212,37 +213,24 @@
 
 <style>
   .devices-tab,
-  .group,
-  header {
+  .group {
     display: grid;
     gap: var(--space-4);
     min-inline-size: 0;
   }
 
-  header {
-    gap: var(--space-2);
+  .devices-tab {
+    gap: var(--space-8);
   }
 
-  h2,
   p {
     margin: 0;
   }
 
-  h2 {
-    color: var(--color-text-primary);
-    font-size: var(--font-size-xl);
-    font-family: var(--font-family-display);
-  }
-
+  /* Every line under a device's name is interface text. */
   .secondary {
     color: var(--color-text-secondary);
-    line-height: var(--line-height-normal);
-  }
-
-  .hint {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-normal);
+    font: var(--text-ui);
   }
 
   .loading {
@@ -266,7 +254,16 @@
   }
 
   li + li {
-    border-block-start: var(--border-width-thin) solid var(--color-border-subtle);
+    border-block-start: var(--border-width-thin) solid var(--color-border-divider);
+  }
+
+  /* The card's own inset frames the list: its first and last rows add none. */
+  li:first-child {
+    padding-block-start: 0;
+  }
+
+  li:last-child {
+    padding-block-end: 0;
   }
 
   li > :global(svg) {
@@ -292,6 +289,7 @@
     align-items: center;
     gap: var(--space-2);
     color: var(--color-text-primary);
+    font: var(--text-body);
     overflow-wrap: anywhere;
   }
 

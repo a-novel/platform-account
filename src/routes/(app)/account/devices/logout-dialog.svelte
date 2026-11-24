@@ -58,7 +58,7 @@
     {#if device}<input type="hidden" name="sessionID" value={device.id} />{/if}
 
     <FormActions>
-      <Button href={controller.confirmationHref(null)} variant="outline" tone="neutral" onclick={close}>
+      <Button href={controller.confirmationHref(null)} variant="text" tone="neutral" onclick={close}>
         {t("account.devices.confirm.cancel")}
       </Button>
       <Button type="submit" tone="danger" disabled={submitting}>
@@ -77,7 +77,7 @@
   p {
     margin: 0;
     color: var(--color-text-primary);
-    line-height: var(--line-height-normal);
+    font: var(--text-body);
   }
 
   .secondary {
