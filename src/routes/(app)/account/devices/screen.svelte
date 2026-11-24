@@ -83,18 +83,21 @@
 
 <!-- Logging another device out takes effect within 15 minutes, so it asks first and says so. -->
 {#snippet confirmLink(confirmation: AccountDeviceConfirmation, label: string, accessibleName?: string)}
-  <div class="action">
-    <Button
-      href={controller.confirmationHref(confirmation)}
-      variant="outline"
-      tone="neutral"
-      size="sm"
-      aria-label={accessibleName}
-      onclick={(event: MouseEvent) => followInPlace(event, () => controller.openConfirmation(confirmation))}
-    >
-      {label}
-    </Button>
-  </div>
+  <Button
+    href={controller.confirmationHref(confirmation)}
+    variant="outline"
+    tone="neutral"
+    size="sm"
+    aria-label={accessibleName}
+    onclick={(event: MouseEvent) => followInPlace(event, () => controller.openConfirmation(confirmation))}
+  >
+    {label}
+  </Button>
+{/snippet}
+
+<!-- Logging every other device out acts on the whole list, so it sits beside the list's title. -->
+{#snippet logoutOthers()}
+  {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
 {/snippet}
 
 {#snippet pagination(list: DeviceList, current: { page: number; totalPages: number }, label: string)}
@@ -117,7 +120,11 @@
     </Alert>
   {/if}
 
-  <Section title={t("account.devices.title")} description={t("account.devices.description")}>
+  <Section
+    title={t("account.devices.title")}
+    description={t("account.devices.description")}
+    actions={hasOthers ? logoutOthers : undefined}
+  >
     <!-- A change's outcome sits with the list it changed, under the title that names it. -->
     {#if model.action.status === "logged-out" || model.action.status === "logged-out-others"}
       {@const title =
@@ -154,22 +161,18 @@
                       t("account.devices.logoutLabel", { device: name })
                     )}
                   {:else}
-                    {@render confirmLink(
-                      { kind: "device", id: device.id },
-                      t("account.devices.logout"),
-                      t("account.devices.logoutLabel", { device: name })
-                    )}
+                    <div class="action">
+                      {@render confirmLink(
+                        { kind: "device", id: device.id },
+                        t("account.devices.logout"),
+                        t("account.devices.logoutLabel", { device: name })
+                      )}
+                    </div>
                   {/if}
                 </li>
               {/each}
             </ul>
             {@render pagination("active", activePage, t("account.devices.pagination.active"))}
-          {/if}
-
-          {#if hasOthers}
-            <footer>
-              {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
-            </footer>
           {/if}
         </div>
       </Card>
@@ -224,9 +227,10 @@
     margin: 0;
   }
 
+  /* Every line under a device's name is interface text. */
   .secondary {
     color: var(--color-text-secondary);
-    line-height: var(--line-height-normal);
+    font: var(--text-ui);
   }
 
   .loading {
@@ -253,6 +257,15 @@
     border-block-start: var(--border-width-thin) solid var(--color-border-divider);
   }
 
+  /* The card's own inset frames the list: its first and last rows add none. */
+  li:first-child {
+    padding-block-start: 0;
+  }
+
+  li:last-child {
+    padding-block-end: 0;
+  }
+
   li > :global(svg) {
     color: var(--color-text-secondary);
   }
@@ -276,6 +289,7 @@
     align-items: center;
     gap: var(--space-2);
     color: var(--color-text-primary);
+    font: var(--text-body);
     overflow-wrap: anywhere;
   }
 

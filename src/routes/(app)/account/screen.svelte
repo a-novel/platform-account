@@ -142,8 +142,7 @@
     padding-inline: var(--layout-gutter);
     padding-block: var(--space-6) var(--space-12);
     inline-size: 100%;
-    /* Off the container scale on purpose: 48rem keeps a long email on one line beside the picture
-       and the logout, where 40rem wraps it. */
+    /* off-scale: 48rem keeps a long email on one line beside the picture and the logout; 40rem wraps it. */
     max-inline-size: 48rem;
   }
 
@@ -171,7 +170,7 @@
   }
 
   .picture:hover .badge {
-    background: var(--color-surface-hover);
+    background: linear-gradient(var(--color-veil), var(--color-veil)), var(--color-surface-island-strong);
   }
 
   .picture:focus-visible {
@@ -187,7 +186,8 @@
     inset-inline-end: 0;
     border: var(--border-width-thin) solid var(--color-border-default);
     border-radius: var(--radius-round);
-    background: var(--color-surface-raised);
+    /* Opaque: the badge sits over the picture, which a veil would let through. */
+    background: var(--color-surface-island-strong);
     inline-size: var(--control-height-sm);
     block-size: var(--control-height-sm);
     color: var(--color-text-primary);
@@ -216,28 +216,27 @@
 
   h1 {
     color: var(--color-text-primary);
+    font: var(--text-display);
+    /* off-scale: the title keeps the display style's least size, so a long email still fits the 48rem column. */
     font-size: var(--font-size-2xl);
-    line-height: var(--line-height-tight);
-    font-family: var(--font-family-display);
     overflow-wrap: anywhere;
   }
 
   .roles {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1);
+    gap: var(--space-1-5);
     padding: 0;
     list-style: none;
   }
 
   .session {
     color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-normal);
+    font: var(--text-body-sm);
   }
 
   .session .label {
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
   }
 
   /* Below 35rem, as uikit's ActionGroup lays out actions, logging out takes a full row set apart from the details,
@@ -301,8 +300,8 @@
     .badge {
       inset-block-end: calc(-1 * var(--space-1));
       inset-inline-end: calc(-1 * var(--space-1));
-      inline-size: var(--space-6);
-      block-size: var(--space-6);
+      inline-size: var(--size-5);
+      block-size: var(--size-5);
     }
   }
 </style>

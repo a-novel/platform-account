@@ -164,7 +164,7 @@
   p {
     margin: 0;
     color: var(--color-text-primary);
-    line-height: var(--line-height-normal);
+    font: var(--text-body);
     overflow-wrap: anywhere;
   }
 

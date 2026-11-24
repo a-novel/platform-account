@@ -89,7 +89,7 @@
   <!-- Each way to log in sits on a card of its own, which names it. -->
   <Section title={t("account.credentials.title")} description={t("account.credentials.description")}>
     <Card surface="raised">
-      <Section title={t("account.signIn.title")} headingLevel={3}>
+      <Section title={t("account.signIn.title")}>
         <dl>
           <div>
             <dt>{t("account.email.title")}</dt>
@@ -179,8 +179,8 @@
   }
 
   dt {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font: var(--text-ui);
   }
 
   .row {
@@ -207,8 +207,7 @@
   .pending-email {
     display: block;
     color: var(--color-text-primary);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-compact);
+    font: var(--text-ui);
     overflow-wrap: anywhere;
   }
 </style>

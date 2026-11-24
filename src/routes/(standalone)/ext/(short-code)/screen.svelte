@@ -167,6 +167,7 @@
   .standalone-page {
     display: grid;
     box-sizing: border-box;
+    /* off-scale: the inset grows with the viewport, between two steps of the scale. */
     padding: clamp(var(--space-4), 5vi, var(--space-12));
     min-block-size: 100dvb;
     color: var(--color-text-primary);
@@ -198,14 +199,12 @@
   }
 
   .page-heading h1 {
-    font-size: var(--font-size-2xl);
-    line-height: var(--line-height-tight);
-    font-family: var(--font-family-display);
+    font: var(--text-display);
   }
 
   .page-heading p {
-    color: var(--color-text-muted);
-    line-height: var(--line-height-normal);
+    color: var(--color-text-secondary);
+    font: var(--text-body);
   }
 
   @media (width < 35rem) {

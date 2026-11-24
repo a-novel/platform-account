@@ -390,6 +390,7 @@
   }
 
   .brand-banner {
+    /* off-scale: the banner is three times as wide as it is tall. */
     inline-size: calc(var(--control-height-sm) * 3);
     max-inline-size: 100%;
     block-size: var(--control-height-sm);
@@ -458,8 +459,8 @@
 
   /* The picture stays muted until the pointer or the keyboard reaches its button, or its page is showing. */
   .account-picture {
-    filter: saturate(50%) brightness(75%);
-    transition: filter var(--duration-fast) var(--easing-standard);
+    filter: var(--filter-dim);
+    transition: filter var(--motion-state);
   }
 
   :global(.shell-account-button:is(:hover, :focus-visible, [aria-current="page"])) .account-picture {
@@ -506,7 +507,7 @@
     border-block-start: var(--border-width-thin) solid var(--color-border-divider);
     padding-block-start: var(--space-4);
     color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    font: var(--text-ui);
     text-align: center;
   }
 

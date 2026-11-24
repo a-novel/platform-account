@@ -208,7 +208,6 @@
 
 <style>
   .story-frame {
-    background: var(--color-surface-canvas);
     inline-size: 100%;
     min-block-size: 100dvb;
   }
