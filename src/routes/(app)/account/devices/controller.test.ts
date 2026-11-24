@@ -26,6 +26,7 @@ function controller(initial: AccountDevicesModel = model, options: Partial<Accou
       logoutDevice: "?/logoutDevice",
       logoutOtherDevices: "?/logoutOtherDevices",
       removeDevice: "?/removeDevice",
+      removeLoggedOutDevices: "?/removeLoggedOutDevices",
       logout: "/auth/logout",
     },
     privacyHref: "/account/privacy",

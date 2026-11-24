@@ -12,6 +12,7 @@ import {
   type AuthenticationApi,
   type Session,
   sessionDelete,
+  sessionDeleteLoggedOut,
   sessionList,
   sessionRevoke,
   sessionRevokeOthers,
@@ -79,7 +80,7 @@ async function readDevices(
 /** Runs a device change for the visitor and maps its failure to the devices tab. */
 async function changeDevices(
   event: RequestEvent,
-  done: "logged-out" | "logged-out-others" | "removed",
+  done: "logged-out" | "logged-out-others" | "removed" | "removed-all",
   change: (api: AuthenticationApi, accessToken: string) => Promise<void>
 ) {
   try {
@@ -125,4 +126,5 @@ export const actions = {
     if (!id) return missingDevice();
     return await changeDevices(event, "removed", (api, token) => removeSession(api, token, id));
   },
+  removeLoggedOutDevices: (event: RequestEvent) => changeDevices(event, "removed-all", sessionDeleteLoggedOut),
 };
