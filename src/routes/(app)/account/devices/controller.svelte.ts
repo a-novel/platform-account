@@ -40,7 +40,7 @@ export interface AccountDevicesModel {
   /** The logout the open confirmation dialog asks about, which the URL owns. */
   confirmation: AccountDeviceConfirmation | null;
   action:
-    | { status: "ready" | "submitting" | "logged-out" | "logged-out-others" | "removed" }
+    | { status: "ready" | "submitting" | "logged-out" | "logged-out-others" | "removed" | "removed-all" }
     | { status: "service-error"; feedback: AuthenticationFeedback };
 }
 
@@ -49,6 +49,7 @@ export interface AccountDevicesActions {
   logoutDevice: string;
   logoutOtherDevices: string;
   removeDevice: string;
+  removeLoggedOutDevices: string;
   /** Logs this device out, through the shell's logout. */
   logout: string;
 }

@@ -47,8 +47,11 @@ export default interface Resources {
           "loggedOut": "Pages of your logged-out devices"
         },
         "remove": "Remove",
+        "removeAll": "Remove all",
+        "removeAllLabel": "Remove all logged-out devices",
         "removeLabel": "Remove {{device}}",
         "removed": "Device removed",
+        "removedAll": "Your logged-out devices are removed",
         "title": "Devices",
         "unavailable": "Your devices can’t be shown right now.",
         "unknown": "Unknown device"

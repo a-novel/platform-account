@@ -37,7 +37,10 @@ account:
       active: Pages de vos appareils actifs
       loggedOut: Pages de vos appareils déconnectés
     remove: Retirer
+    removeAll: Tout retirer
+    removeAllLabel: Tout retirer de la liste de mes appareils déconnectés
     removed: Appareil retiré
+    removedAll: Vos appareils déconnectés sont retirés
     removeLabel: Retirer {{device}}
     title: Appareils
     unavailable: Vos appareils ne peuvent pas être affichés pour le moment.

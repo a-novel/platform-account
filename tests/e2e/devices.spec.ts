@@ -91,6 +91,28 @@ test("logging out all devices keeps only this one", async ({ page, browser, acco
   await expect(deviceRow(activeDevices(page), "This device")).toBeVisible();
 });
 
+test("removing all logged-out devices empties their list", async ({ page, browser, account }, info) => {
+  await page.goto("/account/devices");
+  await login(page, account);
+  // The list offers the action from two logged-out devices on.
+  for (let phones = 0; phones < 2; phones++) {
+    const phone = await loginElsewhere(browser, info, account);
+    await phone.context().close();
+  }
+
+  await page.reload();
+  await page.getByRole("link", { name: "Log out all devices", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Log out all devices?", exact: true });
+  await dialog.getByRole("button", { name: "Log out all devices", exact: true }).click();
+  const loggedOut = page.getByRole("region", { name: "Logged out", exact: true });
+  await expect(deviceRow(loggedOut, "Safari on iOS")).toHaveCount(2);
+
+  await loggedOut.getByRole("button", { name: "Remove all logged-out devices", exact: true }).click();
+  await expect(page.getByText("Your logged-out devices are removed", { exact: true })).toBeVisible();
+  await expect(loggedOut).toHaveCount(0);
+  await expect(deviceRow(activeDevices(page), "This device")).toBeVisible();
+});
+
 test("the location consent records where devices log in until it is withdrawn", async ({
   page,
   browser,

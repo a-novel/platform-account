@@ -67,6 +67,7 @@ function controller(patch: Partial<AccountDevicesModel> = {}, options: Partial<A
       logoutDevice: "?/logoutDevice",
       logoutOtherDevices: "?/logoutOtherDevices",
       removeDevice: "?/removeDevice",
+      removeLoggedOutDevices: "?/removeLoggedOutDevices",
       logout: "/auth/logout",
     },
     privacyHref: "/account/privacy",
@@ -149,6 +150,27 @@ describe("devices screen", () => {
     await expect.element(page.getByRole("button", { name: "Log out Firefox on Linux" })).toBeDisabled();
   });
 
+  it("removes every logged-out device at once, from beside their list's title", async () => {
+    const tab = controller(devices([thisDevice, { ...phone, loggedOut: true }, oldTablet]));
+    await render(Screen, { controller: tab }, withLocale());
+
+    const loggedOut = page.getByRole("region", { name: "Logged out" });
+    await expect.element(loggedOut.getByRole("button", { name: "Remove all logged-out devices" })).toBeVisible();
+
+    const form = await submitForm("Remove all logged-out devices");
+
+    expect(form.getAttribute("action")).toBe("?/removeLoggedOutDevices");
+    expect(Object.fromEntries(new FormData(form))).toEqual({});
+    expect(tab.state.model.action).toEqual({ status: "submitting" });
+  });
+
+  it("offers to remove every logged-out device only while more than one is listed", async () => {
+    await render(Screen, { controller: controller() }, withLocale());
+
+    await expect.element(page.getByRole("button", { name: "Remove Browser on Android" })).toBeVisible();
+    await expect.element(page.getByRole("button", { name: "Remove all logged-out devices" })).not.toBeInTheDocument();
+  });
+
   it("offers to log out every other device only while another one is active", async () => {
     await render(Screen, { controller: controller(devices([thisDevice, oldTablet])) }, withLocale());
 
@@ -175,6 +197,7 @@ describe("devices screen", () => {
     ["logged-out", "That device is logged out"],
     ["logged-out-others", "Your other devices are logged out"],
     ["removed", "Device removed"],
+    ["removed-all", "Your logged-out devices are removed"],
   ] as const)("confirms a %s change", async (status, message) => {
     await render(Screen, { controller: controller({ action: { status } }) }, withLocale());
 

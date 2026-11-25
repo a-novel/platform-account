@@ -158,6 +158,7 @@
               logoutDevice: "/storybook/devices/logout",
               logoutOtherDevices: "/storybook/devices/logout-others",
               removeDevice: "/storybook/devices/remove",
+              removeLoggedOutDevices: "/storybook/devices/remove-logged-out",
               logout: "/storybook/logout",
             },
             privacyHref: "#privacy",

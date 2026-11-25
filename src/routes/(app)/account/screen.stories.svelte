@@ -535,6 +535,18 @@
   />
 </Story>
 
+<Story name="Devices: logged-out devices removed" asChild>
+  <StoryHarness
+    {summary}
+    tab="devices"
+    devices={{
+      ...located,
+      devices: { status: "ready", devices: [thisDeviceLocated, phoneLocated] },
+      action: { status: "removed-all" },
+    }}
+  />
+</Story>
+
 <Story name="Devices: only this one" asChild>
   <StoryHarness
     {summary}

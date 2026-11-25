@@ -600,6 +600,13 @@ describe("account session at the request boundary", () => {
     ["logoutDevice", "PUT", `/v2/sessions/${deviceId}/revoke`, devicesActions.logoutDevice, "logged-out"],
     ["logoutOtherDevices", "PUT", "/v2/sessions/revoke-others", devicesActions.logoutOtherDevices, "logged-out-others"],
     ["removeDevice", "DELETE", `/v2/sessions/${deviceId}`, devicesActions.removeDevice, "removed"],
+    [
+      "removeLoggedOutDevices",
+      "DELETE",
+      "/v2/sessions/logged-out",
+      devicesActions.removeLoggedOutDevices,
+      "removed-all",
+    ],
   ] as const;
 
   it.each(deviceChanges)("%s sends %s %s after verifying the session", async (name, method, path, action, status) => {
@@ -690,6 +697,7 @@ describe("account session at the request boundary", () => {
     ["logoutDevice", "/account/devices", devicesActions.logoutDevice],
     ["logoutOtherDevices", "/account/devices", devicesActions.logoutOtherDevices],
     ["removeDevice", "/account/devices", devicesActions.removeDevice],
+    ["removeLoggedOutDevices", "/account/devices", devicesActions.removeLoggedOutDevices],
     ["locationConsent", "/account/privacy", privacyActions.locationConsent],
     ["username", "/account", informationActions.username],
     ["removePicture", "/account", informationActions.removePicture],

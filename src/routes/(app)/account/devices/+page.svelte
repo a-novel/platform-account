@@ -19,6 +19,7 @@
     logoutDevice: "?/logoutDevice",
     logoutOtherDevices: "?/logoutOtherDevices",
     removeDevice: "?/removeDevice",
+    removeLoggedOutDevices: "?/removeLoggedOutDevices",
     logout: resolve("/auth/logout"),
   };
 

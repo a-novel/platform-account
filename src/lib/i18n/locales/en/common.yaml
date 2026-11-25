@@ -37,7 +37,10 @@ account:
       active: Pages of your active devices
       loggedOut: Pages of your logged-out devices
     remove: Remove
+    removeAll: Remove all
+    removeAllLabel: Remove all logged-out devices
     removed: Device removed
+    removedAll: Your logged-out devices are removed
     removeLabel: Remove {{device}}
     title: Devices
     unavailable: Your devices can’t be shown right now.

@@ -100,6 +100,15 @@
   {@render confirmLink({ kind: "others" }, t("account.devices.logoutOthers"))}
 {/snippet}
 
+<!-- Removing every logged-out device acts on its whole list. Like a single removal, it asks for no confirmation. -->
+{#snippet removeAll()}
+  {@render deviceAction(
+    actions.removeLoggedOutDevices,
+    t("account.devices.removeAll"),
+    t("account.devices.removeAllLabel")
+  )}
+{/snippet}
+
 {#snippet pagination(list: DeviceList, current: { page: number; totalPages: number }, label: string)}
   {#if current.totalPages > 1}
     <Pagination
@@ -130,8 +139,10 @@
       {@const title =
         model.action.status === "logged-out" ? t("account.devices.loggedOut") : t("account.devices.loggedOutOthers")}
       <Alert tone="success" {title} />
-    {:else if model.action.status === "removed"}
-      <Alert tone="success" title={t("account.devices.removed")} />
+    {:else if model.action.status === "removed" || model.action.status === "removed-all"}
+      {@const title =
+        model.action.status === "removed" ? t("account.devices.removed") : t("account.devices.removedAll")}
+      <Alert tone="success" {title} />
     {:else if model.action.status === "service-error"}
       <AuthenticationError feedback={model.action.feedback} />
     {/if}
@@ -183,6 +194,7 @@
     <Section
       title={t("account.devices.loggedOutTitle")}
       description={`${t("account.devices.loggedOutDescription")} ${t("account.devices.lossDelay")}`}
+      actions={loggedOut.length > 1 ? removeAll : undefined}
     >
       <Card surface="raised">
         <div class="group">
@@ -293,18 +305,22 @@
     overflow-wrap: anywhere;
   }
 
-  /*
-   * Below 35rem, as uikit's ActionGroup lays out actions, the device's name keeps its full line and the action takes
-   * a full row below, set apart from the details so a scrolling thumb does not land on it.
-   */
   .action {
     display: grid;
-    grid-column: 1 / -1;
-    margin-block-start: var(--space-2);
   }
 
   .action > :global(*) {
     justify-content: center;
+  }
+
+  /*
+   * Below 35rem, as uikit's ActionGroup lays out actions, the device's name keeps its full line and its action takes
+   * a full row below, set apart from the details so a scrolling thumb does not land on it. A list's own action stays
+   * beside its title.
+   */
+  li > .action {
+    grid-column: 1 / -1;
+    margin-block-start: var(--space-2);
   }
 
   /* From 35rem an action fits its label at the end of its row. */
@@ -314,7 +330,7 @@
       align-items: center;
     }
 
-    .action {
+    li > .action {
       grid-column: auto;
       justify-items: end;
       margin-block-start: 0;
